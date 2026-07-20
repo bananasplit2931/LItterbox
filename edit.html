@@ -120,9 +120,9 @@
       <div class="field" id="dataFileField" style="display:none;">
         <label for="dataFile">Mod file</label>
         <div class="file-input">
-          <input type="file" id="dataFile" accept=".win">
+          <input type="file" id="dataFile" accept=".win,.zip">
         </div>
-        <p class="field-hint">Adding this publishes the mod and notifies everyone following it.</p>
+        <p class="field-hint">Adding this publishes the mod and notifies everyone following it — it'll go through a quick manual review first.</p>
       </div>
 
       <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Save changes</button>
@@ -154,9 +154,9 @@
       <div class="field" id="changelogFileField" style="display:none;">
         <label for="changelogFile">New <code>data.win</code> <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
         <div class="file-input">
-          <input type="file" id="changelogFile" accept=".win">
+          <input type="file" id="changelogFile" accept=".win,.zip">
         </div>
-        <p class="field-hint">Attach this to replace the current file with a new version when you post.</p>
+        <p class="field-hint">Attach this to replace the current file with a new version when you post — the new version goes back through review before it's public.</p>
       </div>
 
       <button type="submit" class="btn btn-secondary" id="changelogSubmitBtn">Post update</button>
