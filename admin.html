@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Litterbox</title>
+<link rel="icon" type="image/png" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/app.js"></script>
+<style>
+.admin-header-wrap { max-width: 1020px; margin: 0 auto; padding: 32px clamp(16px, 5vw, 56px) 0; }
+.admin-header-wrap h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.4px; }
+.admin-header-wrap p.sub { color: var(--color-text-muted); font-size: 14px; margin: 0; }
+.pending-item { margin-bottom: 18px; }
+.pending-item .mod-row { pointer-events: none; }
+.pending-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.pending-actions .btn { padding: 8px 14px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <img src="assets/logo.png" alt="" class="brand-mark">
+    <span class="brand-name">Litterbox</span>
+  </a>
+  <div class="header-right">
+    <span id="notifSlot"></span>
+    <span class="user-name" id="userName"></span>
+    <a class="nav-link" href="index.html">← Back to mods</a>
+    <button class="nav-link" id="logoutBtn" style="display:none;">Log out</button>
+  </div>
+</header>
+
+<div id="gate" class="gate-state">Checking access…</div>
+
+<div id="pageWrap" style="display:none;">
+  <div class="admin-header-wrap">
+    <h1>Admin</h1>
+    <p class="sub">Moderation queue and reports. Only visible to admins.</p>
+  </div>
+
+  <div class="admin-section">
+    <h2 id="pendingHeading">Pending mods</h2>
+    <div id="pendingList"><p class="empty-inline">Loading…</p></div>
+  </div>
+
+  <div class="admin-section">
+    <h2 id="reportsHeading">Open reports</h2>
+    <div id="reportsList"><p class="empty-inline">Loading…</p></div>
+  </div>
+</div>
+
+<script>
+const gateEl = document.getElementById("gate");
+const pageWrapEl = document.getElementById("pageWrap");
+const userNameEl = document.getElementById("userName");
+const logoutBtn = document.getElementById("logoutBtn");
+
+let currentUser = null;
+
+async function checkAccess() {
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data.session) {
+    window.location.href = "login.html";
+    return false;
+  }
+  currentUser = data.session.user;
+
+  const { data: profile, error } = await supabaseClient
+    .from("profiles").select("is_admin, username").eq("id", currentUser.id).single();
+
+  if (error || !profile?.is_admin) {
+    gateEl.textContent = "You don't have access to this page.";
+    gateEl.style.display = "block";
+    return false;
+  }
+
+  userNameEl.textContent = profile.username || currentUser.email;
+  logoutBtn.style.display = "inline-block";
+  logoutBtn.addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
+    window.location.href = "index.html";
+  });
+  LB_mountNotifications(document.getElementById("notifSlot"), currentUser.id);
+
+  gateEl.style.display = "none";
+  pageWrapEl.style.display = "block";
+  return true;
+}
+
+async function loadPending() {
+  const listEl = document.getElementById("pendingList");
+  const { data, error } = await supabaseClient
+    .from("mods")
+    .select("*, profiles!mods_profiles_fkey(is_verified)")
+    .eq("review_status", "pending")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    listEl.innerHTML = `<p class="empty-inline">Couldn't load the queue.</p>`;
+    console.error(error);
+    return;
+  }
+
+  const mods = data || [];
+  document.getElementById("pendingHeading").textContent = `Pending mods (${mods.length})`;
+
+  if (mods.length === 0) {
+    listEl.innerHTML = `<p class="empty-inline">Nothing waiting on review. 🎉</p>`;
+    return;
+  }
+
+  listEl.innerHTML = mods.map(mod => `
+    <div class="pending-item" data-mod-id="${mod.id}">
+      ${LB_renderModCard(mod, { clickable: false })}
+      <div class="pending-actions">
+        <a class="btn btn-secondary" href="mod.html?id=${mod.id}" target="_blank" rel="noopener">Open page ↗</a>
+        <button type="button" class="btn btn-primary" data-action="approve">Approve</button>
+        <button type="button" class="btn btn-danger" data-action="reject">Reject</button>
+      </div>
+    </div>
+  `).join("");
+
+  listEl.querySelectorAll("[data-action]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const item = btn.closest(".pending-item");
+      const modId = item.dataset.modId;
+      const action = btn.dataset.action;
+
+      let note = null;
+      if (action === "reject") {
+        note = prompt("Reason for rejecting (shown to the creator, optional):") || null;
+      }
+
+      item.querySelectorAll("button").forEach(b => b.disabled = true);
+      const { error } = await supabaseClient.rpc("admin_set_review_status", {
+        target_mod_id: Number(modId),
+        new_status: action === "approve" ? "approved" : "rejected",
+        note,
+      });
+
+      if (error) {
+        console.error(error);
+        alert("Something went wrong: " + error.message);
+        item.querySelectorAll("button").forEach(b => b.disabled = false);
+        return;
+      }
+      item.remove();
+      loadPending();
+    });
+  });
+}
+
+function reportReasonLabel(reason) {
+  return {
+    malware: "Unsafe / suspicious file",
+    spam: "Spam",
+    inappropriate: "Inappropriate content",
+    stolen: "Stolen work / not the creator",
+    other: "Other",
+  }[reason] || reason;
+}
+
+async function loadReports() {
+  const listEl = document.getElementById("reportsList");
+  const { data, error } = await supabaseClient
+    .from("reports")
+    .select("*, mods(id, name, review_status)")
+    .eq("status", "open")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    listEl.innerHTML = `<p class="empty-inline">Couldn't load reports.</p>`;
+    console.error(error);
+    return;
+  }
+
+  const reports = data || [];
+  document.getElementById("reportsHeading").textContent = `Open reports (${reports.length})`;
+
+  if (reports.length === 0) {
+    listEl.innerHTML = `<p class="empty-inline">No open reports.</p>`;
+    return;
+  }
+
+  listEl.innerHTML = reports.map(r => `
+    <div class="admin-row" data-report-id="${r.id}">
+      <div class="admin-row-main">
+        <p class="admin-row-title">${escapeHtml(reportReasonLabel(r.reason))} — ${r.mods ? escapeHtml(r.mods.name) : "(mod deleted)"}</p>
+        <p class="admin-row-meta">${r.details ? escapeHtml(r.details) + " · " : ""}${timeAgo(r.created_at)}</p>
+      </div>
+      <div class="admin-row-actions">
+        ${r.mods ? `<a class="btn btn-secondary" href="mod.html?id=${r.mods.id}" target="_blank" rel="noopener">Open ↗</a>` : ""}
+        ${r.mods ? `<button type="button" class="btn btn-danger" data-action="delete-mod">Delete mod</button>` : ""}
+        <button type="button" class="btn btn-secondary" data-action="dismiss">Dismiss</button>
+        <button type="button" class="btn btn-primary" data-action="resolve">Resolve</button>
+      </div>
+    </div>
+  `).join("");
+
+  listEl.querySelectorAll("[data-action]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const row = btn.closest(".admin-row");
+      const reportId = row.dataset.reportId;
+      const action = btn.dataset.action;
+
+      row.querySelectorAll("button").forEach(b => b.disabled = true);
+
+      try {
+        if (action === "delete-mod") {
+          const modLink = row.querySelector('a[href^="mod.html?id="]');
+          const modId = modLink ? new URLSearchParams(modLink.getAttribute("href").split("?")[1]).get("id") : null;
+          if (modId) {
+            const { error: delError } = await supabaseClient.from("mods").delete().eq("id", modId);
+            if (delError) throw delError;
+          }
+        }
+        if (action === "delete-mod" || action === "resolve" || action === "dismiss") {
+          const { error } = await supabaseClient
+            .from("reports")
+            .update({ status: action === "dismiss" ? "dismissed" : "resolved", resolved_at: new Date().toISOString(), resolved_by: currentUser.id })
+            .eq("id", reportId);
+          if (error) throw error;
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Something went wrong: " + err.message);
+        row.querySelectorAll("button").forEach(b => b.disabled = false);
+        return;
+      }
+
+      row.remove();
+    });
+  });
+}
+
+async function init() {
+  const ok = await checkAccess();
+  if (!ok) return;
+  await Promise.all([loadPending(), loadReports()]);
+}
+
+init();
+</script>
+
+</body>
+</html>
