@@ -130,6 +130,8 @@
 
   <div class="mod-head-meta" id="modHeadMeta"></div>
 
+  <div class="status-banner" id="statusBanner" style="display:none;"></div>
+
   <div class="content-grid">
     <div class="main-col">
       <div class="card">
@@ -146,6 +148,7 @@
     <div class="side-stack">
       <div class="card actions-card" id="actionsCard"></div>
       <div class="card rate-box" id="rateCard"></div>
+      <div class="card" id="reportCard" style="display:none;"></div>
     </div>
   </div>
 </div>
@@ -334,6 +337,19 @@ function renderMod() {
 
   document.getElementById("modHeadMeta").innerHTML = renderMetaRow(mod);
 
+  const statusBanner = document.getElementById("statusBanner");
+  if (mod.review_status === "pending") {
+    statusBanner.className = "status-banner";
+    statusBanner.style.display = "block";
+    statusBanner.innerHTML = `<strong>Awaiting review.</strong> This mod is only visible to you right now. It'll show up for everyone once an admin approves it — usually quick.`;
+  } else if (mod.review_status === "rejected") {
+    statusBanner.className = "status-banner rejected";
+    statusBanner.style.display = "block";
+    statusBanner.innerHTML = `<strong>Rejected.</strong> This mod isn't public.${mod.moderation_note ? ` Reason: ${escapeHtml(mod.moderation_note)}` : ""} Fix the issue and reach out if you think this was a mistake.`;
+  } else {
+    statusBanner.style.display = "none";
+  }
+
   const showFav = currentUser && mod.user_id !== currentUser.id;
   const showFollow = currentUser && mod.user_id !== currentUser.id;
   const showManage = mod.user_id === currentUser?.id;
@@ -368,11 +384,73 @@ function renderMod() {
 
   wireFavButton();
   wireFollowButton();
+  renderReportCard();
 
   renderRateBox();
 
   gateEl.style.display = "none";
   pageWrapEl.style.display = "block";
+}
+
+function renderReportCard() {
+  const card = document.getElementById("reportCard");
+  const mod = currentMod;
+  if (!currentUser || mod.user_id === currentUser.id) {
+    card.style.display = "none";
+    return;
+  }
+  card.style.display = "block";
+  card.innerHTML = `<button type="button" class="report-link" id="reportToggle">Report this mod</button>`;
+
+  document.getElementById("reportToggle").addEventListener("click", async () => {
+    const { data: existing } = await supabaseClient
+      .from("reports").select("id").eq("mod_id", mod.id).eq("reporter_id", currentUser.id).eq("status", "open").maybeSingle();
+    if (existing) {
+      card.innerHTML = `<p class="empty-inline">You've already reported this mod — the team's on it.</p>`;
+      return;
+    }
+
+    card.innerHTML = `
+      <form id="reportForm" class="report-form">
+        <label for="reportReason">Why are you reporting this?</label>
+        <select id="reportReason" required>
+          <option value="">Choose a reason…</option>
+          <option value="malware">Unsafe / suspicious file</option>
+          <option value="spam">Spam</option>
+          <option value="inappropriate">Inappropriate content</option>
+          <option value="stolen">Stolen work / not the creator</option>
+          <option value="other">Other</option>
+        </select>
+        <textarea id="reportDetails" maxlength="400" placeholder="Any extra details (optional)"></textarea>
+        <button type="submit" class="btn btn-secondary btn-block" id="reportSubmitBtn">Submit report</button>
+        <p class="empty-inline" id="reportMsg"></p>
+      </form>
+    `;
+
+    document.getElementById("reportForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("reportSubmitBtn");
+      const msg = document.getElementById("reportMsg");
+      btn.disabled = true;
+      btn.textContent = "Submitting…";
+
+      const { error } = await supabaseClient.from("reports").insert({
+        mod_id: mod.id,
+        reporter_id: currentUser.id,
+        reason: document.getElementById("reportReason").value,
+        details: document.getElementById("reportDetails").value.trim() || null,
+      });
+
+      if (error) {
+        console.error(error);
+        msg.textContent = "Couldn't submit the report — try again.";
+        btn.disabled = false;
+        btn.textContent = "Submit report";
+        return;
+      }
+      card.innerHTML = `<p class="empty-inline">Thanks — the team will take a look.</p>`;
+    });
+  });
 }
 
 function wireFavButton() {
