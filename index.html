@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Litterbox - Mods for Cat Goes Fishing</title>
+<link rel="icon" type="image/png" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="description" content="Browse and share mods for Cat Goes Fishing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/app.js"></script>
+<style>
+.hero {
+  padding: 44px clamp(16px, 5vw, 56px) 4px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.hero h1 {
+  font-weight: 800;
+  font-size: clamp(28px, 4.2vw, 40px);
+  line-height: 1.15;
+  margin: 0 0 12px;
+  letter-spacing: -0.8px;
+}
+.hero p { color: var(--color-text-muted); font-size: 15.5px; max-width: 62ch; margin: 0; }
+.hero p code {
+  font-family: var(--font-mono); font-size: 13px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  padding: 1px 6px; border-radius: 5px; color: var(--color-accent);
+}
+.hero-meta {
+  display: flex; gap: 18px; margin-top: 16px; flex-wrap: wrap;
+}
+
+.mods-section { padding: 20px clamp(16px, 5vw, 56px) 64px; max-width: 1180px; margin: 0 auto; }
+
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+
+.search-wrap { position: relative; flex: 1; min-width: 220px; }
+.search-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--color-text-faint); pointer-events: none; }
+#search {
+  width: 100%; background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill); color: var(--color-text);
+  padding: 11px 14px 11px 38px; font-family: var(--font-body); font-size: 14px;
+}
+#search:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+.toolbar-row2 { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+
+.pill-select {
+  position: relative; display: flex; align-items: center; gap: 6px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill); padding: 0 6px 0 14px;
+}
+.pill-select label { font-size: 13px; color: var(--color-text-muted); white-space: nowrap; margin: 0; font-weight: 500; }
+.pill-select select {
+  appearance: none; background: none; border: none; color: var(--color-text);
+  font-family: var(--font-body); font-weight: 600; font-size: 13px;
+  padding: 9px 24px 9px 4px; cursor: pointer;
+}
+.pill-select select:focus { outline: none; }
+.pill-select::after {
+  content: ""; position: absolute; right: 13px; top: 50%; width: 6px; height: 6px;
+  border-right: 1.5px solid var(--color-text-faint); border-bottom: 1.5px solid var(--color-text-faint);
+  transform: translateY(-70%) rotate(45deg); pointer-events: none;
+}
+
+.view-toggle { display: flex; border: 1px solid var(--color-border); border-radius: var(--radius-pill); overflow: hidden; }
+.view-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; background: var(--color-surface); border: none; cursor: pointer;
+  color: var(--color-text-faint);
+}
+.view-btn:hover { color: var(--color-text); }
+.view-btn.active { background: var(--color-accent-tint); color: var(--color-accent); }
+.view-btn + .view-btn { border-left: 1px solid var(--color-border); }
+
+#modCount { font-size: 13px; color: var(--color-text-faint); white-space: nowrap; margin-left: auto; }
+
+/* ---- list view (default) ---- */
+.mods-list { display: flex; flex-direction: column; gap: 10px; }
+
+@media (max-width: 600px) {
+  .hero { padding: 28px 16px 4px; }
+  .mods-section { padding: 16px 16px 48px; }
+}
+@media (max-width: 480px) {
+  .toolbar-row2 { flex-wrap: wrap; }
+  #modCount { order: 3; margin-left: 0; width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <img src="assets/logo.png" alt="" class="brand-mark">
+    <span class="brand-name">Litterbox</span>
+  </a>
+  <nav class="site-nav" id="siteNav"></nav>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Mods for Cat Goes Fishing</h1>
+    <p>Every mod is a single <code>data.win</code> file you drop into your game folder. Click a mod to see its full page.</p>
+    <div class="hero-meta" id="heroMeta"></div>
+  </section>
+
+  <section class="mods-section">
+    <div class="browse-tabs" role="tablist" style="margin-bottom: 14px;">
+      <button type="button" class="browse-tab active" id="modsTabBtn" role="tab">Mods</button>
+      <button type="button" class="browse-tab" id="creatorsTabBtn" role="tab">Creators</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input id="search" type="text" placeholder="Search mods..." aria-label="Search mods">
+      </div>
+    </div>
+
+    <div class="toolbar-row2" id="toolbarRow2">
+      <div class="pill-select">
+        <label for="sort">Sort by</label>
+        <select id="sort">
+          <option value="new">Newest</option>
+          <option value="rating">Top rated</option>
+          <option value="name">Name (A-Z)</option>
+        </select>
+      </div>
+
+      <div class="view-toggle" role="group" aria-label="Layout">
+        <button type="button" class="view-btn active" id="listViewBtn" title="List view" aria-label="List view">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 5.5h12M4 10h12M4 14.5h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" class="view-btn" id="gridViewBtn" title="Grid view" aria-label="Grid view">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="3.5" y="3.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="3.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="3.5" y="11" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="11" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
+      </div>
+
+      <span id="modCount">Loading…</span>
+    </div>
+
+    <div id="modsList" class="mods-list">
+      <div class="loading-state">Loading mods…</div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">Litterbox &middot; made for the Cat Goes Fishing community</footer>
+
+<script>
+let allMods = [];
+let allProfiles = [];
+let currentBrowseTab = "mods";
+let currentUserId = null;
+let currentSort = "new";
+
+const CUBE_ICON = `<svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 2l7 4v8l-7 4-7-4V6l7-4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+
+async function renderNav() {
+  const navEl = document.getElementById("siteNav");
+  const { data } = await supabaseClient.auth.getSession();
+  currentUserId = data.session?.user?.id || null;
+
+  if (data.session) {
+    const username = data.session.user.user_metadata?.username || data.session.user.email;
+    navEl.innerHTML = `
+      <span id="notifSlot"></span>
+      <a class="nav-link" href="profile.html?u=${encodeURIComponent(username)}">${escapeHtml(username)}</a>
+      <a class="nav-link primary" href="upload.html">+ Upload mod</a>
+      <button class="nav-link" id="logoutBtn">Log out</button>
+    `;
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.reload();
+    });
+    LB_mountNotifications(document.getElementById("notifSlot"), currentUserId);
+  } else {
+    navEl.innerHTML = `
+      <a class="nav-link" href="login.html">Log in</a>
+      <a class="nav-link primary" href="login.html">+ Upload mod</a>
+    `;
+  }
+}
+
+function renderRatingChip(rating, count) {
+  const value = Number(rating) || 0;
+  const countLabel = typeof count === "number" ? ` (${count})` : "";
+  return `<span class="stat-chip stat-rating">${STAR_ICON}<strong>${value.toFixed(1)}</strong>${countLabel}</span>`;
+}
+
+function iconInitials(name) {
+  if (!name) return "?";
+  const words = name.trim().split(/\s+/);
+  const initials = words.slice(0, 2).map(w => w[0]?.toUpperCase() || "").join("");
+  return initials || "?";
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return "";
+  const then = new Date(dateStr).getTime();
+  const now = Date.now();
+  const diffSec = Math.max(1, Math.floor((now - then) / 1000));
+  const units = [
+    [31536000, "year"], [2592000, "month"], [86400, "day"],
+    [3600, "hour"], [60, "minute"], [1, "second"]
+  ];
+  for (const [secs, label] of units) {
+    const val = Math.floor(diffSec / secs);
+    if (val >= 1) return `${val} ${label}${val > 1 ? "s" : ""} ago`;
+  }
+  return "just now";
+}
+
+function isTrustedStorageUrl(url) {
+  return typeof url === "string" && url.startsWith(TRUSTED_STORAGE_PREFIX);
+}
+
+function sortMods(mods) {
+  const copy = [...mods];
+  if (currentSort === "rating") copy.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  else if (currentSort === "name") copy.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  else copy.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  return copy;
+}
+
+function renderMods(mods) {
+  const listEl = document.getElementById("modsList");
+  const countEl = document.getElementById("modCount");
+
+  if (mods.length === 0) {
+    listEl.innerHTML = `<div class="empty-state">No mods found.</div>`;
+    countEl.textContent = "0 mods";
+    return;
+  }
+
+  countEl.textContent = `${mods.length} mod${mods.length === 1 ? "" : "s"}`;
+
+  listEl.innerHTML = sortMods(mods).map(mod => LB_renderModCard(mod, { currentUserId })).join("");
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function applyFilters() {
+  const query = document.getElementById("search").value.trim().toLowerCase();
+  if (currentBrowseTab === "creators") {
+    if (!query) { renderCreators(allProfiles); return; }
+    renderCreators(allProfiles.filter(p =>
+      (p.username || "").toLowerCase().includes(query) ||
+      (p.bio || "").toLowerCase().includes(query)
+    ));
+    return;
+  }
+  if (!query) {
+    renderMods(allMods);
+    return;
+  }
+  const filtered = allMods.filter(mod =>
+    (mod.name || "").toLowerCase().includes(query) ||
+    (mod.author || "").toLowerCase().includes(query) ||
+    (mod.description || "").toLowerCase().includes(query)
+  );
+  renderMods(filtered);
+}
+
+async function loadMods() {
+  const listEl = document.getElementById("modsList");
+  const countEl = document.getElementById("modCount");
+
+  const { data, error } = await supabaseClient
+    .from("mods")
+    .select("*, profiles!mods_profiles_fkey(is_verified)")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error loading mods:", error);
+    listEl.innerHTML = `<div class="error-state">Couldn't load mods. Please try again later.</div>`;
+    countEl.textContent = "";
+    return;
+  }
+
+  allMods = data || [];
+  renderMods(allMods);
+  renderHeroMeta(allMods);
+}
+
+function renderHeroMeta(mods) {
+  const totalDownloads = mods.reduce((sum, m) => sum + (m.download_count || 0), 0);
+  document.getElementById("heroMeta").innerHTML = `
+    <span class="stat-chip">${CUBE_ICON}<strong>${mods.length}</strong> mod${mods.length === 1 ? "" : "s"}</span>
+    <span class="stat-chip">${DOWNLOAD_ICON}<strong>${LB_formatCount(totalDownloads)}</strong> total downloads</span>
+  `;
+}
+
+function renderCreators(profiles) {
+  const listEl = document.getElementById("modsList");
+  const countEl = document.getElementById("modCount");
+
+  if (profiles.length === 0) {
+    listEl.innerHTML = `<div class="empty-state">No creators found.</div>`;
+    countEl.textContent = "0 creators";
+    return;
+  }
+
+  countEl.textContent = `${profiles.length} creator${profiles.length === 1 ? "" : "s"}`;
+
+  const sorted = [...profiles].sort((a, b) => (b._modCount || 0) - (a._modCount || 0));
+  listEl.innerHTML = sorted.map(p => {
+    const safeAvatar = isTrustedStorageUrl(p.avatar_url) ? escapeHtml(p.avatar_url) : null;
+    return `
+      <a class="creator-row" href="profile.html?u=${encodeURIComponent(p.username)}">
+        <div class="creator-avatar">${safeAvatar ? `<img src="${safeAvatar}" alt="">` : iconInitials(p.username)}</div>
+        <div class="creator-main">
+          <p class="creator-name">${escapeHtml(p.username)}${p.is_verified ? VERIFIED_BADGE : ""}</p>
+          <p class="creator-bio">${escapeHtml(p.bio || "No bio yet.")}</p>
+        </div>
+        <div class="creator-stats">
+          <span class="stat-chip">${CUBE_ICON}<strong>${p._modCount || 0}</strong></span>
+          <span class="stat-chip">${DOWNLOAD_ICON}<strong>${LB_formatCount(p._downloadCount || 0)}</strong></span>
+        </div>
+      </a>
+    `;
+  }).join("");
+}
+
+async function loadProfiles() {
+  if (allProfiles.length > 0) return;
+  const { data, error } = await supabaseClient.from("profiles").select("*");
+  if (error) {
+    console.error("Error loading creators:", error);
+    return;
+  }
+  const statsByUser = {};
+  allMods.forEach(m => {
+    if (!m.user_id) return;
+    if (!statsByUser[m.user_id]) statsByUser[m.user_id] = { mods: 0, downloads: 0 };
+    statsByUser[m.user_id].mods += 1;
+    statsByUser[m.user_id].downloads += m.download_count || 0;
+  });
+  allProfiles = (data || [])
+    .filter(p => p.username)
+    .map(p => ({ ...p, _modCount: statsByUser[p.id]?.mods || 0, _downloadCount: statsByUser[p.id]?.downloads || 0 }));
+}
+
+async function switchTab(tab) {
+  currentBrowseTab = tab;
+  document.getElementById("modsTabBtn").classList.toggle("active", tab === "mods");
+  document.getElementById("creatorsTabBtn").classList.toggle("active", tab === "creators");
+  document.getElementById("toolbarRow2").style.display = tab === "mods" ? "flex" : "none";
+  document.getElementById("search").placeholder = tab === "mods" ? "Search mods..." : "Search creators...";
+  document.getElementById("search").value = "";
+
+  if (tab === "creators") {
+    document.getElementById("modsList").innerHTML = `<div class="loading-state">Loading creators…</div>`;
+    await loadProfiles();
+    renderCreators(allProfiles);
+  } else {
+    renderMods(allMods);
+  }
+}
+document.getElementById("modsTabBtn").addEventListener("click", () => switchTab("mods"));
+document.getElementById("creatorsTabBtn").addEventListener("click", () => switchTab("creators"));
+
+document.getElementById("search").addEventListener("input", applyFilters);
+document.getElementById("sort").addEventListener("change", (e) => {
+  currentSort = e.target.value;
+  applyFilters();
+});
+
+function setView(mode) {
+  const listEl = document.getElementById("modsList");
+  const listBtn = document.getElementById("listViewBtn");
+  const gridBtn = document.getElementById("gridViewBtn");
+  listEl.classList.toggle("grid", mode === "grid");
+  listBtn.classList.toggle("active", mode === "list");
+  gridBtn.classList.toggle("active", mode === "grid");
+  localStorage.setItem("litterbox-view", mode);
+}
+document.getElementById("listViewBtn").addEventListener("click", () => setView("list"));
+document.getElementById("gridViewBtn").addEventListener("click", () => setView("grid"));
+setView(localStorage.getItem("litterbox-view") === "grid" ? "grid" : "list");
+
+async function init() {
+  await renderNav();
+  await loadMods();
+}
+
+init();
+</script>
+
+</body>
+</html>
