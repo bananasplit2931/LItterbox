@@ -180,6 +180,12 @@ async function renderNav() {
       window.location.reload();
     });
     LB_mountNotifications(document.getElementById("notifSlot"), currentUserId);
+
+    supabaseClient.from("profiles").select("is_admin").eq("id", currentUserId).single().then(({ data: profile }) => {
+      if (profile?.is_admin) {
+        document.getElementById("logoutBtn").insertAdjacentHTML("beforebegin", `<a class="nav-link" href="admin.html">Admin</a>`);
+      }
+    });
   } else {
     navEl.innerHTML = `
       <a class="nav-link" href="login.html">Log in</a>
