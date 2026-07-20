@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign up - Litterbox</title>
+<link rel="icon" type="image/png" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/app.js"></script>
+<style>
+.auth-wrap { max-width: 380px; margin: 64px auto; padding: 0 20px; }
+.auth-card h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: -0.3px; }
+.auth-card p.sub { color: var(--color-text-muted); font-size: 14px; margin: 0 0 22px; }
+.auth-footer-link { text-align: center; font-size: 13px; color: var(--color-text-muted); margin-top: 20px; }
+.auth-footer-link a { font-weight: 600; text-decoration: none; }
+.auth-footer-link a:hover { text-decoration: underline; }
+@media (max-width: 480px) { .auth-wrap { margin: 36px auto; } .auth-card { padding: 20px; } }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <img src="assets/logo.png" alt="" class="brand-mark">
+    <span class="brand-name">Litterbox</span>
+  </a>
+  <a class="nav-link" href="index.html">← Back to mods</a>
+</header>
+
+<div class="auth-wrap">
+  <div class="card auth-card">
+    <h1>Create an account</h1>
+    <p class="sub">Sign up to upload and manage your mods.</p>
+
+    <div id="formMsg" class="form-msg"></div>
+
+    <form id="registerForm">
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+" autocomplete="username" placeholder="e.g. fishercat123">
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" required autocomplete="new-password" minlength="6">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Sign up</button>
+    </form>
+
+    <p class="auth-footer-link">Already have an account? <a href="login.html">Log in</a></p>
+  </div>
+</div>
+
+<script>
+
+supabaseClient.auth.getSession().then(({ data }) => {
+  if (data.session) window.location.href = "upload.html";
+});
+
+const form = document.getElementById("registerForm");
+const msgEl = document.getElementById("formMsg");
+const submitBtn = document.getElementById("submitBtn");
+
+function showMessage(text, type) {
+  msgEl.textContent = text;
+  msgEl.className = "form-msg " + type;
+}
+
+const BLOCKED_WORDS = [
+  "fuck", "shit", "bitch", "asshole", "bastard", "cunt", "dick", "piss",
+  "slut", "whore", "rape", "nazi", "hitler"
+];
+
+function containsBlockedWord(text) {
+  const normalized = text.toLowerCase();
+  return BLOCKED_WORDS.some(word => normalized.includes(word));
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = document.getElementById("username").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (containsBlockedWord(username)) {
+    showMessage("That username isn't allowed. Please choose another.", "error");
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Signing up…";
+  msgEl.className = "form-msg";
+
+  const { data, error } = await supabaseClient.auth.signUp({
+    email,
+    password,
+    options: { data: { username } }
+  });
+
+  if (error) {
+    const friendly = /duplicate key|unique constraint/i.test(error.message)
+      ? "That username is already taken. Please choose another."
+      : error.message;
+    showMessage(friendly, "error");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Sign up";
+    return;
+  }
+
+  if (!data.session) {
+    showMessage("Account created. Check your email to confirm before logging in.", "success");
+    submitBtn.textContent = "Sign up";
+    form.reset();
+    return;
+  }
+
+  showMessage("Account created, redirecting…", "success");
+  window.location.href = "upload.html";
+});
+</script>
+
+</body>
+</html>

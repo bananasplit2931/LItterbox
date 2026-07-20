@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile - Litterbox</title>
+<link rel="icon" type="image/png" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/app.js"></script>
+<style>
+.mini-mod-list { display: flex; flex-direction: column; gap: 10px; }
+.mini-mod-row {
+  display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); text-decoration: none; color: inherit;
+  transition: border-color .12s ease, background .12s ease, transform .12s ease, box-shadow .12s ease;
+}
+.mini-mod-row:hover {
+  border-color: var(--color-border-strong); background: var(--color-surface-hover);
+  transform: translateY(-1px); box-shadow: var(--shadow-hover);
+}
+.mini-mod-icon {
+  width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--color-accent-tint);
+  display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
+  font-family: var(--font-mono); font-weight: 700; font-size: 12px; color: var(--color-accent);
+}
+.mini-mod-icon img { width: 100%; height: 100%; object-fit: cover; }
+.mini-mod-name { font-weight: 600; font-size: 14px; margin: 0; }
+.mini-mod-stats { margin-left: auto; display: flex; gap: 10px; flex-shrink: 0; }
+
+.edit-toggle-link { font-size: 13px; font-weight: 600; }
+.avatar-file-input { max-width: 260px; }
+.avatar-edit-row { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.avatar-edit-preview { width: 64px; height: 64px; font-size: 18px; border-width: 2px; flex-shrink: 0; }
+.avatar-field { flex: 1; margin-bottom: 0; }
+.profile-section .card { max-width: 460px; }
+@media (max-width: 480px) {
+  .profile-head { padding: 20px 16px 4px; }
+  .profile-avatar { width: 72px; height: 72px; font-size: 20px; }
+  .profile-info h1 { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <img src="assets/logo.png" alt="" class="brand-mark">
+    <span class="brand-name">Litterbox</span>
+  </a>
+  <nav class="site-nav" id="siteNav"></nav>
+</header>
+
+<div id="gate" class="gate-state">Loading profile…</div>
+
+<div id="pageWrap" style="display:none;">
+  <div class="profile-head">
+    <div class="profile-avatar" id="avatarEl"></div>
+    <div class="profile-info">
+      <h1 id="usernameEl"></h1>
+      <p class="profile-bio" id="bioEl"></p>
+      <div class="profile-stats-row">
+        <span class="stat-chip" id="statMods"></span>
+        <span class="stat-chip" id="statDownloads"></span>
+        <span class="stat-chip" id="statFavorited"></span>
+      </div>
+    </div>
+    <a class="edit-toggle-link" href="#" id="editToggle" style="display:none;">Edit profile</a>
+  </div>
+
+  <div class="profile-section" id="editSection" style="display:none;">
+    <div class="card">
+      <h2>Edit your profile</h2>
+      <div id="editMsg" class="form-msg"></div>
+      <form id="editProfileForm" class="profile-edit-form">
+        <div class="avatar-edit-row">
+          <div class="profile-avatar avatar-edit-preview" id="avatarPreviewEl"></div>
+          <div class="field avatar-field">
+            <label for="avatarInput">Avatar</label>
+            <div class="file-input avatar-file-input">
+              <input type="file" id="avatarInput" accept="image/*">
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="bioInput">Bio <span class="field-hint-inline" id="bioCount">0/240</span></label>
+          <textarea id="bioInput" maxlength="240" placeholder="A short line about you and what you make."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" id="saveProfileBtn">Save profile</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="profile-section">
+    <h2>Badges</h2>
+    <div id="badgesEl"></div>
+  </div>
+
+  <div class="profile-section">
+    <h2>Mods</h2>
+    <div id="modsEl" class="mini-mod-list"></div>
+  </div>
+
+  <div class="profile-section">
+    <h2>Favorited mods</h2>
+    <div id="favoritesEl" class="mini-mod-list"></div>
+  </div>
+</div>
+
+<footer class="site-footer">Litterbox &middot; made for the Cat Goes Fishing community</footer>
+
+<script>
+const gateEl = document.getElementById("gate");
+const pageWrapEl = document.getElementById("pageWrap");
+
+let currentUser = null;
+let profileUser = null;
+
+// STAR_ICON, DOWNLOAD_ICON i VERIFIED_BADGE są już zadeklarowane globalnie
+// w assets/app.js (ładowanym przed tym skryptem) — NIE deklaruj ich tu ponownie,
+// bo `const` redeklarowany w tym samym zasięgu globalnym to SyntaxError, który
+// wywala CAŁY ten blok <script> (i przez to strona wisi na "Loading profile…").
+const CUBE_ICON = `<svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 2l7 4v8l-7 4-7-4V6l7-4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+
+async function renderNav() {
+  const navEl = document.getElementById("siteNav");
+  const { data } = await supabaseClient.auth.getSession();
+  currentUser = data.session?.user || null;
+
+  if (currentUser) {
+    const username = currentUser.user_metadata?.username || currentUser.email;
+    navEl.innerHTML = `
+      <span id="notifSlot"></span>
+      <a class="nav-link" href="profile.html?u=${encodeURIComponent(username)}">${escapeHtml(username)}</a>
+      <a class="nav-link primary" href="upload.html">+ Upload mod</a>
+      <button class="nav-link" id="logoutBtn">Log out</button>
+    `;
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.reload();
+    });
+    LB_mountNotifications(document.getElementById("notifSlot"), currentUser.id);
+  } else {
+    navEl.innerHTML = `
+      <a class="nav-link" href="login.html">Log in</a>
+      <a class="nav-link primary" href="login.html">+ Upload mod</a>
+    `;
+  }
+}
+
+function renderMiniMod(mod) {
+  const safeIconUrl = isTrustedStorageUrl(mod.icon_url) ? escapeHtml(mod.icon_url) : null;
+  return `
+    <a class="mini-mod-row" href="mod.html?id=${encodeURIComponent(mod.id)}">
+      <div class="mini-mod-icon">${safeIconUrl ? `<img src="${safeIconUrl}" alt="">` : iconInitials(mod.name)}</div>
+      <p class="mini-mod-name">${escapeHtml(mod.name)}</p>
+      <div class="mini-mod-stats">
+        <span class="stat-chip">${DOWNLOAD_ICON}${LB_formatCount(mod.download_count ?? 0)}</span>
+        <span class="stat-chip stat-rating">${STAR_ICON}${Number(mod.rating || 0).toFixed(1)}</span>
+      </div>
+    </a>
+  `;
+}
+
+async function loadAndRenderMods(userId) {
+  const { data } = await supabaseClient
+    .from("mods")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  const mods = data || [];
+  document.getElementById("modsEl").innerHTML = mods.length
+    ? mods.map(renderMiniMod).join("")
+    : `<p class="empty-inline">No mods uploaded yet.</p>`;
+
+  const totalDownloads = mods.reduce((sum, m) => sum + (m.download_count || 0), 0);
+  document.getElementById("statMods").innerHTML = `${CUBE_ICON}<strong>${mods.length}</strong> mod${mods.length === 1 ? "" : "s"}`;
+  document.getElementById("statDownloads").innerHTML = `${DOWNLOAD_ICON}<strong>${LB_formatCount(totalDownloads)}</strong> total downloads`;
+}
+
+async function loadAndRenderFavorites(userId) {
+  const { data } = await supabaseClient
+    .from("mod_favorites")
+    .select("mod_id, mods(*)")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  const favMods = (data || []).map(row => row.mods).filter(Boolean);
+  document.getElementById("favoritesEl").innerHTML = favMods.length
+    ? favMods.map(renderMiniMod).join("")
+    : `<p class="empty-inline">No favorited mods yet.</p>`;
+  document.getElementById("statFavorited").innerHTML = `${STAR_ICON}<strong>${favMods.length}</strong> favorited`;
+}
+
+async function loadAndRenderBadges(userId) {
+  const { data } = await supabaseClient
+    .from("user_badges")
+    .select("*")
+    .eq("user_id", userId)
+    .order("earned_at", { ascending: false });
+  document.getElementById("badgesEl").innerHTML = LB_renderBadges(data || []);
+}
+
+function wireEditProfile() {
+  const toggle = document.getElementById("editToggle");
+  const section = document.getElementById("editSection");
+  toggle.style.display = "inline-block";
+  toggle.addEventListener("click", (e) => {
+    e.preventDefault();
+    section.style.display = section.style.display === "none" ? "block" : "none";
+  });
+
+  const bioInput = document.getElementById("bioInput");
+  const bioCount = document.getElementById("bioCount");
+  bioInput.value = profileUser.bio || "";
+  const updateBioCount = () => { bioCount.textContent = `${bioInput.value.length}/240`; };
+  updateBioCount();
+  bioInput.addEventListener("input", updateBioCount);
+
+  const avatarPreviewEl = document.getElementById("avatarPreviewEl");
+  const safeCurrentAvatar = isTrustedStorageUrl(profileUser.avatar_url) ? escapeHtml(profileUser.avatar_url) : null;
+  avatarPreviewEl.innerHTML = safeCurrentAvatar ? `<img src="${safeCurrentAvatar}" alt="">` : iconInitials(profileUser.username);
+  document.getElementById("avatarInput").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    avatarPreviewEl.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="">`;
+  });
+
+  const form = document.getElementById("editProfileForm");
+  const msgEl = document.getElementById("editMsg");
+  const saveBtn = document.getElementById("saveProfileBtn");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving…";
+    msgEl.className = "form-msg";
+
+    try {
+      const updates = { bio: document.getElementById("bioInput").value.trim() };
+      const avatarFile = document.getElementById("avatarInput").files[0];
+
+      if (avatarFile) {
+        const safeName = avatarFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${currentUser.id}/avatars/${Date.now()}-${safeName}`;
+        const { error: uploadError } = await supabaseClient.storage
+          .from("mod-uploads").upload(path, avatarFile, { upsert: false });
+        if (uploadError) throw uploadError;
+        const { data } = supabaseClient.storage.from("mod-uploads").getPublicUrl(path);
+        updates.avatar_url = data.publicUrl;
+      }
+
+      const { error: updateError } = await supabaseClient
+        .from("profiles").update(updates).eq("id", currentUser.id);
+      if (updateError) throw updateError;
+
+      profileUser = { ...profileUser, ...updates };
+      renderIdentity();
+      msgEl.textContent = "Saved.";
+      msgEl.className = "form-msg success";
+    } catch (err) {
+      console.error(err);
+      msgEl.textContent = err.message || "Couldn't save your profile.";
+      msgEl.className = "form-msg error";
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save profile";
+    }
+  });
+}
+
+function renderIdentity() {
+  const safeAvatar = isTrustedStorageUrl(profileUser.avatar_url) ? escapeHtml(profileUser.avatar_url) : null;
+  document.getElementById("avatarEl").innerHTML = safeAvatar
+    ? `<img src="${safeAvatar}" alt="">`
+    : iconInitials(profileUser.username);
+  document.getElementById("usernameEl").innerHTML = `${escapeHtml(profileUser.username)}${profileUser.is_verified ? VERIFIED_BADGE : ""}`;
+  document.getElementById("bioEl").textContent = profileUser.bio || "No bio yet.";
+}
+
+async function init() {
+  await renderNav();
+
+  const username = new URLSearchParams(window.location.search).get("u");
+  if (!username) {
+    gateEl.textContent = "No user specified.";
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("*")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (error || !data) {
+    gateEl.textContent = "That user doesn't exist.";
+    return;
+  }
+
+  profileUser = data;
+  document.title = `${profileUser.username} - Litterbox`;
+  renderIdentity();
+
+  await Promise.all([
+    loadAndRenderMods(profileUser.id),
+    loadAndRenderFavorites(profileUser.id),
+    loadAndRenderBadges(profileUser.id),
+  ]);
+
+  if (currentUser && currentUser.id === profileUser.id) {
+    try {
+      wireEditProfile();
+    } catch (err) {
+      console.error("wireEditProfile failed:", err);
+    }
+  }
+
+  gateEl.style.display = "none";
+  pageWrapEl.style.display = "block";
+}
+
+init();
+</script>
+
+</body>
+</html>
