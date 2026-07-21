@@ -12,6 +12,26 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const TRUSTED_STORAGE_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/mod-uploads/`;
 const STORAGE_PREFIX = TRUSTED_STORAGE_PREFIX;
 
+// ---------- Discord OAuth (used by login.html + register.html) ----------
+// One call handles both sign-in and sign-up: Supabase creates the account
+// on first login automatically. `button` gets disabled while the redirect
+// kicks in, `msgEl` (the page's #formMsg) shows the error if the OAuth
+// call itself fails before the redirect happens.
+async function LB_signInWithDiscord(button, msgEl, redirectPath = "upload.html") {
+  if (button) button.disabled = true;
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: "discord",
+    options: { redirectTo: `${window.location.origin}/${redirectPath}` }
+  });
+  if (error) {
+    if (msgEl) {
+      msgEl.textContent = error.message;
+      msgEl.className = "form-msg error";
+    }
+    if (button) button.disabled = false;
+  }
+}
+
 const BADGES = {
   downloads_5:   { icon: "⭳", label: "5 Downloads" },
   downloads_50:  { icon: "⭳", label: "50 Downloads" },
