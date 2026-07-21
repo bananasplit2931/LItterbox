@@ -16,8 +16,7 @@
 <style>
 .page-wrap { max-width: 1060px; margin: 0 auto; padding: 0 clamp(16px, 5vw, 56px) 64px; }
 
-.banner {
-  height: 220px; margin: 24px 0 0; border-radius: var(--radius-lg);
+.banner { height: 220px; margin: 24px 0 0; border-radius: var(--radius-lg);
   background: linear-gradient(135deg, #182620, #10221c);
   position: relative; overflow: hidden; border: 1px solid var(--color-border);
 }
@@ -458,9 +457,15 @@ function wireFavButton() {
   if (!favBtn) return;
   favBtn.addEventListener("click", async () => {
     favBtn.disabled = true;
+    const wasFavorited = myFavorited;
     myFavorited = await LB_toggleFavorite(currentMod.id, currentUser.id, myFavorited);
-    currentMod.favorite_count = Math.max(0, (currentMod.favorite_count || 0) + (myFavorited ? 1 : -1));
-    document.getElementById("modHeadMeta").innerHTML = renderMetaRow(currentMod);
+    // Only touch the count/meta row if the toggle actually went through —
+    // otherwise a rejected write (e.g. an RLS policy blocking the insert)
+    // would still bump the displayed number even though nothing saved.
+    if (myFavorited !== wasFavorited) {
+      currentMod.favorite_count = Math.max(0, (currentMod.favorite_count || 0) + (myFavorited ? 1 : -1));
+      document.getElementById("modHeadMeta").innerHTML = renderMetaRow(currentMod);
+    }
     favBtn.outerHTML = LB_renderFavoriteBtn(myFavorited, currentMod.favorite_count);
     wireFavButton();
   });
@@ -471,9 +476,14 @@ function wireFollowButton() {
   if (!followBtn) return;
   followBtn.addEventListener("click", async () => {
     followBtn.disabled = true;
+    const wasFollowing = myFollowing;
     myFollowing = await LB_toggleFollow(currentMod.id, currentUser.id, myFollowing);
-    currentMod.follow_count = Math.max(0, (currentMod.follow_count || 0) + (myFollowing ? 1 : -1));
-    document.getElementById("modHeadMeta").innerHTML = renderMetaRow(currentMod);
+    // Same reasoning as wireFavButton: don't move the counter unless the
+    // follow/unfollow write actually succeeded.
+    if (myFollowing !== wasFollowing) {
+      currentMod.follow_count = Math.max(0, (currentMod.follow_count || 0) + (myFollowing ? 1 : -1));
+      document.getElementById("modHeadMeta").innerHTML = renderMetaRow(currentMod);
+    }
     followBtn.outerHTML = LB_renderFollowBtn(myFollowing, currentMod.follow_count);
     wireFollowButton();
   });
