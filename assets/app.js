@@ -211,13 +211,19 @@ async function LB_isFavorited(modId, userId) {
 
 async function LB_toggleFavorite(modId, userId, currentlyFavorited) {
   if (!userId) return currentlyFavorited;
-  if (currentlyFavorited) {
-    await supabaseClient.from("mod_favorites").delete().eq("mod_id", modId).eq("user_id", userId);
-    return false;
-  } else {
-    await supabaseClient.from("mod_favorites").insert({ mod_id: modId, user_id: userId });
-    return true;
+  // IMPORTANT: check `error` before reporting success — previously this
+  // returned the "new" state unconditionally even when the insert/delete
+  // was rejected (e.g. by an RLS policy), which made the heart look
+  // toggled in the UI while nothing changed in the database.
+  const { error } = currentlyFavorited
+    ? await supabaseClient.from("mod_favorites").delete().eq("mod_id", modId).eq("user_id", userId)
+    : await supabaseClient.from("mod_favorites").insert({ mod_id: modId, user_id: userId });
+
+  if (error) {
+    console.error("Error toggling favorite (check RLS policies on mod_favorites):", error);
+    return currentlyFavorited;
   }
+  return !currentlyFavorited;
 }
 
 function LB_renderFavoriteBtn(favorited, count) {
@@ -366,13 +372,17 @@ async function LB_isFollowing(modId, userId) {
 
 async function LB_toggleFollow(modId, userId, currentlyFollowing) {
   if (!userId) return currentlyFollowing;
-  if (currentlyFollowing) {
-    await supabaseClient.from("mod_follows").delete().eq("mod_id", modId).eq("user_id", userId);
-    return false;
-  } else {
-    await supabaseClient.from("mod_follows").insert({ mod_id: modId, user_id: userId });
-    return true;
+  // Same fix as LB_toggleFavorite above: check `error` before claiming
+  // the toggle succeeded, instead of always returning the flipped state.
+  const { error } = currentlyFollowing
+    ? await supabaseClient.from("mod_follows").delete().eq("mod_id", modId).eq("user_id", userId)
+    : await supabaseClient.from("mod_follows").insert({ mod_id: modId, user_id: userId });
+
+  if (error) {
+    console.error("Error toggling follow (check RLS policies on mod_follows):", error);
+    return currentlyFollowing;
   }
+  return !currentlyFollowing;
 }
 
 function LB_renderFollowBtn(following, count) {
