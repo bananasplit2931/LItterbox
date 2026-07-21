@@ -102,8 +102,11 @@ function LB_renderModCard(mod, opts = {}) {
   </div>
   </div>
   <div class="mod-side">
+  <div class="mod-stats-row">
   ${LB_renderRatingChip(mod.rating, mod.rating_count)}
-  <span class="stat-chip stat-dl">${DOWNLOAD_ICON}<strong>${LB_formatCount(mod.download_count ?? 0)}</strong></span>
+  <span class="stat-chip">${DOWNLOAD_ICON}<strong>${LB_formatCount(mod.download_count ?? 0)}</strong></span>
+  </div>
+  <span class="stat-chip">${CLOCK_ICON}${mod.created_at ? timeAgo(mod.created_at) : "just now"}</span>
   </div>
   </${tag}>
   `;
