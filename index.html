@@ -39,30 +39,12 @@
 
 .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
 
-.search-wrap { position: relative; display: flex; align-items: center; height: 38px; }
-
-.search-icon-btn {
-  position: absolute; left: 0; top: 0; width: 38px; height: 38px; z-index: 2;
-  display: flex; align-items: center; justify-content: center;
-  background: none; border: none; border-radius: var(--radius-pill);
-  color: var(--color-text-faint); cursor: pointer;
-}
-.search-icon-btn:hover { color: var(--color-text); }
-
+.search-wrap { position: relative; flex: 1; min-width: 220px; }
+.search-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--color-text-faint); pointer-events: none; }
 #search {
-  width: 38px; height: 38px;
-  background: var(--color-surface); border: 1px solid var(--color-border);
+  width: 100%; background: var(--color-surface); border: 1px solid var(--color-border);
   border-radius: var(--radius-pill); color: var(--color-text);
-  padding: 0 14px 0 38px; font-family: var(--font-body); font-size: 14px;
-  opacity: 0; cursor: pointer;
-  transition: width .3s cubic-bezier(.4,0,.2,1), opacity .2s ease .05s;
-}
-.search-wrap:hover #search,
-.search-wrap.expanded #search,
-#search:focus {
-  width: min(320px, 60vw);
-  opacity: 1;
-  cursor: text;
+  padding: 11px 14px 11px 38px; font-family: var(--font-body); font-size: 14px;
 }
 #search:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
 
@@ -118,15 +100,6 @@
     <img src="assets/logo.png" alt="" class="brand-mark">
     <span class="brand-name">Litterbox</span>
   </a>
-
-  <div class="header-actions">
-    <div class="header-right" id="headerRight"></div>
-    <button type="button" class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="siteNav">
-      <svg class="icon-burger" width="19" height="19" viewBox="0 0 20 20" fill="none"><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-      <svg class="icon-close" width="19" height="19" viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-    </button>
-  </div>
-
   <nav class="site-nav" id="siteNav"></nav>
 </header>
 
@@ -144,10 +117,8 @@
     </div>
 
     <div class="toolbar">
-      <div class="search-wrap" id="searchWrap">
-        <button type="button" class="search-icon-btn" id="searchToggle" aria-label="Open search">
-          <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        </button>
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         <input id="search" type="text" placeholder="Search mods..." aria-label="Search mods">
       </div>
     </div>
@@ -193,14 +164,13 @@ const CUBE_ICON = `<svg width="13" height="13" viewBox="0 0 20 20" fill="none"><
 
 async function renderNav() {
   const navEl = document.getElementById("siteNav");
-  const rightEl = document.getElementById("headerRight");
   const { data } = await supabaseClient.auth.getSession();
   currentUserId = data.session?.user?.id || null;
 
   if (data.session) {
     const username = data.session.user.user_metadata?.username || data.session.user.email;
-    rightEl.innerHTML = `<span id="notifSlot"></span>`;
     navEl.innerHTML = `
+      <span id="notifSlot"></span>
       <a class="nav-link" href="profile.html?u=${encodeURIComponent(username)}">${escapeHtml(username)}</a>
       <a class="nav-link primary" href="upload.html">+ Upload mod</a>
       <button class="nav-link" id="logoutBtn">Log out</button>
@@ -217,7 +187,6 @@ async function renderNav() {
       }
     });
   } else {
-    rightEl.innerHTML = "";
     navEl.innerHTML = `
       <a class="nav-link" href="login.html">Log in</a>
       <a class="nav-link primary" href="login.html">+ Upload mod</a>
@@ -407,29 +376,7 @@ async function switchTab(tab) {
 document.getElementById("modsTabBtn").addEventListener("click", () => switchTab("mods"));
 document.getElementById("creatorsTabBtn").addEventListener("click", () => switchTab("creators"));
 
-const searchWrap = document.getElementById("searchWrap");
-const searchToggle = document.getElementById("searchToggle");
-const searchInput = document.getElementById("search");
-
-searchInput.addEventListener("input", applyFilters);
-searchToggle.addEventListener("click", () => {
-  searchWrap.classList.add("expanded");
-  searchInput.focus();
-});
-searchInput.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
-    searchInput.value = "";
-    searchInput.blur();
-    searchWrap.classList.remove("expanded");
-    applyFilters();
-  }
-});
-document.addEventListener("click", (e) => {
-  if (!searchWrap.contains(e.target) && !searchInput.value) {
-    searchWrap.classList.remove("expanded");
-  }
-});
-
+document.getElementById("search").addEventListener("input", applyFilters);
 document.getElementById("sort").addEventListener("change", (e) => {
   currentSort = e.target.value;
   applyFilters();
@@ -447,29 +394,6 @@ function setView(mode) {
 document.getElementById("listViewBtn").addEventListener("click", () => setView("list"));
 document.getElementById("gridViewBtn").addEventListener("click", () => setView("grid"));
 setView(localStorage.getItem("litterbox-view") === "grid" ? "grid" : "list");
-
-const menuToggle = document.getElementById("menuToggle");
-const siteNavEl = document.getElementById("siteNav");
-menuToggle.addEventListener("click", (e) => {
-  e.stopPropagation();
-  const isOpen = siteNavEl.classList.toggle("open");
-  menuToggle.classList.toggle("open", isOpen);
-  menuToggle.setAttribute("aria-expanded", String(isOpen));
-});
-siteNavEl.addEventListener("click", (e) => {
-  if (e.target.closest("a, button")) {
-    siteNavEl.classList.remove("open");
-    menuToggle.classList.remove("open");
-    menuToggle.setAttribute("aria-expanded", "false");
-  }
-});
-document.addEventListener("click", (e) => {
-  if (siteNavEl.classList.contains("open") && !siteNavEl.contains(e.target) && !menuToggle.contains(e.target)) {
-    siteNavEl.classList.remove("open");
-    menuToggle.classList.remove("open");
-    menuToggle.setAttribute("aria-expanded", "false");
-  }
-});
 
 async function init() {
   await renderNav();
