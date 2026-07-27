@@ -33,19 +33,16 @@ async function LB_signInWithDiscord(button, msgEl, redirectPath = "upload.html")
 }
 
 const BADGES = {
-  downloads_5:   { icon: `<i class="fa-solid fa-download"></i>`, label: "5 Downloads" },
-  downloads_50:  { icon: `<i class="fa-solid fa-download"></i>`, label: "50 Downloads" },
-  downloads_100: { icon: `<i class="fa-solid fa-download"></i>`, label: "100 Downloads" },
-  favorites_10:  { icon: `<i class="fa-solid fa-heart"></i>`, label: "10 Favorites" },
+  downloads_5:   { icon: "⭳", label: "5 Downloads" },
+  downloads_50:  { icon: "⭳", label: "50 Downloads" },
+  downloads_100: { icon: "⭳", label: "100 Downloads" },
+  favorites_10:  { icon: "★", label: "10 Favorites" },
 };
 
-// ---------- Font Awesome icon snippets ----------
-// Solid style throughout, except heart/bell which pair Regular (off) with
-// Solid (on) so toggle buttons still read as empty vs. filled.
-const BELL_ICON = `<i class="fa-regular fa-bell"></i>`;
-const BELL_ICON_FILLED = `<i class="fa-solid fa-bell"></i>`;
-const HEART_ICON = `<i class="fa-regular fa-heart"></i>`;
-const HEART_ICON_FILLED = `<i class="fa-solid fa-heart"></i>`;
+const BELL_ICON = `<svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M5 8a5 5 0 0 1 10 0c0 3 1 4.2 1.5 5H3.5C4 12.2 5 11 5 8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 15.5a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+const HEART_ICON = `<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M10 17s-6.5-4-6.5-8.7A3.8 3.8 0 0 1 10 5.7 3.8 3.8 0 0 1 16.5 8.3C16.5 13 10 17 10 17Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+const HEART_ICON_FILLED = `<svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path d="M10 17s-6.5-4-6.5-8.7A3.8 3.8 0 0 1 10 5.7 3.8 3.8 0 0 1 16.5 8.3C16.5 13 10 17 10 17Z"/></svg>`;
+const BELL_ICON_FILLED = `<svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path d="M5 8a5 5 0 0 1 10 0c0 3 1 4.2 1.5 5H3.5C4 12.2 5 11 5 8Z"/><path d="M8 15.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
 
 function escapeHtml(str) {
   const div = document.createElement("div");
@@ -63,36 +60,20 @@ function iconInitials(name) {
   return words.slice(0, 2).map(w => w[0]?.toUpperCase() || "").join("") || "?";
 }
 
-const VERIFIED_BADGE = `<i class="fa-solid fa-circle-check verified-badge" aria-label="Verified creator" title="Verified creator"></i>`;
-const CLOCK_ICON = `<i class="fa-solid fa-clock"></i>`;
-const DOWNLOAD_ICON = `<i class="fa-solid fa-download"></i>`;
-const CUBE_ICON = `<i class="fa-solid fa-cube"></i>`;
-
-// ---------- Emoji rating scale (replaces 1–5 stars) ----------
-// Same 1-5 integer stored in the DB as before — only the presentation
-// changed, from stars to a face that better carries how someone feels
-// about a mod, angry (1) through grinning (5).
-const LB_RATING_FACES = [
-  { icon: "fa-face-angry",       color: "var(--rating-1)", label: "Not for me" },
-  { icon: "fa-face-frown",       color: "var(--rating-2)", label: "Meh" },
-  { icon: "fa-face-meh",         color: "var(--rating-3)", label: "It's okay" },
-  { icon: "fa-face-smile",       color: "var(--rating-4)", label: "Good" },
-  { icon: "fa-face-grin-hearts", color: "var(--rating-5)", label: "Love it" },
-];
-
-function LB_ratingFace(value) {
-  const idx = Math.min(5, Math.max(1, Math.round(Number(value) || 0))) - 1;
-  return LB_RATING_FACES[idx];
-}
+const VERIFIED_BADGE = `
+<svg class="verified-badge" viewBox="0 0 20 20" width="14" height="14" aria-label="Verified creator">
+<circle cx="10" cy="10" r="10" fill="var(--color-accent)"/>
+<path d="M6 10.2L8.7 13L14 7.3" fill="none" stroke="var(--color-bg-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+`;
+const STAR_ICON = `<svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L1.3 7.8l6.1-.7z"/></svg>`;
+const CLOCK_ICON = `<svg width="13" height="13" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.3" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4.3l3 1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const DOWNLOAD_ICON = `<svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 3v9.5M6 9l4 4 4-4M4 16.5h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 function LB_renderRatingChip(rating, count) {
   const value = Number(rating) || 0;
   const countLabel = typeof count === "number" && count > 0 ? ` (${count})` : "";
-  if (!value) {
-    return `<span class="stat-chip stat-rating no-rating"><i class="fa-solid fa-face-meh"></i><strong>—</strong>${countLabel}</span>`;
-  }
-  const face = LB_ratingFace(value);
-  return `<span class="stat-chip stat-rating" style="--rating-color:${face.color}"><i class="fa-solid ${face.icon}"></i><strong>${value.toFixed(1)}</strong>${countLabel}</span>`;
+  return `<span class="stat-chip stat-rating">${STAR_ICON}<strong>${value.toFixed(1)}</strong>${countLabel}</span>`;
 }
 
 // Renders one mod-row card — the single source of truth used by the browse
@@ -117,7 +98,7 @@ function LB_renderModCard(mod, opts = {}) {
   ${mod.is_preview ? `<span class="tag-pill preview-pill">Preview</span>` : ""}
   ${mod.review_status === "pending" ? `<span class="tag-pill pending-pill">Awaiting review</span>` : ""}
   ${mod.review_status === "rejected" ? `<span class="tag-pill rejected-pill">Rejected</span>` : ""}
-  ${clickable && currentUserId && mod.user_id === currentUserId ? `<span class="manage-link">Manage this mod <i class="fa-solid fa-arrow-right"></i></span>` : ""}
+  ${clickable && currentUserId && mod.user_id === currentUserId ? `<span class="manage-link">Manage this mod →</span>` : ""}
   </div>
   </div>
   <div class="mod-side">
@@ -216,68 +197,6 @@ async function LB_mountNotifications(anchorEl, userId) {
     .subscribe();
 }
 
-// ---------- Hamburger nav (mounts into any header's #navToggle/#navDrawer) ----------
-// Every page shares this one header pattern: a hamburger button that opens a
-// small dropdown drawer with the session-appropriate links, instead of a row
-// of separate buttons. Returns { user, isAdmin, username } so the calling
-// page can reuse the session info for its own auth gating.
-async function LB_mountHeaderNav() {
-  const toggleBtn = document.getElementById("navToggle");
-  const drawer = document.getElementById("navDrawer");
-  const notifSlot = document.getElementById("notifSlot");
-  if (!toggleBtn || !drawer) return { user: null, isAdmin: false, username: null };
-
-  const { data } = await supabaseClient.auth.getSession();
-  const user = data.session?.user || null;
-
-  let isAdmin = false;
-  if (user) {
-    const { data: profile } = await supabaseClient.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
-    isAdmin = !!profile?.is_admin;
-  }
-
-  const username = user ? (user.user_metadata?.username || user.email) : null;
-
-  drawer.innerHTML = user ? `
-    <a class="drawer-link" href="profile.html?u=${encodeURIComponent(username)}"><i class="fa-solid fa-user"></i>${escapeHtml(username)}</a>
-    <a class="drawer-link primary" href="upload.html"><i class="fa-solid fa-upload"></i>Upload mod</a>
-    ${isAdmin ? `<a class="drawer-link" href="admin.html"><i class="fa-solid fa-shield-halved"></i>Admin</a>` : ""}
-    <div class="drawer-divider"></div>
-    <button type="button" class="drawer-link" id="lbDrawerLogoutBtn"><i class="fa-solid fa-right-from-bracket"></i>Log out</button>
-  ` : `
-    <a class="drawer-link" href="login.html"><i class="fa-solid fa-right-to-bracket"></i>Log in</a>
-    <a class="drawer-link primary" href="login.html"><i class="fa-solid fa-upload"></i>Upload mod</a>
-  `;
-
-  if (user) {
-    document.getElementById("lbDrawerLogoutBtn").addEventListener("click", async () => {
-      await supabaseClient.auth.signOut();
-      window.location.href = "index.html";
-    });
-    if (notifSlot) LB_mountNotifications(notifSlot, user.id);
-  }
-
-  function closeDrawer() {
-    drawer.hidden = true;
-    toggleBtn.setAttribute("aria-expanded", "false");
-  }
-  toggleBtn.setAttribute("aria-expanded", "false");
-  toggleBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const wasHidden = drawer.hidden;
-    drawer.hidden = !wasHidden;
-    toggleBtn.setAttribute("aria-expanded", String(wasHidden));
-  });
-  document.addEventListener("click", (e) => {
-    if (!drawer.hidden && !drawer.contains(e.target) && !toggleBtn.contains(e.target)) closeDrawer();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !drawer.hidden) closeDrawer();
-  });
-
-  return { user, isAdmin, username };
-}
-
 // ---------- Favorite button (mounts + wires a heart toggle) ----------
 async function LB_isFavorited(modId, userId) {
   if (!userId) return false;
@@ -359,21 +278,21 @@ function LB_mountMarkdownEditor(container, initialValue) {
   container.innerHTML = `
   <div class="md-editor">
   <div class="md-toolbar">
-  <button type="button" class="md-btn" data-cmd="bold" title="Bold"><i class="fa-solid fa-bold"></i></button>
-  <button type="button" class="md-btn" data-cmd="italic" title="Italic"><i class="fa-solid fa-italic"></i></button>
-  <button type="button" class="md-btn" data-cmd="heading" title="Heading"><i class="fa-solid fa-heading"></i></button>
-  <button type="button" class="md-btn" data-cmd="list" title="Bulleted list"><i class="fa-solid fa-list-ul"></i></button>
-  <button type="button" class="md-btn" data-cmd="quote" title="Quote"><i class="fa-solid fa-quote-right"></i></button>
-  <button type="button" class="md-btn" data-cmd="code" title="Code"><i class="fa-solid fa-code"></i></button>
-  <button type="button" class="md-btn" data-cmd="link" title="Link"><i class="fa-solid fa-link"></i></button>
-  <button type="button" class="md-btn" data-cmd="image" title="Image"><i class="fa-solid fa-image"></i></button>
-  <button type="button" class="md-btn" data-cmd="youtube" title="Embed YouTube video"><i class="fa-solid fa-video"></i></button>
+  <button type="button" class="md-btn" data-cmd="bold" title="Bold"><b>B</b></button>
+  <button type="button" class="md-btn" data-cmd="italic" title="Italic"><i>I</i></button>
+  <button type="button" class="md-btn" data-cmd="heading" title="Heading">H</button>
+  <button type="button" class="md-btn" data-cmd="list" title="Bulleted list">&bull;</button>
+  <button type="button" class="md-btn" data-cmd="quote" title="Quote">&rdquo;</button>
+  <button type="button" class="md-btn" data-cmd="code" title="Code">&lt;/&gt;</button>
+  <button type="button" class="md-btn" data-cmd="link" title="Link">🔗</button>
+  <button type="button" class="md-btn" data-cmd="image" title="Image">🖼</button>
+  <button type="button" class="md-btn" data-cmd="youtube" title="Embed YouTube video">▶</button>
   <div class="md-tabs">
   <button type="button" class="md-tab active" data-tab="write">Write</button>
   <button type="button" class="md-tab" data-tab="preview">Preview</button>
   </div>
   </div>
-  <textarea class="md-textarea" maxlength="4000" placeholder="What does this mod change or add? Paste a YouTube link with the video button to embed it."></textarea>
+  <textarea class="md-textarea" maxlength="4000" placeholder="What does this mod change or add? Paste a YouTube link with the ▶ button to embed it."></textarea>
   <div class="md-preview" hidden></div>
   </div>
   `;
@@ -520,8 +439,7 @@ function LB_renderBadges(userBadges) {
     return `<p class="empty-inline">No badges earned yet.</p>`;
   }
   return `<div class="badge-strip">${userBadges.map(b => {
-    const meta = BADGES[b.badge_code] || { icon: `<i class="fa-solid fa-medal"></i>`, label: b.badge_code };
+    const meta = BADGES[b.badge_code] || { icon: "🏅", label: b.badge_code };
     return `<span class="badge badge-earned" title="${escapeHtml(meta.label)}">${meta.icon} ${escapeHtml(meta.label)}</span>`;
   }).join("")}</div>`;
 }
-
