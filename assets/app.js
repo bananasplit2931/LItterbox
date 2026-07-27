@@ -524,3 +524,4 @@ function LB_renderBadges(userBadges) {
     return `<span class="badge badge-earned" title="${escapeHtml(meta.label)}">${meta.icon} ${escapeHtml(meta.label)}</span>`;
   }).join("")}</div>`;
 }
+
