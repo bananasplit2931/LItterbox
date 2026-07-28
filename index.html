@@ -9,46 +9,50 @@
 <meta name="description" content="Browse and share mods for Cat Goes Fishing.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css">
 <link rel="stylesheet" href="assets/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="assets/app.js"></script>
 <style>
-.hero {
-  padding: 44px clamp(16px, 5vw, 56px) 4px;
-  max-width: 1180px;
-  margin: 0 auto;
+.mods-section { padding: 30px clamp(16px, 5vw, 56px) 64px; max-width: 1180px; margin: 0 auto; }
+
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+
+/* ---- expanding search: a lens button that a search bar slides out from ---- */
+.search-orb-wrap {
+  position: relative; display: flex; align-items: center;
+  height: 42px; flex-shrink: 0;
 }
-.hero h1 {
-  font-weight: 800;
-  font-size: clamp(28px, 4.2vw, 40px);
-  line-height: 1.15;
-  margin: 0 0 12px;
-  letter-spacing: -0.8px;
-}
-.hero p { color: var(--color-text-muted); font-size: 15.5px; max-width: 62ch; margin: 0; }
-.hero p code {
-  font-family: var(--font-mono); font-size: 13px;
+
+.search-orb-btn {
+  position: relative; z-index: 2; flex-shrink: 0;
+  width: 42px; height: 42px; border-radius: 50%;
   background: var(--color-surface); border: 1px solid var(--color-border);
-  padding: 1px 6px; border-radius: 5px; color: var(--color-accent);
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+  color: var(--color-text-muted); cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
 }
-.hero-meta {
-  display: flex; gap: 18px; margin-top: 16px; flex-wrap: wrap;
+.search-orb-wrap.expanded .search-orb-btn,
+.search-orb-wrap:focus-within .search-orb-btn,
+.search-orb-wrap:hover .search-orb-btn { color: var(--color-accent); border-color: var(--color-accent); }
+
+.search-orb-input {
+  height: 42px; width: 0; min-width: 0; box-sizing: border-box;
+  margin-left: -21px; padding: 0; border: 1px solid transparent;
+  background: var(--color-surface); border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  color: var(--color-text); font-family: var(--font-body); font-size: 14px;
+  opacity: 0; pointer-events: none;
+  transition: width .32s cubic-bezier(.4, 0, .2, 1), padding .32s cubic-bezier(.4, 0, .2, 1), opacity .2s ease, border-color .15s ease;
 }
-
-.mods-section { padding: 20px clamp(16px, 5vw, 56px) 64px; max-width: 1180px; margin: 0 auto; }
-
-.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
-
-.search-wrap { position: relative; flex: 1; min-width: 220px; }
-.search-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--color-text-faint); pointer-events: none; }
-#search {
-  width: 100%; background: var(--color-surface); border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill); color: var(--color-text);
-  padding: 11px 14px 11px 38px; font-family: var(--font-body); font-size: 14px;
+.search-orb-wrap.expanded .search-orb-input,
+.search-orb-wrap:focus-within .search-orb-input,
+.search-orb-wrap:hover .search-orb-input {
+  width: min(280px, 55vw); opacity: 1; pointer-events: auto;
+  padding: 0 16px 0 26px; border-color: var(--color-border);
 }
-#search:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+.search-orb-wrap:focus-within .search-orb-input { border-color: var(--color-accent); }
 
-.toolbar-row2 { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+.toolbar-row2 { display: flex; align-items: center; gap: 10px; flex: 1; flex-wrap: wrap; }
 
 .pill-select {
   position: relative; display: flex; align-items: center; gap: 6px;
@@ -62,17 +66,16 @@
   padding: 9px 24px 9px 4px; cursor: pointer;
 }
 .pill-select select:focus { outline: none; }
-.pill-select::after {
-  content: ""; position: absolute; right: 13px; top: 50%; width: 6px; height: 6px;
-  border-right: 1.5px solid var(--color-text-faint); border-bottom: 1.5px solid var(--color-text-faint);
-  transform: translateY(-70%) rotate(45deg); pointer-events: none;
+.pill-select i {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 9px; color: var(--color-text-faint); pointer-events: none;
 }
 
 .view-toggle { display: flex; border: 1px solid var(--color-border); border-radius: var(--radius-pill); overflow: hidden; }
 .view-btn {
   display: flex; align-items: center; justify-content: center;
   width: 38px; height: 38px; background: var(--color-surface); border: none; cursor: pointer;
-  color: var(--color-text-faint);
+  color: var(--color-text-faint); font-size: 14px;
 }
 .view-btn:hover { color: var(--color-text); }
 .view-btn.active { background: var(--color-accent-tint); color: var(--color-accent); }
@@ -84,8 +87,7 @@
 .mods-list { display: flex; flex-direction: column; gap: 10px; }
 
 @media (max-width: 600px) {
-  .hero { padding: 28px 16px 4px; }
-  .mods-section { padding: 16px 16px 48px; }
+  .mods-section { padding: 20px 16px 48px; }
 }
 @media (max-width: 480px) {
   .toolbar-row2 { flex-wrap: wrap; }
@@ -100,49 +102,50 @@
     <img src="assets/logo.png" alt="" class="brand-mark">
     <span class="brand-name">Litterbox</span>
   </a>
-  <nav class="site-nav" id="siteNav"></nav>
+  <div class="header-right">
+    <span id="notifSlot"></span>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-drawer" id="navDrawer" hidden></div>
+  </div>
 </header>
 
 <main>
-  <section class="hero">
-    <h1>Mods for Cat Goes Fishing</h1>
-    <p>Every mod is a single <code>data.win</code> file you drop into your game folder. Click a mod to see its full page.</p>
-    <div class="hero-meta" id="heroMeta"></div>
-  </section>
-
   <section class="mods-section">
     <div class="browse-tabs" role="tablist" style="margin-bottom: 14px;">
-      <button type="button" class="browse-tab active" id="modsTabBtn" role="tab">Mods</button>
-      <button type="button" class="browse-tab" id="creatorsTabBtn" role="tab">Creators</button>
+      <button type="button" class="browse-tab active" id="modsTabBtn" role="tab"><i class="fa-solid fa-cube"></i> Mods</button>
+      <button type="button" class="browse-tab" id="creatorsTabBtn" role="tab"><i class="fa-solid fa-user-group"></i> Creators</button>
     </div>
 
     <div class="toolbar">
-      <div class="search-wrap">
-        <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        <input id="search" type="text" placeholder="Search mods..." aria-label="Search mods">
-      </div>
-    </div>
-
-    <div class="toolbar-row2" id="toolbarRow2">
-      <div class="pill-select">
-        <label for="sort">Sort by</label>
-        <select id="sort">
-          <option value="new">Newest</option>
-          <option value="rating">Top rated</option>
-          <option value="name">Name (A-Z)</option>
-        </select>
-      </div>
-
-      <div class="view-toggle" role="group" aria-label="Layout">
-        <button type="button" class="view-btn active" id="listViewBtn" title="List view" aria-label="List view">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 5.5h12M4 10h12M4 14.5h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <div class="search-orb-wrap" id="searchOrbWrap">
+        <button type="button" class="search-orb-btn" id="searchOrbBtn" aria-label="Search" aria-expanded="false">
+          <i class="fa-solid fa-magnifying-glass"></i>
         </button>
-        <button type="button" class="view-btn" id="gridViewBtn" title="Grid view" aria-label="Grid view">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="3.5" y="3.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="3.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="3.5" y="11" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="11" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.6"/></svg>
-        </button>
+        <input id="search" class="search-orb-input" type="text" placeholder="Search mods..." aria-label="Search mods">
       </div>
 
-      <span id="modCount">Loading…</span>
+      <div class="toolbar-row2" id="toolbarRow2">
+        <div class="pill-select">
+          <label for="sort">Sort by</label>
+          <select id="sort">
+            <option value="new">Newest</option>
+            <option value="rating">Top rated</option>
+            <option value="name">Name (A-Z)</option>
+          </select>
+          <i class="fa-solid fa-chevron-down"></i>
+        </div>
+
+        <div class="view-toggle" role="group" aria-label="Layout">
+          <button type="button" class="view-btn active" id="listViewBtn" title="List view" aria-label="List view">
+            <i class="fa-solid fa-list"></i>
+          </button>
+          <button type="button" class="view-btn" id="gridViewBtn" title="Grid view" aria-label="Grid view">
+            <i class="fa-solid fa-table-cells"></i>
+          </button>
+        </div>
+
+        <span id="modCount">Loading…</span>
+      </div>
     </div>
 
     <div id="modsList" class="mods-list">
@@ -159,46 +162,6 @@ let allProfiles = [];
 let currentBrowseTab = "mods";
 let currentUserId = null;
 let currentSort = "new";
-
-const CUBE_ICON = `<svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 2l7 4v8l-7 4-7-4V6l7-4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
-
-async function renderNav() {
-  const navEl = document.getElementById("siteNav");
-  const { data } = await supabaseClient.auth.getSession();
-  currentUserId = data.session?.user?.id || null;
-
-  if (data.session) {
-    const username = data.session.user.user_metadata?.username || data.session.user.email;
-    navEl.innerHTML = `
-      <span id="notifSlot"></span>
-      <a class="nav-link" href="profile.html?u=${encodeURIComponent(username)}">${escapeHtml(username)}</a>
-      <a class="nav-link primary" href="upload.html">+ Upload mod</a>
-      <button class="nav-link" id="logoutBtn">Log out</button>
-    `;
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await supabaseClient.auth.signOut();
-      window.location.reload();
-    });
-    LB_mountNotifications(document.getElementById("notifSlot"), currentUserId);
-
-    supabaseClient.from("profiles").select("is_admin").eq("id", currentUserId).single().then(({ data: profile }) => {
-      if (profile?.is_admin) {
-        document.getElementById("logoutBtn").insertAdjacentHTML("beforebegin", `<a class="nav-link" href="admin.html">Admin</a>`);
-      }
-    });
-  } else {
-    navEl.innerHTML = `
-      <a class="nav-link" href="login.html">Log in</a>
-      <a class="nav-link primary" href="login.html">+ Upload mod</a>
-    `;
-  }
-}
-
-function renderRatingChip(rating, count) {
-  const value = Number(rating) || 0;
-  const countLabel = typeof count === "number" ? ` (${count})` : "";
-  return `<span class="stat-chip stat-rating">${STAR_ICON}<strong>${value.toFixed(1)}</strong>${countLabel}</span>`;
-}
 
 function iconInitials(name) {
   if (!name) return "?";
@@ -296,15 +259,6 @@ async function loadMods() {
 
   allMods = data || [];
   renderMods(allMods);
-  renderHeroMeta(allMods);
-}
-
-function renderHeroMeta(mods) {
-  const totalDownloads = mods.reduce((sum, m) => sum + (m.download_count || 0), 0);
-  document.getElementById("heroMeta").innerHTML = `
-    <span class="stat-chip">${CUBE_ICON}<strong>${mods.length}</strong> mod${mods.length === 1 ? "" : "s"}</span>
-    <span class="stat-chip">${DOWNLOAD_ICON}<strong>${LB_formatCount(totalDownloads)}</strong> total downloads</span>
-  `;
 }
 
 function renderCreators(profiles) {
@@ -395,8 +349,30 @@ document.getElementById("listViewBtn").addEventListener("click", () => setView("
 document.getElementById("gridViewBtn").addEventListener("click", () => setView("grid"));
 setView(localStorage.getItem("litterbox-view") === "grid" ? "grid" : "list");
 
+// ---------- expanding search: click/tap the lens to slide the bar out ----------
+const searchOrbWrap = document.getElementById("searchOrbWrap");
+const searchOrbBtn = document.getElementById("searchOrbBtn");
+const searchInput = document.getElementById("search");
+
+function setSearchExpanded(expanded) {
+  searchOrbWrap.classList.toggle("expanded", expanded);
+  searchOrbBtn.setAttribute("aria-expanded", String(expanded));
+}
+searchOrbBtn.addEventListener("click", () => {
+  const expanding = !searchOrbWrap.classList.contains("expanded");
+  setSearchExpanded(expanding);
+  if (expanding) searchInput.focus();
+});
+searchInput.addEventListener("focus", () => setSearchExpanded(true));
+document.addEventListener("click", (e) => {
+  if (searchOrbWrap.classList.contains("expanded") && !searchOrbWrap.contains(e.target) && !searchInput.value) {
+    setSearchExpanded(false);
+  }
+});
+
 async function init() {
-  await renderNav();
+  const nav = await LB_mountHeaderNav();
+  currentUserId = nav.user?.id || null;
   await loadMods();
 }
 
