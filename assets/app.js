@@ -258,21 +258,21 @@ async function LB_mountHeaderNav() {
   }
 
   function closeDrawer() {
-    drawer.hidden = true;
+    drawer.classList.remove("open");
     toggleBtn.setAttribute("aria-expanded", "false");
   }
   toggleBtn.setAttribute("aria-expanded", "false");
   toggleBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    const wasHidden = drawer.hidden;
-    drawer.hidden = !wasHidden;
-    toggleBtn.setAttribute("aria-expanded", String(wasHidden));
+    const isOpen = drawer.classList.contains("open");
+    drawer.classList.toggle("open", !isOpen);
+    toggleBtn.setAttribute("aria-expanded", String(!isOpen));
   });
   document.addEventListener("click", (e) => {
-    if (!drawer.hidden && !drawer.contains(e.target) && !toggleBtn.contains(e.target)) closeDrawer();
+    if (drawer.classList.contains("open") && !drawer.contains(e.target) && !toggleBtn.contains(e.target)) closeDrawer();
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !drawer.hidden) closeDrawer();
+    if (e.key === "Escape" && drawer.classList.contains("open")) closeDrawer();
   });
 
   return { user, isAdmin, username };
