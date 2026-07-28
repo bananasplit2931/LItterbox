@@ -16,16 +16,24 @@
 <style>
 .mods-section { padding: 30px clamp(16px, 5vw, 56px) 64px; max-width: 1180px; margin: 0 auto; }
 
-.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
 
-/* ---- expanding search: a lens button that a search bar slides out from ---- */
+/* ---- expanding search: a lens button that a search bar slides out from ----
+   The wrap itself grows, so its neighbors (sort pill, view toggle, count)
+   naturally slide over to make room. Driven by a JS-toggled .expanded class
+   (mouseenter/leave + click) rather than CSS :hover — hovering an element
+   that resizes itself is a classic flicker trap, since the box growing can
+   nudge the cursor across its own edge and re-trigger/un-trigger :hover
+   mid-transition. JS enter/leave events don't have that feedback loop. */
 .search-orb-wrap {
-  position: relative; display: flex; align-items: center;
-  height: 42px; flex-shrink: 0;
+  position: relative; flex-shrink: 0;
+  width: 42px; height: 42px;
+  transition: width .32s cubic-bezier(.4, 0, .2, 1);
 }
+.search-orb-wrap.expanded, .search-orb-wrap:focus-within { width: min(280px, 50vw); }
 
 .search-orb-btn {
-  position: relative; z-index: 2; flex-shrink: 0;
+  position: relative; z-index: 2;
   width: 42px; height: 42px; border-radius: 50%;
   background: var(--color-surface); border: 1px solid var(--color-border);
   display: flex; align-items: center; justify-content: center; font-size: 14px;
@@ -33,22 +41,21 @@
   transition: color .15s ease, border-color .15s ease;
 }
 .search-orb-wrap.expanded .search-orb-btn,
-.search-orb-wrap:focus-within .search-orb-btn,
-.search-orb-wrap:hover .search-orb-btn { color: var(--color-accent); border-color: var(--color-accent); }
+.search-orb-wrap:focus-within .search-orb-btn { color: var(--color-accent); border-color: var(--color-accent); }
 
 .search-orb-input {
-  height: 42px; width: 0; min-width: 0; box-sizing: border-box;
-  margin-left: -21px; padding: 0; border: 1px solid transparent;
-  background: var(--color-surface); border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  position: absolute; left: 0; top: 0;
+  height: 42px; width: 100%; box-sizing: border-box;
+  padding: 0; border: 1px solid transparent; outline: none;
+  background: var(--color-surface); border-radius: var(--radius-pill);
   color: var(--color-text); font-family: var(--font-body); font-size: 14px;
   opacity: 0; pointer-events: none;
-  transition: width .32s cubic-bezier(.4, 0, .2, 1), padding .32s cubic-bezier(.4, 0, .2, 1), opacity .2s ease, border-color .15s ease;
+  transition: opacity .2s ease, padding .32s cubic-bezier(.4, 0, .2, 1), border-color .15s ease;
 }
 .search-orb-wrap.expanded .search-orb-input,
-.search-orb-wrap:focus-within .search-orb-input,
-.search-orb-wrap:hover .search-orb-input {
-  width: min(280px, 55vw); opacity: 1; pointer-events: auto;
-  padding: 0 16px 0 26px; border-color: var(--color-border);
+.search-orb-wrap:focus-within .search-orb-input {
+  opacity: 1; pointer-events: auto;
+  padding: 0 16px 0 44px; border-color: var(--color-border);
 }
 .search-orb-wrap:focus-within .search-orb-input { border-color: var(--color-accent); }
 
@@ -105,7 +112,7 @@
   <div class="header-right">
     <span id="notifSlot"></span>
     <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
-    <div class="nav-drawer" id="navDrawer" hidden></div>
+    <div class="nav-drawer" id="navDrawer"></div>
   </div>
 </header>
 
@@ -362,6 +369,10 @@ searchOrbBtn.addEventListener("click", () => {
   const expanding = !searchOrbWrap.classList.contains("expanded");
   setSearchExpanded(expanding);
   if (expanding) searchInput.focus();
+});
+searchOrbWrap.addEventListener("mouseenter", () => setSearchExpanded(true));
+searchOrbWrap.addEventListener("mouseleave", () => {
+  if (!searchInput.value && document.activeElement !== searchInput) setSearchExpanded(false);
 });
 searchInput.addEventListener("focus", () => setSearchExpanded(true));
 document.addEventListener("click", (e) => {
