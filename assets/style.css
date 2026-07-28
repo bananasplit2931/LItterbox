@@ -6,44 +6,44 @@
  *  ========================================================================== */
 
 :root {
-  /* ---- palette: sage → warm gray → plum → near-black plum ---- */
-  --color-bg: #28112B;
-  --color-bg-soft: #1F0D22;
-  --color-surface: #453643;
-  --color-surface-hover: #584A56;
-  --color-border: #362437;
-  --color-border-strong: #5E5D5C;
+  /* ---- palette: peach → dusty mauve → indigo → navy → near-black navy ---- */
+  --color-bg: #0D0C1D;
+  --color-bg-soft: #080813;
+  --color-surface: #161B33;
+  --color-surface-hover: #32364B;
+  --color-border: #12152A;
+  --color-border-strong: #474973;
 
-  --color-text: #F6F3F0;
-  --color-text-muted: #9AA398;
-  --color-text-faint: #6E756A;
+  --color-text: #F6F1EC;
+  --color-text-muted: #A69CAC;
+  --color-text-faint: #7C7581;
 
-  --color-accent: #8DAA91;
-  --color-accent-dark: #748B77;
-  --color-accent-ink: #14231A;
-  --color-accent-tint: rgba(141, 170, 145, 0.16);
+  --color-accent: #F1DAC4;
+  --color-accent-dark: #CDB9A7;
+  --color-accent-ink: #221D2E;
+  --color-accent-tint: rgba(241, 218, 196, 0.16);
 
-  --color-gold: #C99A5B;
-  --color-gold-bg: rgba(201, 154, 91, 0.12);
-  --color-gold-border: rgba(201, 154, 91, 0.4);
+  --color-gold: #D4A574;
+  --color-gold-bg: rgba(212, 165, 116, 0.12);
+  --color-gold-border: rgba(212, 165, 116, 0.4);
 
-  --color-info: #A893C9;
-  --color-info-bg: rgba(168, 147, 201, 0.12);
-  --color-info-border: rgba(168, 147, 201, 0.4);
+  --color-info: #8B87A6;
+  --color-info-bg: rgba(139, 135, 166, 0.14);
+  --color-info-border: rgba(139, 135, 166, 0.4);
 
-  --color-error: #E2607A;
-  --color-error-bg: rgba(226, 96, 122, 0.1);
-  --color-error-border: rgba(226, 96, 122, 0.35);
+  --color-error: #DE7686;
+  --color-error-bg: rgba(222, 118, 134, 0.1);
+  --color-error-border: rgba(222, 118, 134, 0.35);
 
-  --color-btn-secondary-bg: #534B51;
-  --color-btn-secondary-bg-hover: #635a60;
+  --color-btn-secondary-bg: #2C3050;
+  --color-btn-secondary-bg-hover: #383B60;
 
   /* ---- emoji rating scale, angry (1) → grinning (5) ---- */
-  --rating-1: #D97C86;
-  --rating-2: #CC8F63;
-  --rating-3: #9AA398;
-  --rating-4: #A6BDA9;
-  --rating-5: #8DAA91;
+  --rating-1: #C97B72;
+  --rating-2: #D9A679;
+  --rating-3: #A69CAC;
+  --rating-4: #F2DDC9;
+  --rating-5: #F1DAC4;
 
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -83,7 +83,7 @@ h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: var(--radius-pill); border: 2px solid var(--color-bg); }
-*::-webkit-scrollbar-thumb:hover { background: #767469; }
+*::-webkit-scrollbar-thumb:hover { background: #5C5F8C; }
 
 /* ---------- header ---------- */
 .site-header {
@@ -94,7 +94,7 @@ h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; }
   height: var(--header-h);
   padding: 0 clamp(16px, 5vw, 40px);
   border-bottom: 1px solid var(--color-border);
-  background: rgba(31, 13, 34, 0.82);
+  background: rgba(13, 12, 29, 0.82);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   position: sticky;
@@ -319,7 +319,7 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 .changelog-item { padding: 14px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
 .changelog-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
 .changelog-item-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.announcement-pill { color: var(--color-accent); border-color: rgba(141, 170, 145, 0.4); background: var(--color-accent-tint); }
+.announcement-pill { color: var(--color-accent); border-color: rgba(241, 218, 196, 0.4); background: var(--color-accent-tint); }
 .changelog-title { font-size: 14.5px; font-weight: 700; margin: 0; letter-spacing: -0.2px; color: var(--color-text); }
 .changelog-date { font-size: 12px; color: var(--color-text-faint); white-space: nowrap; }
 .changelog-body { font-size: 13.5px; }
