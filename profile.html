@@ -53,7 +53,11 @@
     <img src="assets/logo.png" alt="" class="brand-mark">
     <span class="brand-name">Litterbox</span>
   </a>
-  <nav class="site-nav" id="siteNav"></nav>
+  <div class="header-right">
+    <span id="notifSlot"></span>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-drawer" id="navDrawer"></div>
+  </div>
 </header>
 
 <div id="gate" class="gate-state">Loading profile…</div>
@@ -121,37 +125,12 @@ const pageWrapEl = document.getElementById("pageWrap");
 let currentUser = null;
 let profileUser = null;
 
-// STAR_ICON, DOWNLOAD_ICON i VERIFIED_BADGE są już zadeklarowane globalnie
-// w assets/app.js (ładowanym przed tym skryptem) — NIE deklaruj ich tu ponownie,
-// bo `const` redeklarowany w tym samym zasięgu globalnym to SyntaxError, który
-// wywala CAŁY ten blok <script> (i przez to strona wisi na "Loading profile…").
-const CUBE_ICON = `<svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 2l7 4v8l-7 4-7-4V6l7-4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
-
-async function renderNav() {
-  const navEl = document.getElementById("siteNav");
-  const { data } = await supabaseClient.auth.getSession();
-  currentUser = data.session?.user || null;
-
-  if (currentUser) {
-    const username = currentUser.user_metadata?.username || currentUser.email;
-    navEl.innerHTML = `
-      <span id="notifSlot"></span>
-      <a class="nav-link" href="profile.html?u=${encodeURIComponent(username)}">${escapeHtml(username)}</a>
-      <a class="nav-link primary" href="upload.html">+ Upload mod</a>
-      <button class="nav-link" id="logoutBtn">Log out</button>
-    `;
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await supabaseClient.auth.signOut();
-      window.location.reload();
-    });
-    LB_mountNotifications(document.getElementById("notifSlot"), currentUser.id);
-  } else {
-    navEl.innerHTML = `
-      <a class="nav-link" href="login.html">Log in</a>
-      <a class="nav-link primary" href="login.html">+ Upload mod</a>
-    `;
-  }
-}
+// DOWNLOAD_ICON, VERIFIED_BADGE, CUBE_ICON, HEART_ICON i LB_renderRatingChip są
+// już zadeklarowane globalnie w assets/app.js (ładowanym przed tym skryptem) —
+// NIE deklaruj ich tu ponownie, bo `const` redeklarowany w tym samym zasięgu
+// globalnym to SyntaxError, który wywala CAŁY ten blok <script> (i przez to
+// strona wisi na "Loading profile…" — to właśnie był dotychczasowy bug, bo
+// CUBE_ICON było zadeklarowane tutaj I w app.js).
 
 function renderMiniMod(mod) {
   const safeIconUrl = isTrustedStorageUrl(mod.icon_url) ? escapeHtml(mod.icon_url) : null;
@@ -160,8 +139,8 @@ function renderMiniMod(mod) {
       <div class="mini-mod-icon">${safeIconUrl ? `<img src="${safeIconUrl}" alt="">` : iconInitials(mod.name)}</div>
       <p class="mini-mod-name">${escapeHtml(mod.name)}</p>
       <div class="mini-mod-stats">
-        <span class="stat-chip">${DOWNLOAD_ICON}${LB_formatCount(mod.download_count ?? 0)}</span>
-        <span class="stat-chip stat-rating">${STAR_ICON}${Number(mod.rating || 0).toFixed(1)}</span>
+        <span class="stat-chip">${DOWNLOAD_ICON}<strong>${LB_formatCount(mod.download_count ?? 0)}</strong></span>
+        ${LB_renderRatingChip(mod.rating, mod.rating_count)}
       </div>
     </a>
   `;
@@ -195,7 +174,7 @@ async function loadAndRenderFavorites(userId) {
   document.getElementById("favoritesEl").innerHTML = favMods.length
     ? favMods.map(renderMiniMod).join("")
     : `<p class="empty-inline">No favorited mods yet.</p>`;
-  document.getElementById("statFavorited").innerHTML = `${STAR_ICON}<strong>${favMods.length}</strong> favorited`;
+  document.getElementById("statFavorited").innerHTML = `${HEART_ICON}<strong>${favMods.length}</strong> favorited`;
 }
 
 async function loadAndRenderBadges(userId) {
@@ -285,7 +264,8 @@ function renderIdentity() {
 }
 
 async function init() {
-  await renderNav();
+  const nav = await LB_mountHeaderNav();
+  currentUser = nav.user;
 
   const username = new URLSearchParams(window.location.search).get("u");
   if (!username) {
