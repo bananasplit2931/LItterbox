@@ -45,7 +45,6 @@
 .author-link:hover { color: var(--color-accent); text-decoration: underline; }
 
 .mod-head-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 12px; padding: 0 8px; }
-.mod-head-meta .stars-icons { font-size: 14px; }
 
 .content-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; margin-top: 26px; }
 
@@ -59,16 +58,17 @@
 .actions-card .actions-row > * { flex: 1; }
 .actions-card .file-unavailable { font-size: 13px; color: var(--color-text-faint); text-align: center; display: block; padding: 8px 0; }
 
-.stars-icons { position: relative; line-height: 1; letter-spacing: 2px; font-size: 15px; }
-.stars-bg { color: var(--color-border-strong); }
-.stars-fg { position: absolute; top: 0; left: 0; overflow: hidden; white-space: nowrap; color: var(--color-gold); }
-
 .rate-box { text-align: center; }
 .rate-box h2 { text-align: left; }
-.rate-stars { display: inline-flex; gap: 4px; cursor: pointer; font-size: 26px; line-height: 1; margin: 6px 0 4px; }
-.rate-stars .star { color: var(--color-border-strong); transition: color .08s ease, transform .08s ease; }
-.rate-stars .star:hover { transform: scale(1.1); }
-.rate-stars .star.active { color: var(--color-gold); }
+.rate-faces { display: inline-flex; gap: 8px; margin: 8px 0 4px; }
+.rate-face {
+  width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--color-surface); color: var(--color-text-faint); font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  transition: color .1s ease, transform .1s ease;
+}
+.rate-face:hover { transform: scale(1.12); }
+.rate-face.active { color: var(--rating-color); }
 .rate-hint { font-size: 12px; color: var(--color-text-faint); }
 .rate-login-hint { font-size: 13px; color: var(--color-text-muted); }
 .rate-login-hint a { font-weight: 600; text-decoration: none; }
@@ -205,38 +205,41 @@ function renderRateBox() {
 
   rateCard.innerHTML = `
     <h2>Rate this mod</h2>
-    <div class="rate-stars" role="group" aria-label="Rate this mod">
-      ${[1, 2, 3, 4, 5].map(n => `<span class="star${myRating >= n ? " active" : ""}" data-value="${n}">★</span>`).join("")}
+    <div class="rate-faces" role="group" aria-label="Rate this mod">
+      ${LB_RATING_FACES.map((face, i) => {
+        const n = i + 1;
+        return `<button type="button" class="rate-face${myRating === n ? " active" : ""}" data-value="${n}" style="--rating-color:${face.color}" title="${escapeHtml(face.label)}" aria-label="${escapeHtml(face.label)}"><i class="fa-solid ${face.icon}"></i></button>`;
+      }).join("")}
     </div>
-    <div class="rate-hint" id="rateHint">${myRating ? `You rated it ${myRating}★` : "Tap a star to rate"}</div>
+    <div class="rate-hint" id="rateHint">${myRating ? `You rated it: ${LB_ratingFace(myRating).label}` : "Tap a face to rate"}</div>
   `;
 
-  const groupEl = rateCard.querySelector(".rate-stars");
+  const groupEl = rateCard.querySelector(".rate-faces");
   const hintEl = document.getElementById("rateHint");
 
   groupEl.addEventListener("mouseover", (e) => {
-    const star = e.target.closest(".star");
-    if (!star) return;
-    previewStars(groupEl, Number(star.dataset.value));
+    const btn = e.target.closest(".rate-face");
+    if (!btn) return;
+    previewFaces(groupEl, Number(btn.dataset.value));
   });
-  groupEl.addEventListener("mouseleave", () => previewStars(groupEl, myRating));
+  groupEl.addEventListener("mouseleave", () => previewFaces(groupEl, myRating));
   groupEl.addEventListener("click", (e) => {
-    const star = e.target.closest(".star");
-    if (!star) return;
-    submitRating(Number(star.dataset.value), groupEl, hintEl);
+    const btn = e.target.closest(".rate-face");
+    if (!btn) return;
+    submitRating(Number(btn.dataset.value), groupEl, hintEl);
   });
 }
 
-function previewStars(groupEl, value) {
-  groupEl.querySelectorAll(".star").forEach(starEl => {
-    starEl.classList.toggle("active", Number(starEl.dataset.value) <= value);
+function previewFaces(groupEl, value) {
+  groupEl.querySelectorAll(".rate-face").forEach(btn => {
+    btn.classList.toggle("active", Number(btn.dataset.value) === value);
   });
 }
 
 async function submitRating(value, groupEl, hintEl) {
   const previous = myRating;
   myRating = value;
-  previewStars(groupEl, value);
+  previewFaces(groupEl, value);
   hintEl.textContent = "Saving…";
 
   const { error } = await supabaseClient
@@ -249,12 +252,12 @@ async function submitRating(value, groupEl, hintEl) {
   if (error) {
     console.error("Error saving rating:", error);
     myRating = previous;
-    previewStars(groupEl, previous);
+    previewFaces(groupEl, previous);
     hintEl.textContent = "Couldn't save rating";
     return;
   }
 
-  hintEl.textContent = `You rated it ${value}★`;
+  hintEl.textContent = `You rated it: ${LB_ratingFace(value).label}`;
 
   const { data: modRow, error: modError } = await supabaseClient
     .from("mods")
