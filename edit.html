@@ -119,7 +119,7 @@
 
   <div class="preview-banner" id="previewBanner" style="display:none;">
     <i class="fa-solid fa-rocket"></i>
-    <div><strong>This mod is a preview.</strong> It has no file yet, so it only shows a Follow button on its page. Add the <code>data.win</code> file below and save to publish it — everyone following will be notified automatically.</div>
+    <div><strong>This mod is a preview.</strong> It has no file yet, so it only shows a Follow button on its page. Add the <code>data.win</code> file below and save to publish it - everyone following will be notified automatically.</div>
   </div>
 
   <div class="form-with-preview">
@@ -167,7 +167,7 @@
               <div class="file-input">
                 <input type="file" id="icon" accept="image/*">
               </div>
-              <p class="field-hint">Square image works best — shown everywhere your mod appears.</p>
+              <p class="field-hint">Square image works best - shown everywhere your mod appears.</p>
             </div>
 
             <div class="field" style="margin-bottom:0;">
@@ -197,7 +197,7 @@
             <div class="file-input">
               <input type="file" id="dataFile" accept=".win,.zip">
             </div>
-            <p class="field-hint">Adding this publishes the mod and notifies everyone following it — it'll go through a quick manual review first.</p>
+            <p class="field-hint">Adding this publishes the mod and notifies everyone following it - it'll go through a quick manual review first.</p>
           </div>
         </div>
 
@@ -209,7 +209,7 @@
           <span class="section-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
           <div class="section-head-text">
             <h2>Changelog &amp; announcements</h2>
-            <p>Post a real update, or just chat with your followers — either way, everyone following gets notified.</p>
+            <p>Post a real update, or just chat with your followers - either way, everyone following gets notified.</p>
           </div>
         </div>
 
@@ -223,7 +223,7 @@
 
           <div class="field">
             <label for="changelogTitle">Title <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
-            <input type="text" id="changelogTitle" maxlength="100" placeholder="e.g. v1.2 — bug fixes">
+            <input type="text" id="changelogTitle" maxlength="100" placeholder="e.g. v1.2 - bug fixes">
           </div>
 
           <div class="field">
@@ -236,7 +236,7 @@
             <div class="file-input">
               <input type="file" id="changelogFile" accept=".win,.zip">
             </div>
-            <p class="field-hint">Attach this to replace the current file with a new version when you post — the new version goes back through review before it's public.</p>
+            <p class="field-hint">Attach this to replace the current file with a new version when you post - the new version goes back through review before it's public.</p>
           </div>
 
           <button type="submit" class="btn btn-secondary" id="changelogSubmitBtn">Post update</button>
@@ -330,7 +330,7 @@ function updatePreview() {
 function renderQuickStats(mod) {
   const ratingVal = Number(mod.rating) || 0;
   const ratingIcon = ratingVal ? LB_ratingFace(ratingVal).icon : "fa-face-meh";
-  const ratingLabel = ratingVal ? ratingVal.toFixed(1) : "—";
+  const ratingLabel = ratingVal ? ratingVal.toFixed(1) : "-";
   const primaryStat = mod.is_preview
     ? { icon: BELL_ICON, value: LB_formatCount(mod.follow_count ?? 0), label: "Following" }
     : { icon: DOWNLOAD_ICON, value: LB_formatCount(mod.download_count ?? 0), label: "Downloads" };
@@ -394,7 +394,7 @@ async function checkAuth() {
   if (mod.review_status === "pending") {
     statusBanner.className = "status-banner";
     statusBanner.style.display = "block";
-    statusBanner.innerHTML = `<strong>Awaiting review.</strong> This mod is only visible to you right now. It'll show up for everyone once an admin approves it — usually quick.`;
+    statusBanner.innerHTML = `<strong>Awaiting review.</strong> This mod is only visible to you right now. It'll show up for everyone once an admin approves it - usually quick.`;
   } else if (mod.review_status === "rejected") {
     statusBanner.className = "status-banner rejected";
     statusBanner.style.display = "block";
@@ -436,7 +436,7 @@ function updateChangelogKindUI() {
   document.getElementById("changelogEditorLabel").textContent =
     selectedChangelogKind === "announcement" ? "Message" : "What's new";
   document.getElementById("changelogTitle").placeholder =
-    selectedChangelogKind === "announcement" ? "e.g. What we're working on next" : "e.g. v1.2 — bug fixes";
+    selectedChangelogKind === "announcement" ? "e.g. What we're working on next" : "e.g. v1.2 - bug fixes";
   document.getElementById("changelogSubmitBtn").textContent =
     selectedChangelogKind === "announcement" ? "Post announcement" : "Post update";
 
