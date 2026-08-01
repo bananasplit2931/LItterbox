@@ -21,7 +21,7 @@
 /* ---- expanding search: a lens button that a search bar slides out from ----
    The wrap itself grows, so its neighbors (sort pill, view toggle, count)
    naturally slide over to make room. Driven by a JS-toggled .expanded class
-   (mouseenter/leave + click) rather than CSS :hover — hovering an element
+   (mouseenter/leave + click) rather than CSS :hover - hovering an element
    that resizes itself is a classic flicker trap, since the box growing can
    nudge the cursor across its own edge and re-trigger/un-trigger :hover
    mid-transition. JS enter/leave events don't have that feedback loop. */
