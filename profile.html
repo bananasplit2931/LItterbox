@@ -126,10 +126,10 @@ let currentUser = null;
 let profileUser = null;
 
 // DOWNLOAD_ICON, VERIFIED_BADGE, CUBE_ICON, HEART_ICON i LB_renderRatingChip są
-// już zadeklarowane globalnie w assets/app.js (ładowanym przed tym skryptem) —
+// już zadeklarowane globalnie w assets/app.js (ładowanym przed tym skryptem) -
 // NIE deklaruj ich tu ponownie, bo `const` redeklarowany w tym samym zasięgu
 // globalnym to SyntaxError, który wywala CAŁY ten blok <script> (i przez to
-// strona wisi na "Loading profile…" — to właśnie był dotychczasowy bug, bo
+// strona wisi na "Loading profile…" - to właśnie był dotychczasowy bug, bo
 // CUBE_ICON było zadeklarowane tutaj I w app.js).
 
 function renderMiniMod(mod) {
