@@ -166,7 +166,7 @@ let myFollowing = false;
 
 // escapeHtml, isTrustedStorageUrl, iconInitials, timeAgo, DOWNLOAD_ICON,
 // CLOCK_ICON, VERIFIED_BADGE and LB_renderRatingChip all come from
-// assets/app.js — don't redeclare them here (see profile.html's note on
+// assets/app.js - don't redeclare them here (see profile.html's note on
 // why that crashes the page).
 
 function getModIdFromUrl() {
@@ -301,7 +301,7 @@ function renderMod() {
   if (mod.review_status === "pending") {
     statusBanner.className = "status-banner";
     statusBanner.style.display = "block";
-    statusBanner.innerHTML = `<strong>Awaiting review.</strong> This mod is only visible to you right now. It'll show up for everyone once an admin approves it — usually quick.`;
+    statusBanner.innerHTML = `<strong>Awaiting review.</strong> This mod is only visible to you right now. It'll show up for everyone once an admin approves it - usually quick.`;
   } else if (mod.review_status === "rejected") {
     statusBanner.className = "status-banner rejected";
     statusBanner.style.display = "block";
@@ -318,7 +318,7 @@ function renderMod() {
     ${safeFileUrl
       ? `<a class="btn btn-primary btn-block" id="downloadBtn" href="${safeFileUrl}" download><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 3v9.5M6 9l4 4 4-4M4 16.5h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Download data.win</a>`
       : mod.is_preview
-        ? `<div class="preview-notice">This mod is a preview — the creator hasn't added the file yet. Follow it below to get notified the moment it's released.</div>`
+        ? `<div class="preview-notice">This mod is a preview - the creator hasn't added the file yet. Follow it below to get notified the moment it's released.</div>`
         : `<span class="file-unavailable">File unavailable</span>`}
     ${(showFav || showFollow || showManage) ? `<div class="actions-row">
       ${showFav ? LB_renderFavoriteBtn(myFavorited, mod.favorite_count) : ""}
@@ -331,7 +331,7 @@ function renderMod() {
   if (downloadBtn) {
     downloadBtn.addEventListener("click", async () => {
       // Only bump the on-screen count once the database write actually
-      // succeeds — this is what used to make the number revert on refresh.
+      // succeeds - this is what used to make the number revert on refresh.
       const { error } = await supabaseClient.rpc("increment_download_count", { target_mod_id: mod.id });
       if (error) {
         console.error("Couldn't record the download (check that the increment_download_count function exists in Supabase):", error);
@@ -366,7 +366,7 @@ function renderReportCard() {
     const { data: existing } = await supabaseClient
       .from("reports").select("id").eq("mod_id", mod.id).eq("reporter_id", currentUser.id).eq("status", "open").maybeSingle();
     if (existing) {
-      card.innerHTML = `<p class="empty-inline">You've already reported this mod — the team's on it.</p>`;
+      card.innerHTML = `<p class="empty-inline">You've already reported this mod - the team's on it.</p>`;
       return;
     }
 
@@ -403,12 +403,12 @@ function renderReportCard() {
 
       if (error) {
         console.error(error);
-        msg.textContent = "Couldn't submit the report — try again.";
+        msg.textContent = "Couldn't submit the report - try again.";
         btn.disabled = false;
         btn.textContent = "Submit report";
         return;
       }
-      card.innerHTML = `<p class="empty-inline">Thanks — the team will take a look.</p>`;
+      card.innerHTML = `<p class="empty-inline">Thanks - the team will take a look.</p>`;
     });
   });
 }
@@ -420,7 +420,7 @@ function wireFavButton() {
     favBtn.disabled = true;
     const wasFavorited = myFavorited;
     myFavorited = await LB_toggleFavorite(currentMod.id, currentUser.id, myFavorited);
-    // Only touch the count/meta row if the toggle actually went through —
+    // Only touch the count/meta row if the toggle actually went through -
     // otherwise a rejected write (e.g. an RLS policy blocking the insert)
     // would still bump the displayed number even though nothing saved.
     if (myFavorited !== wasFavorited) {
