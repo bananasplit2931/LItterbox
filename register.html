@@ -19,6 +19,15 @@
 .auth-footer-link a { font-weight: 600; text-decoration: none; }
 .auth-footer-link a:hover { text-decoration: underline; }
 @media (max-width: 480px) { .auth-wrap { margin: 36px auto; } .auth-card { padding: 20px; } }
+
+.field-checkbox { margin-bottom: 20px; }
+.checkbox-label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.checkbox-label input[type="checkbox"] {
+  width: 17px; height: 17px; margin: 1px 0 0; flex-shrink: 0; accent-color: var(--color-accent); cursor: pointer;
+}
+.checkbox-label span { font-size: 12.5px; line-height: 1.5; color: var(--color-text-muted); }
+.checkbox-label a { color: var(--color-text-muted); text-decoration: underline; text-underline-offset: 2px; }
+.checkbox-label a:hover { color: var(--color-accent); }
 </style>
 </head>
 <body>
@@ -47,6 +56,12 @@
 <label for="password">Password</label>
 <input type="password" id="password" required autocomplete="new-password" minlength="6">
 </div>
+<div class="field field-checkbox">
+<label class="checkbox-label">
+<input type="checkbox" id="ageConfirm" required>
+<span>I'm at least 13 years old, and if I'm under 16, I have my parent or guardian's permission to use Litterbox. I've read the <a href="terms.html" target="_blank" rel="noopener">Terms</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span>
+</label>
+</div>
 <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Sign up</button>
 </form>
 <div class="oauth-divider"><span>or</span></div>
@@ -71,7 +86,16 @@ function showMessage(text, type) {
 msgEl.textContent = text;
 msgEl.className = "form-msg " + type;
 }
-discordBtn.addEventListener("click", () => LB_signInWithDiscord(discordBtn, msgEl));
+const ageConfirmInput = document.getElementById("ageConfirm");
+
+discordBtn.addEventListener("click", () => {
+  if (!ageConfirmInput.checked) {
+    ageConfirmInput.reportValidity();
+    showMessage("Please confirm the age requirement above before continuing.", "error");
+    return;
+  }
+  LB_signInWithDiscord(discordBtn, msgEl);
+});
 const BLOCKED_WORDS = [
 "fuck", "shit", "bitch", "asshole", "bastard", "cunt", "dick", "piss",
 "slut", "whore", "rape", "nazi", "hitler"
