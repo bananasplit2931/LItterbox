@@ -8,47 +8,79 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css">
 <link rel="stylesheet" href="assets/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="assets/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <style>
-.form-wrap { max-width: 560px; margin: 0 auto; padding: 40px 20px 64px; }
-.form-wrap-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.form-wrap h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.4px; }
-.form-wrap p.sub { color: var(--color-text-muted); font-size: 14px; margin: 0 0 26px; }
-.view-mod-link { font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; }
-.view-mod-link:hover { text-decoration: underline; }
+.edit-page-wrap { max-width: 1040px; margin: 0 auto; padding: 32px clamp(16px, 5vw, 56px) 64px; }
 
-.current-preview { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.current-preview img {
-  width: 44px; height: 44px; border-radius: var(--radius-sm); object-fit: cover;
-  border: 1px solid var(--color-border); background: var(--color-accent-tint);
-}
-.current-preview.banner-preview img { width: 100%; height: 60px; border-radius: var(--radius-sm); object-fit: cover; }
-.current-preview span { font-size: 12px; color: var(--color-text-faint); }
+#formWrap { opacity: 0; transform: translateY(6px); transition: opacity .35s ease, transform .35s ease; }
+#formWrap.is-visible { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) { #formWrap { transition: none; } }
+
+.edit-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.edit-hero-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.edit-hero h1 { font-size: 27px; margin: 0; letter-spacing: -0.5px; }
+.edit-hero-sub { color: var(--color-text-muted); font-size: 14px; margin: 6px 0 0; max-width: 56ch; }
+.edit-hero .btn i { font-size: 12px; }
+
+.status-banner { margin: 18px 0 0; }
 
 .preview-banner {
-  margin-bottom: 20px; padding: 14px 16px;
+  margin-top: 18px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px;
   border: 1px solid rgba(245, 185, 66, 0.35); background: rgba(245, 185, 66, 0.08);
   border-radius: var(--radius-lg); font-size: 13.5px; color: var(--color-text-muted); line-height: 1.5;
 }
+.preview-banner i { color: var(--color-gold); font-size: 15px; margin-top: 2px; flex-shrink: 0; }
 .preview-banner strong { color: var(--color-gold); }
 
-.danger-zone {
-  margin-top: 20px; padding: 18px;
-  border: 1px solid var(--color-error-border); background: var(--color-error-bg);
-  border-radius: var(--radius-lg);
+.form-with-preview { margin-top: 26px; }
+#editForm { display: contents; }
+
+.section-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+.section-icon {
+  width: 34px; height: 34px; border-radius: var(--radius-sm); flex-shrink: 0; margin-top: 1px;
+  background: var(--color-accent-tint); color: var(--color-accent);
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
 }
-.danger-zone h2 { font-size: 14px; margin: 0 0 4px; color: var(--color-error); }
-.danger-zone p { font-size: 13px; color: var(--color-text-muted); margin: 0 0 14px; }
+.section-head-text h2 { font-size: 15px; margin: 0 0 2px; letter-spacing: -0.2px; font-weight: 800; color: var(--color-text); text-transform: none; }
+.section-head-text p { font-size: 12.5px; color: var(--color-text-faint); margin: 0; line-height: 1.4; }
 
-.changelog-card { margin-top: 20px; }
-.changelog-card h2 { font-size: 15px; margin: 0 0 4px; letter-spacing: -0.2px; }
-.changelog-card > p.sub-hint { font-size: 13px; color: var(--color-text-muted); margin: 0 0 18px; }
+.current-preview { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.current-preview img {
+  width: 56px; height: 56px; border-radius: var(--radius-md); object-fit: cover;
+  border: 1px solid var(--color-border); background: var(--color-accent-tint);
+}
+.current-preview.banner-preview img { width: 100%; height: 84px; border-radius: var(--radius-md); object-fit: cover; }
+.current-preview span { font-size: 12px; color: var(--color-text-faint); font-weight: 600; }
 
-@media (max-width: 480px) { .form-wrap { padding: 24px 14px 48px; } .card { padding: 18px; } }
+.preview-pane { display: flex; flex-direction: column; gap: 16px; }
+
+.stats-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.stats-mini-item { display: flex; align-items: center; gap: 10px; }
+.stats-mini-icon {
+  width: 32px; height: 32px; border-radius: var(--radius-sm); flex-shrink: 0;
+  background: var(--color-accent-tint); color: var(--color-accent);
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.stats-mini-item strong { display: block; font-size: 15px; font-weight: 800; color: var(--color-text); line-height: 1.25; }
+.stats-mini-item small { display: block; font-size: 11px; color: var(--color-text-faint); font-weight: 600; }
+
+.card.danger-zone-mini { border-color: var(--color-error-border); background: var(--color-error-bg); }
+.danger-zone-mini h2 {
+  text-transform: none; font-size: 13px; letter-spacing: 0; color: var(--color-error);
+  display: flex; align-items: center; gap: 7px; margin: 0 0 6px;
+}
+.danger-zone-mini p { font-size: 12.5px; color: var(--color-text-muted); margin: 0 0 12px; line-height: 1.5; }
+
+@media (max-width: 480px) {
+  .edit-page-wrap { padding: 22px 14px 48px; }
+  .card { padding: 18px; }
+  .edit-hero h1 { font-size: 22px; }
+}
 </style>
 </head>
 <body>
@@ -60,125 +92,184 @@
   </a>
   <div class="header-right">
     <span id="notifSlot"></span>
-    <span class="user-name" id="userName"></span>
     <a class="nav-link" href="index.html">← Back to mods</a>
-    <button class="nav-link" id="logoutBtn" style="display:none;">Log out</button>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-drawer" id="navDrawer"></div>
   </div>
 </header>
 
 <div id="gate" class="gate-state">Checking your session…</div>
 
-<div class="form-wrap" id="formWrap" style="display:none;">
-  <div class="form-wrap-top">
-    <h1>Manage your mod</h1>
-    <a class="view-mod-link" id="viewModLink" href="#">View mod page →</a>
+<div class="edit-page-wrap" id="formWrap" style="display:none;">
+
+  <div class="edit-hero">
+    <div>
+      <div class="edit-hero-title-row">
+        <h1>Manage your mod</h1>
+        <span class="tag-pill preview-pill" id="previewPill" style="display:none;">Preview</span>
+        <span class="tag-pill pending-pill" id="pendingPill" style="display:none;">Awaiting review</span>
+        <span class="tag-pill rejected-pill" id="rejectedPill" style="display:none;">Rejected</span>
+      </div>
+      <p class="edit-hero-sub">Update the details, swap the icon or banner, or remove the mod entirely.</p>
+    </div>
+    <a class="btn btn-secondary" id="viewModLink" href="#"><i class="fa-solid fa-arrow-up-right-from-square"></i>View public page</a>
   </div>
-  <p class="sub">Update the details, swap the icon or banner, or remove the mod entirely.</p>
+
+  <div class="status-banner" id="statusBanner" style="display:none;"></div>
 
   <div class="preview-banner" id="previewBanner" style="display:none;">
-    <strong>This mod is a preview.</strong> It has no file yet, so it only shows a Follow button on its page. Add the <code>data.win</code> file below and save to publish it — everyone following will be notified automatically.
+    <i class="fa-solid fa-rocket"></i>
+    <div><strong>This mod is a preview.</strong> It has no file yet, so it only shows a Follow button on its page. Add the <code>data.win</code> file below and save to publish it — everyone following will be notified automatically.</div>
   </div>
 
-  <div class="card">
-    <div id="formMsg" class="form-msg"></div>
+  <div class="form-with-preview">
+    <div class="main-col">
 
-    <form id="editForm">
-      <div class="field">
-        <label for="name">Mod name</label>
-        <input type="text" id="name" required maxlength="80">
-      </div>
+      <div id="formMsg" class="form-msg"></div>
 
-      <div class="field">
-        <label for="descriptionEditor">Description</label>
-        <div id="descriptionEditor"></div>
-      </div>
-
-      <div class="two-col">
-        <div class="field">
-          <label for="icon">Icon</label>
-          <div class="current-preview" id="iconPreviewWrap" style="display:none;">
-            <img id="iconPreview" alt="">
-            <span>Current icon</span>
+      <form id="editForm">
+        <div class="card">
+          <div class="section-head">
+            <span class="section-icon"><i class="fa-solid fa-circle-info"></i></span>
+            <div class="section-head-text">
+              <h2>Basic info</h2>
+              <p>The name and description shown across the site.</p>
+            </div>
           </div>
-          <div class="file-input">
-            <input type="file" id="icon" accept="image/*">
+
+          <div class="field">
+            <label for="name">Mod name</label>
+            <input type="text" id="name" required maxlength="80">
+          </div>
+
+          <div class="field" style="margin-bottom:0;">
+            <label for="descriptionEditor">Description</label>
+            <div id="descriptionEditor"></div>
           </div>
         </div>
 
-        <div class="field">
-          <label for="banner">Banner <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
-          <div class="current-preview banner-preview" id="bannerPreviewWrap" style="display:none;">
-            <img id="bannerPreview" alt="">
+        <div class="card">
+          <div class="section-head">
+            <span class="section-icon"><i class="fa-solid fa-images"></i></span>
+            <div class="section-head-text">
+              <h2>Media</h2>
+              <p>The icon and banner shown on your mod's card and page.</p>
+            </div>
           </div>
-          <div class="file-input">
-            <input type="file" id="banner" accept="image/*">
+
+          <div class="two-col">
+            <div class="field" style="margin-bottom:0;">
+              <label for="icon">Icon</label>
+              <div class="current-preview" id="iconPreviewWrap" style="display:none;">
+                <img id="iconPreview" alt="">
+                <span>Current icon</span>
+              </div>
+              <div class="file-input">
+                <input type="file" id="icon" accept="image/*">
+              </div>
+              <p class="field-hint">Square image works best — shown everywhere your mod appears.</p>
+            </div>
+
+            <div class="field" style="margin-bottom:0;">
+              <label for="banner">Banner <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
+              <div class="current-preview banner-preview" id="bannerPreviewWrap" style="display:none;">
+                <img id="bannerPreview" alt="">
+              </div>
+              <div class="file-input">
+                <input type="file" id="banner" accept="image/*">
+              </div>
+              <p class="field-hint">Shown as the cover image on your mod's page.</p>
+            </div>
           </div>
-          <p class="field-hint">Shown as the cover image on your mod's page.</p>
         </div>
+
+        <div class="card" id="dataFileField" style="display:none;">
+          <div class="section-head">
+            <span class="section-icon"><i class="fa-solid fa-rocket"></i></span>
+            <div class="section-head-text">
+              <h2>Publish</h2>
+              <p>Add the file to make this mod public.</p>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:0;">
+            <label for="dataFile">Mod file</label>
+            <div class="file-input">
+              <input type="file" id="dataFile" accept=".win,.zip">
+            </div>
+            <p class="field-hint">Adding this publishes the mod and notifies everyone following it — it'll go through a quick manual review first.</p>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Save changes</button>
+      </form>
+
+      <div class="card" id="changelogCard" style="display:none;">
+        <div class="section-head">
+          <span class="section-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+          <div class="section-head-text">
+            <h2>Changelog &amp; announcements</h2>
+            <p>Post a real update, or just chat with your followers — either way, everyone following gets notified.</p>
+          </div>
+        </div>
+
+        <div id="changelogFormMsg" class="form-msg"></div>
+
+        <form id="changelogForm">
+          <div class="browse-tabs" role="tablist" id="changelogKindTabs" style="margin-bottom:16px;">
+            <button type="button" class="browse-tab active" id="changelogKindChangelogBtn" data-kind="changelog" role="tab">Changelog</button>
+            <button type="button" class="browse-tab" id="changelogKindAnnouncementBtn" data-kind="announcement" role="tab">Announcement</button>
+          </div>
+
+          <div class="field">
+            <label for="changelogTitle">Title <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
+            <input type="text" id="changelogTitle" maxlength="100" placeholder="e.g. v1.2 — bug fixes">
+          </div>
+
+          <div class="field">
+            <label for="changelogEditor" id="changelogEditorLabel">What's new</label>
+            <div id="changelogEditor"></div>
+          </div>
+
+          <div class="field" id="changelogFileField" style="display:none;">
+            <label for="changelogFile">New <code>data.win</code> <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
+            <div class="file-input">
+              <input type="file" id="changelogFile" accept=".win,.zip">
+            </div>
+            <p class="field-hint">Attach this to replace the current file with a new version when you post — the new version goes back through review before it's public.</p>
+          </div>
+
+          <button type="submit" class="btn btn-secondary" id="changelogSubmitBtn">Post update</button>
+        </form>
+
+        <div class="changelog-divider"></div>
+        <div id="changelogList"></div>
       </div>
 
-      <div class="field" id="dataFileField" style="display:none;">
-        <label for="dataFile">Mod file</label>
-        <div class="file-input">
-          <input type="file" id="dataFile" accept=".win,.zip">
-        </div>
-        <p class="field-hint">Adding this publishes the mod and notifies everyone following it — it'll go through a quick manual review first.</p>
+    </div>
+
+    <div class="preview-pane">
+      <div class="card">
+        <h2>Live preview</h2>
+        <div id="previewCardWrap"></div>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Save changes</button>
-    </form>
+      <div class="card stats-mini" id="statsMiniCard"></div>
+
+      <div class="card danger-zone-mini">
+        <h2><i class="fa-solid fa-triangle-exclamation"></i>Delete mod</h2>
+        <p>Removes the mod, its files, and all of its ratings. This can't be undone.</p>
+        <button type="button" class="btn btn-danger btn-block" id="deleteBtn">Delete mod</button>
+      </div>
+    </div>
   </div>
 
-  <div class="card changelog-card" id="changelogCard" style="display:none;">
-    <h2>Changelog &amp; announcements</h2>
-    <p class="sub-hint">Post a changelog for a real update, or just an announcement to chat with your followers — either way, everyone following this mod gets notified.</p>
-
-    <div id="changelogFormMsg" class="form-msg"></div>
-
-    <form id="changelogForm">
-      <div class="browse-tabs" role="tablist" id="changelogKindTabs" style="margin-bottom:16px;">
-        <button type="button" class="browse-tab active" id="changelogKindChangelogBtn" data-kind="changelog" role="tab">Changelog</button>
-        <button type="button" class="browse-tab" id="changelogKindAnnouncementBtn" data-kind="announcement" role="tab">Announcement</button>
-      </div>
-
-      <div class="field">
-        <label for="changelogTitle">Title <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
-        <input type="text" id="changelogTitle" maxlength="100" placeholder="e.g. v1.2 — bug fixes">
-      </div>
-
-      <div class="field">
-        <label for="changelogEditor" id="changelogEditorLabel">What's new</label>
-        <div id="changelogEditor"></div>
-      </div>
-
-      <div class="field" id="changelogFileField" style="display:none;">
-        <label for="changelogFile">New <code>data.win</code> <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
-        <div class="file-input">
-          <input type="file" id="changelogFile" accept=".win,.zip">
-        </div>
-        <p class="field-hint">Attach this to replace the current file with a new version when you post — the new version goes back through review before it's public.</p>
-      </div>
-
-      <button type="submit" class="btn btn-secondary" id="changelogSubmitBtn">Post update</button>
-    </form>
-
-    <div class="changelog-divider"></div>
-    <div id="changelogList"></div>
-  </div>
-
-  <div class="danger-zone">
-    <h2>Delete this mod</h2>
-    <p>This removes the mod, its files, and all of its ratings. This can't be undone.</p>
-    <button type="button" class="btn btn-danger btn-block" id="deleteBtn">Delete mod</button>
-  </div>
 </div>
 
 <script>
 
 const gateEl = document.getElementById("gate");
 const formWrapEl = document.getElementById("formWrap");
-const userNameEl = document.getElementById("userName");
-const logoutBtn = document.getElementById("logoutBtn");
 const msgEl = document.getElementById("formMsg");
 const submitBtn = document.getElementById("submitBtn");
 const deleteBtn = document.getElementById("deleteBtn");
@@ -186,6 +277,8 @@ const deleteBtn = document.getElementById("deleteBtn");
 let currentUser = null;
 let currentMod = null;
 let selectedChangelogKind = "changelog";
+let previewIconObjectUrl = null;
+
 const descEditor = LB_mountMarkdownEditor(document.getElementById("descriptionEditor"), "");
 const changelogEditor = LB_mountMarkdownEditor(document.getElementById("changelogEditor"), "");
 
@@ -220,6 +313,39 @@ async function loadMod(modId) {
   return data;
 }
 
+function currentPreviewMod() {
+  return {
+    ...currentMod,
+    name: document.getElementById("name").value,
+    description: descEditor.getValue(),
+  };
+}
+
+function updatePreview() {
+  if (!currentMod) return;
+  document.getElementById("previewCardWrap").innerHTML =
+    LB_renderModCard(currentPreviewMod(), { clickable: false, localIconUrl: previewIconObjectUrl });
+}
+
+function renderQuickStats(mod) {
+  const ratingVal = Number(mod.rating) || 0;
+  const ratingIcon = ratingVal ? LB_ratingFace(ratingVal).icon : "fa-face-meh";
+  const ratingLabel = ratingVal ? ratingVal.toFixed(1) : "—";
+  const primaryStat = mod.is_preview
+    ? { icon: BELL_ICON, value: LB_formatCount(mod.follow_count ?? 0), label: "Following" }
+    : { icon: DOWNLOAD_ICON, value: LB_formatCount(mod.download_count ?? 0), label: "Downloads" };
+
+  document.getElementById("statsMiniCard").innerHTML = `
+    <h2>At a glance</h2>
+    <div class="stats-mini-grid">
+      <div class="stats-mini-item"><span class="stats-mini-icon">${primaryStat.icon}</span><div><strong>${primaryStat.value}</strong><small>${primaryStat.label}</small></div></div>
+      <div class="stats-mini-item"><span class="stats-mini-icon">${HEART_ICON}</span><div><strong>${LB_formatCount(mod.favorite_count ?? 0)}</strong><small>Favorites</small></div></div>
+      <div class="stats-mini-item"><span class="stats-mini-icon"><i class="fa-solid ${ratingIcon}"></i></span><div><strong>${ratingLabel}</strong><small>Rating${mod.rating_count ? ` (${mod.rating_count})` : ""}</small></div></div>
+      <div class="stats-mini-item"><span class="stats-mini-icon">${CLOCK_ICON}</span><div><strong>${timeAgo(mod.created_at)}</strong><small>Added</small></div></div>
+    </div>
+  `;
+}
+
 async function checkAuth() {
   const modId = getModIdFromUrl();
   if (!modId) {
@@ -227,12 +353,13 @@ async function checkAuth() {
     return;
   }
 
-  const { data } = await supabaseClient.auth.getSession();
-  if (!data.session) {
+  const nav = await LB_mountHeaderNav();
+  currentUser = nav.user;
+
+  if (!currentUser) {
     window.location.href = "login.html";
     return;
   }
-  currentUser = data.session.user;
 
   const mod = await loadMod(modId);
   if (!mod) return;
@@ -245,10 +372,6 @@ async function checkAuth() {
   }
 
   currentMod = mod;
-  const username = currentUser.user_metadata?.username || currentUser.email;
-  userNameEl.textContent = username;
-  logoutBtn.style.display = "inline-block";
-  LB_mountNotifications(document.getElementById("notifSlot"), currentUser.id);
 
   document.getElementById("viewModLink").href = `mod.html?id=${mod.id}`;
   document.getElementById("name").value = mod.name || "";
@@ -263,8 +386,25 @@ async function checkAuth() {
     document.getElementById("bannerPreviewWrap").style.display = "flex";
   }
 
+  document.getElementById("previewPill").style.display = mod.is_preview ? "inline-flex" : "none";
+  document.getElementById("pendingPill").style.display = mod.review_status === "pending" ? "inline-flex" : "none";
+  document.getElementById("rejectedPill").style.display = mod.review_status === "rejected" ? "inline-flex" : "none";
+
+  const statusBanner = document.getElementById("statusBanner");
+  if (mod.review_status === "pending") {
+    statusBanner.className = "status-banner";
+    statusBanner.style.display = "block";
+    statusBanner.innerHTML = `<strong>Awaiting review.</strong> This mod is only visible to you right now. It'll show up for everyone once an admin approves it — usually quick.`;
+  } else if (mod.review_status === "rejected") {
+    statusBanner.className = "status-banner rejected";
+    statusBanner.style.display = "block";
+    statusBanner.innerHTML = `<strong>Rejected.</strong> This mod isn't public.${mod.moderation_note ? ` Reason: ${escapeHtml(mod.moderation_note)}` : ""} Fix the issue below and reach out if you think this was a mistake.`;
+  } else {
+    statusBanner.style.display = "none";
+  }
+
   if (mod.is_preview) {
-    document.getElementById("previewBanner").style.display = "block";
+    document.getElementById("previewBanner").style.display = "flex";
     document.getElementById("dataFileField").style.display = "block";
   }
 
@@ -272,9 +412,22 @@ async function checkAuth() {
   updateChangelogKindUI();
   loadChangelogs();
 
+  renderQuickStats(mod);
+  updatePreview();
+
   gateEl.style.display = "none";
   formWrapEl.style.display = "block";
+  requestAnimationFrame(() => formWrapEl.classList.add("is-visible"));
 }
+
+document.getElementById("name").addEventListener("input", updatePreview);
+document.querySelector("#descriptionEditor .md-textarea").addEventListener("input", updatePreview);
+document.getElementById("icon").addEventListener("change", (e) => {
+  if (previewIconObjectUrl) URL.revokeObjectURL(previewIconObjectUrl);
+  const file = e.target.files[0];
+  previewIconObjectUrl = file ? URL.createObjectURL(file) : null;
+  updatePreview();
+});
 
 function updateChangelogKindUI() {
   document.getElementById("changelogKindChangelogBtn").classList.toggle("active", selectedChangelogKind === "changelog");
@@ -287,9 +440,6 @@ function updateChangelogKindUI() {
   document.getElementById("changelogSubmitBtn").textContent =
     selectedChangelogKind === "announcement" ? "Post announcement" : "Post update";
 
-  // A new file only makes sense for a real changelog entry on a mod
-  // that's already published — preview→publish still goes through
-  // the "Mod file" field above, in the main Save changes form.
   const fileField = document.getElementById("changelogFileField");
   fileField.style.display = (selectedChangelogKind === "changelog" && currentMod && !currentMod.is_preview) ? "block" : "none";
 }
@@ -370,7 +520,6 @@ document.getElementById("changelogForm").addEventListener("submit", async (e) =>
       });
     if (postError) throw postError;
 
-    // Best-effort cleanup of the old file, only after everything else succeeded.
     if (newFileUrl && currentMod.file_url) await deleteFromStorage(currentMod.file_url);
     if (newFileUrl) currentMod.file_url = newFileUrl;
 
@@ -388,11 +537,6 @@ document.getElementById("changelogForm").addEventListener("submit", async (e) =>
     changelogSubmitBtn.disabled = false;
     changelogSubmitBtn.textContent = selectedChangelogKind === "announcement" ? "Post announcement" : "Post update";
   }
-});
-
-logoutBtn.addEventListener("click", async () => {
-  await supabaseClient.auth.signOut();
-  window.location.href = "index.html";
 });
 
 function resizeImage(file, maxSize) {
@@ -503,7 +647,6 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
       justPublished = true;
     }
 
-    // Best-effort cleanup of the old files, only after the row updated ok.
     if (iconFile && currentMod.icon_url) await deleteFromStorage(currentMod.icon_url);
     if (bannerFile && currentMod.banner_url) await deleteFromStorage(currentMod.banner_url);
 
