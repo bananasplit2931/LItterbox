@@ -155,10 +155,10 @@ async function LB_mountNotifications(anchorEl, userId) {
   if (!anchorEl || !userId) return;
 
   anchorEl.innerHTML = `
-  <button class="nav-link icon-btn" id="lbNotifBtn" title="Notifications" aria-label="Notifications">
+  <button class="nav-link icon-btn" id="lbNotifBtn" title="Notifications" aria-label="Notifications" aria-expanded="false">
   ${BELL_ICON}<span class="notif-dot" id="lbNotifDot" hidden></span>
   </button>
-  <div class="notif-panel" id="lbNotifPanel" hidden></div>
+  <div class="notif-panel" id="lbNotifPanel"></div>
   `;
 
   const btn = document.getElementById("lbNotifBtn");
@@ -191,10 +191,15 @@ async function LB_mountNotifications(anchorEl, userId) {
     : `<div class="notif-empty">No notifications yet.</div>`;
   }
 
+  function closePanel() {
+    panel.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+  }
   btn.addEventListener("click", async (e) => {
     e.stopPropagation();
-    const opening = panel.hidden;
-    panel.hidden = !panel.hidden;
+    const opening = !panel.classList.contains("open");
+    panel.classList.toggle("open", opening);
+    btn.setAttribute("aria-expanded", String(opening));
     if (opening) {
       await refresh();
       dot.hidden = true;
@@ -202,7 +207,10 @@ async function LB_mountNotifications(anchorEl, userId) {
     }
   });
   document.addEventListener("click", (e) => {
-    if (!panel.hidden && !panel.contains(e.target) && e.target !== btn) panel.hidden = true;
+    if (panel.classList.contains("open") && !panel.contains(e.target) && e.target !== btn) closePanel();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && panel.classList.contains("open")) closePanel();
   });
 
     await refresh();

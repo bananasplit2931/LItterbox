@@ -65,10 +65,14 @@
   width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
   background: var(--color-surface); color: var(--color-text-faint); font-size: 18px;
   display: flex; align-items: center; justify-content: center;
-  transition: color .1s ease, transform .1s ease;
+  transition: color .1s ease, transform .12s var(--ease-out);
 }
-.rate-face:hover { transform: scale(1.12); }
-.rate-face.active { color: var(--rating-color); }
+@media (hover: hover) and (pointer: fine) {
+  .rate-face:hover { transform: scale(1.12); }
+}
+.rate-face:active { transform: scale(.92); }
+.rate-face.active { color: var(--rating-color); animation: lb-rate-pop .3s var(--ease-out); }
+@keyframes lb-rate-pop { 0% { transform: scale(1); } 45% { transform: scale(1.28); } 100% { transform: scale(1); } }
 .rate-hint { font-size: 12px; color: var(--color-text-faint); }
 .rate-login-hint { font-size: 13px; color: var(--color-text-muted); }
 .rate-login-hint a { font-weight: 600; text-decoration: none; }
@@ -109,7 +113,7 @@
 
 <div id="gate" class="gate-state">Loading mod…</div>
 
-<div class="page-wrap" id="pageWrap" style="display:none;">
+<div class="page-wrap page-reveal" id="pageWrap" style="display:none;">
 
   <div class="banner" id="banner">
     <div class="banner-fallback" id="bannerFallback">
@@ -350,6 +354,7 @@ function renderMod() {
 
   gateEl.style.display = "none";
   pageWrapEl.style.display = "block";
+  requestAnimationFrame(() => pageWrapEl.classList.add("is-visible"));
 }
 
 function renderReportCard() {

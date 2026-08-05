@@ -15,8 +15,9 @@
 .admin-header-wrap { max-width: 1020px; margin: 0 auto; padding: 32px clamp(16px, 5vw, 56px) 0; }
 .admin-header-wrap h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.4px; }
 .admin-header-wrap p.sub { color: var(--color-text-muted); font-size: 14px; margin: 0; }
-.pending-item { margin-bottom: 18px; }
+.pending-item { margin-bottom: 18px; transition: opacity .18s var(--ease-out), transform .18s var(--ease-out); }
 .pending-item .mod-row { pointer-events: none; }
+.pending-item.row-exit { opacity: 0; transform: scale(.97); pointer-events: none; }
 .pending-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .pending-actions .btn { padding: 8px 14px; font-size: 13px; }
 </style>
@@ -38,7 +39,7 @@
 
 <div id="gate" class="gate-state">Checking access…</div>
 
-<div id="pageWrap" style="display:none;">
+<div id="pageWrap" class="page-reveal" style="display:none;">
   <div class="admin-header-wrap">
     <h1>Admin</h1>
     <p class="sub">Moderation queue and reports. Only visible to admins.</p>
@@ -90,6 +91,7 @@ async function checkAccess() {
 
   gateEl.style.display = "none";
   pageWrapEl.style.display = "block";
+  requestAnimationFrame(() => pageWrapEl.classList.add("is-visible"));
   return true;
 }
 
@@ -150,7 +152,8 @@ async function loadPending() {
         item.querySelectorAll("button").forEach(b => b.disabled = false);
         return;
       }
-      item.remove();
+      item.classList.add("row-exit");
+      item.addEventListener("transitionend", () => item.remove(), { once: true });
       loadPending();
     });
   });
@@ -234,7 +237,8 @@ async function loadReports() {
         return;
       }
 
-      row.remove();
+      row.classList.add("row-exit");
+      row.addEventListener("transitionend", () => row.remove(), { once: true });
     });
   });
 }

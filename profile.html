@@ -19,11 +19,18 @@
   background: var(--color-surface); border: 1px solid var(--color-border);
   border-radius: var(--radius-md); text-decoration: none; color: inherit;
   transition: border-color .12s ease, background .12s ease, transform .12s ease, box-shadow .12s ease;
+  animation: lb-card-in .28s var(--ease-out) both;
 }
-.mini-mod-row:hover {
-  border-color: var(--color-border-strong); background: var(--color-surface-hover);
-  transform: translateY(-1px); box-shadow: var(--shadow-hover);
+@media (hover: hover) and (pointer: fine) {
+  .mini-mod-row:hover {
+    border-color: var(--color-border-strong); background: var(--color-surface-hover);
+    transform: translateY(-1px); box-shadow: var(--shadow-hover);
+  }
 }
+.mini-mod-row:nth-child(1) { animation-delay: 0ms; }
+.mini-mod-row:nth-child(2) { animation-delay: 25ms; }
+.mini-mod-row:nth-child(3) { animation-delay: 50ms; }
+.mini-mod-row:nth-child(n+4) { animation-delay: 70ms; }
 .mini-mod-icon {
   width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--color-accent-tint);
   display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
@@ -34,6 +41,8 @@
 .mini-mod-stats { margin-left: auto; display: flex; gap: 10px; flex-shrink: 0; }
 
 .edit-toggle-link { font-size: 13px; font-weight: 600; }
+#editSection { animation: lb-section-in .22s var(--ease-out); transform-origin: top center; }
+@keyframes lb-section-in { from { opacity: 0; transform: translateY(-6px) scaleY(.97); } to { opacity: 1; transform: translateY(0) scaleY(1); } }
 .avatar-file-input { max-width: 260px; }
 .avatar-edit-row { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
 .avatar-edit-preview { width: 64px; height: 64px; font-size: 18px; border-width: 2px; flex-shrink: 0; }
@@ -62,7 +71,7 @@
 
 <div id="gate" class="gate-state">Loading profile…</div>
 
-<div id="pageWrap" style="display:none;">
+<div id="pageWrap" class="page-reveal" style="display:none;">
   <div class="profile-head">
     <div class="profile-avatar" id="avatarEl"></div>
     <div class="profile-info">
@@ -304,6 +313,7 @@ async function init() {
 
   gateEl.style.display = "none";
   pageWrapEl.style.display = "block";
+  requestAnimationFrame(() => pageWrapEl.classList.add("is-visible"));
 }
 
 init();

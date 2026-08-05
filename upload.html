@@ -22,6 +22,7 @@
   width: 100%; height: 64px; border-radius: var(--radius-sm);
   background: var(--color-accent-tint); border: 1px solid var(--color-border);
   overflow: hidden; display: none;
+  animation: lb-thumb-in .22s var(--ease-out);
 }
 .preview-thumb.icon-shape { width: 64px; height: 64px; border-radius: var(--radius-md); }
 .preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
@@ -46,7 +47,7 @@
 
 <div id="gate" class="gate-state">Checking your session…</div>
 
-<div class="form-wrap" id="formWrap" style="display:none;">
+<div class="form-wrap page-reveal" id="formWrap" style="display:none;">
   <h1>Upload a mod</h1>
   <p class="sub">Add a name, a short description, an icon, an optional banner, and the <code>data.win</code> file itself. This all shows up on your mod's own page.</p>
 
@@ -128,6 +129,7 @@ async function checkAuth() {
   LB_mountNotifications(document.getElementById("notifSlot"), currentUser.id);
   gateEl.style.display = "none";
   formWrapEl.style.display = "block";
+  requestAnimationFrame(() => formWrapEl.classList.add("is-visible"));
   if (typeof updateCardPreview === "function") updateCardPreview();
 }
 

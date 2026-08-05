@@ -17,10 +17,6 @@
 <style>
 .edit-page-wrap { max-width: 1040px; margin: 0 auto; padding: 32px clamp(16px, 5vw, 56px) 64px; }
 
-#formWrap { opacity: 0; transform: translateY(6px); transition: opacity .35s ease, transform .35s ease; }
-#formWrap.is-visible { opacity: 1; transform: translateY(0); }
-@media (prefers-reduced-motion: reduce) { #formWrap { transition: none; } }
-
 .edit-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .edit-hero-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .edit-hero h1 { font-size: 27px; margin: 0; letter-spacing: -0.5px; }
@@ -100,7 +96,7 @@
 
 <div id="gate" class="gate-state">Checking your session…</div>
 
-<div class="edit-page-wrap" id="formWrap" style="display:none;">
+<div class="edit-page-wrap page-reveal" id="formWrap" style="display:none;">
 
   <div class="edit-hero">
     <div>
