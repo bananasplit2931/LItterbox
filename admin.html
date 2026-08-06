@@ -8,6 +8,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css">
 <link rel="stylesheet" href="assets/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="assets/app.js"></script>
@@ -31,9 +32,8 @@
   </a>
   <div class="header-right">
     <span id="notifSlot"></span>
-    <span class="user-name" id="userName"></span>
-    <a class="nav-link" href="index.html">← Back to mods</a>
-    <button class="nav-link" id="logoutBtn" style="display:none;">Log out</button>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-drawer" id="navDrawer"></div>
   </div>
 </header>
 
@@ -59,35 +59,23 @@
 <script>
 const gateEl = document.getElementById("gate");
 const pageWrapEl = document.getElementById("pageWrap");
-const userNameEl = document.getElementById("userName");
-const logoutBtn = document.getElementById("logoutBtn");
 
 let currentUser = null;
 
 async function checkAccess() {
-  const { data } = await supabaseClient.auth.getSession();
-  if (!data.session) {
+  const nav = await LB_mountHeaderNav();
+  currentUser = nav.user;
+
+  if (!currentUser) {
     window.location.href = "login.html";
     return false;
   }
-  currentUser = data.session.user;
 
-  const { data: profile, error } = await supabaseClient
-    .from("profiles").select("is_admin, username").eq("id", currentUser.id).single();
-
-  if (error || !profile?.is_admin) {
+  if (!nav.isAdmin) {
     gateEl.textContent = "You don't have access to this page.";
     gateEl.style.display = "block";
     return false;
   }
-
-  userNameEl.textContent = profile.username || currentUser.email;
-  logoutBtn.style.display = "inline-block";
-  logoutBtn.addEventListener("click", async () => {
-    await supabaseClient.auth.signOut();
-    window.location.href = "index.html";
-  });
-  LB_mountNotifications(document.getElementById("notifSlot"), currentUser.id);
 
   gateEl.style.display = "none";
   pageWrapEl.style.display = "block";

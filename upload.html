@@ -13,6 +13,7 @@
 <script src="assets/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css">
 <style>
 .form-wrap { max-width: 980px; margin: 0 auto; padding: 40px 20px 64px; }
 .form-wrap h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.4px; }
@@ -39,9 +40,8 @@
   </a>
   <div class="header-right">
     <span id="notifSlot"></span>
-    <span class="user-name" id="userName"></span>
-    <a class="nav-link" href="index.html">← Back to mods</a>
-    <button class="nav-link" id="logoutBtn" style="display:none;">Log out</button>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-drawer" id="navDrawer"></div>
   </div>
 </header>
 
@@ -109,34 +109,24 @@
 
 const gateEl = document.getElementById("gate");
 const formWrapEl = document.getElementById("formWrap");
-const userNameEl = document.getElementById("userName");
-const logoutBtn = document.getElementById("logoutBtn");
 
 let currentUser = null;
 let currentUsername = null;
 
 async function checkAuth() {
-  const { data } = await supabaseClient.auth.getSession();
-  if (!data.session) {
+  const nav = await LB_mountHeaderNav();
+  if (!nav.user) {
     gateEl.textContent = "Redirecting to login…";
     window.location.href = "login.html";
     return;
   }
-  currentUser = data.session.user;
-  currentUsername = currentUser.user_metadata?.username || currentUser.email;
-  userNameEl.textContent = currentUsername;
-  logoutBtn.style.display = "inline-block";
-  LB_mountNotifications(document.getElementById("notifSlot"), currentUser.id);
+  currentUser = nav.user;
+  currentUsername = nav.username;
   gateEl.style.display = "none";
   formWrapEl.style.display = "block";
   requestAnimationFrame(() => formWrapEl.classList.add("is-visible"));
   if (typeof updateCardPreview === "function") updateCardPreview();
 }
-
-logoutBtn.addEventListener("click", async () => {
-  await supabaseClient.auth.signOut();
-  window.location.href = "index.html";
-});
 
 checkAuth();
 
