@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Litterbox - Mods for Cat Goes Fishing</title>
-<link rel="icon" type="image/png" href="assets/favicon-32.png">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="apple-touch-icon" href="assets/logo.png">
 <meta name="description" content="Browse and share mods for Cat Goes Fishing.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,7 +14,73 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="assets/app.js"></script>
 <style>
-.mods-section { padding: 30px clamp(16px, 5vw, 56px) 64px; max-width: 1180px; margin: 0 auto; }
+html { scroll-behavior: smooth; }
+
+/* ---------- hero ----------
+   Sits between the header and the browse toolbar. Gradient backdrop with two
+   slow-pulsing glow blobs (amber "sun", teal "water") reads as ambient
+   atmosphere rather than motion you have to wait out — it's decorative, seen
+   once per visit, and prefers-reduced-motion (see shared stylesheet) kills it
+   entirely for anyone who's opted out. A wave divider hands off into the
+   flat page background so the browse section below feels like "shore". */
+.hero {
+  position: relative; overflow: hidden;
+  padding: clamp(40px, 8vw, 76px) clamp(16px, 5vw, 56px) 0;
+  background: linear-gradient(180deg, var(--color-bg-soft) 0%, var(--color-bg) 100%);
+  text-align: center;
+}
+.hero-glow { position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none; }
+.hero-glow-a {
+  width: 420px; height: 420px; top: -180px; left: -120px;
+  background: radial-gradient(circle, rgba(245, 185, 66, 0.30) 0%, rgba(245, 185, 66, 0) 70%);
+  animation: hero-pulse 9s ease-in-out infinite;
+}
+.hero-glow-b {
+  width: 380px; height: 380px; top: -80px; right: -140px;
+  background: radial-gradient(circle, rgba(95, 203, 196, 0.22) 0%, rgba(95, 203, 196, 0) 70%);
+  animation: hero-pulse 11s ease-in-out infinite reverse;
+}
+@keyframes hero-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.7; }
+}
+
+.hero-inner { position: relative; max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+
+.hero-logo {
+  width: 96px; height: auto; margin-bottom: 6px;
+  filter: drop-shadow(0 8px 28px rgba(245, 185, 66, 0.35));
+  animation: hero-in .5s var(--ease-out) both;
+}
+.hero-title {
+  font-size: clamp(26px, 4.5vw, 38px); margin: 4px 0 0; letter-spacing: -0.6px;
+  animation: hero-in .5s var(--ease-out) .06s both;
+}
+.hero-title .hero-highlight { color: var(--color-accent); }
+.hero-sub {
+  color: var(--color-text-muted); font-size: 15.5px; line-height: 1.6;
+  max-width: 46ch; margin: 12px 0 0;
+  animation: hero-in .5s var(--ease-out) .12s both;
+}
+.hero-actions {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  margin: 24px 0 0;
+  animation: hero-in .5s var(--ease-out) .18s both;
+}
+.hero-stats {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+  margin: 26px 0 0; font-size: 13.5px; color: var(--color-text-faint);
+  animation: hero-in .5s var(--ease-out) .24s both;
+}
+.hero-stats strong { font-family: var(--font-mono); color: var(--color-text); font-size: 14px; }
+.hero-stat-dot { opacity: .6; }
+
+@keyframes hero-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.hero-wave { position: relative; display: block; width: 100%; height: 44px; margin-top: 32px; }
+
+/* ---------- browse section ---------- */
+.mods-section { padding: 30px clamp(16px, 5vw, 56px) 64px; max-width: 1180px; margin: 0 auto; scroll-margin-top: calc(var(--header-h) + 14px); }
 
 .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
 
@@ -98,12 +164,31 @@
 /* ---- list view (default) ---- */
 .mods-list { display: flex; flex-direction: column; gap: 10px; }
 
+/* ---- friendlier empty / loading / error states, scoped to the browse list
+   so other pages that reuse .empty-state / .error-state keep their plainer
+   default look (see assets/style.css) ---- */
+.mods-list .loading-state,
+.mods-list .empty-state,
+.mods-list .error-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  padding: 56px 20px;
+}
+.mods-list .loading-state i,
+.mods-list .empty-state i,
+.mods-list .error-state i { font-size: 22px; color: var(--color-text-faint); }
+.mods-list .error-state i { color: var(--color-error); }
+.mods-list .empty-state p,
+.mods-list .error-state p { margin: 0; font-weight: 700; color: var(--color-text); font-size: 15px; }
+.mods-list .empty-state span,
+.mods-list .error-state span { font-size: 13px; color: var(--color-text-muted); max-width: 34ch; }
+
 @media (max-width: 600px) {
   .mods-section { padding: 20px 16px 48px; }
 }
 @media (max-width: 480px) {
   .toolbar-row2 { flex-wrap: wrap; }
   #modCount { order: 3; margin-left: 0; width: 100%; }
+  .hero-logo { width: 76px; }
 }
 </style>
 </head>
@@ -122,7 +207,31 @@
 </header>
 
 <main>
-  <section class="mods-section">
+  <section class="hero">
+    <div class="hero-glow hero-glow-a" aria-hidden="true"></div>
+    <div class="hero-glow hero-glow-b" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <img src="assets/logo.png" alt="Litterbox" class="hero-logo">
+      <h1 class="hero-title">Mods for <span class="hero-highlight">Cat Goes Fishing</span></h1>
+      <p class="hero-sub">Browse community-made mods, rate the ones you love, and share your own — new drops land here first.</p>
+      <div class="hero-actions">
+        <a href="login.html" class="btn btn-primary" id="heroUploadBtn"><i class="fa-solid fa-upload"></i> Upload a mod</a>
+        <a href="#browse" class="btn btn-secondary"><i class="fa-solid fa-fish"></i> Start browsing</a>
+      </div>
+      <div class="hero-stats" id="heroStats">
+        <span><strong id="heroStatMods">—</strong> mods</span>
+        <span class="hero-stat-dot">&middot;</span>
+        <span><strong id="heroStatCreators">—</strong> creators</span>
+        <span class="hero-stat-dot">&middot;</span>
+        <span><strong id="heroStatDownloads">—</strong> downloads</span>
+      </div>
+    </div>
+    <svg class="hero-wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,30 C240,60 480,0 720,30 C960,60 1200,0 1440,30 L1440,60 L0,60 Z" fill="var(--color-bg)"></path>
+    </svg>
+  </section>
+
+  <section class="mods-section" id="browse">
     <div class="browse-tabs" role="tablist" style="margin-bottom: 14px;">
       <button type="button" class="browse-tab active" id="modsTabBtn" role="tab"><i class="fa-solid fa-cube"></i> Mods</button>
       <button type="button" class="browse-tab" id="creatorsTabBtn" role="tab"><i class="fa-solid fa-user-group"></i> Creators</button>
@@ -161,7 +270,7 @@
     </div>
 
     <div id="modsList" class="mods-list">
-      <div class="loading-state">Loading mods…</div>
+      <div class="loading-state"><i class="fa-solid fa-circle-notch fa-spin"></i><p>Loading mods…</p></div>
     </div>
   </section>
 </main>
@@ -215,7 +324,7 @@ function renderMods(mods) {
   const countEl = document.getElementById("modCount");
 
   if (mods.length === 0) {
-    listEl.innerHTML = `<div class="empty-state">No mods found.</div>`;
+    listEl.innerHTML = `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p>No mods found</p><span>Try a different search, or check back soon — new mods land here first.</span></div>`;
     countEl.textContent = "0 mods";
     return;
   }
@@ -264,7 +373,7 @@ async function loadMods() {
 
   if (error) {
     console.error("Error loading mods:", error);
-    listEl.innerHTML = `<div class="error-state">Couldn't load mods. Please try again later.</div>`;
+    listEl.innerHTML = `<div class="error-state"><i class="fa-solid fa-triangle-exclamation"></i><p>Couldn't load mods</p><span>Something went wrong on our end — please try again in a moment.</span></div>`;
     countEl.textContent = "";
     return;
   }
@@ -278,7 +387,7 @@ function renderCreators(profiles) {
   const countEl = document.getElementById("modCount");
 
   if (profiles.length === 0) {
-    listEl.innerHTML = `<div class="empty-state">No creators found.</div>`;
+    listEl.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-group"></i><p>No creators found</p><span>Try a different search.</span></div>`;
     countEl.textContent = "0 creators";
     return;
   }
@@ -332,7 +441,7 @@ async function switchTab(tab) {
   document.getElementById("search").value = "";
 
   if (tab === "creators") {
-    document.getElementById("modsList").innerHTML = `<div class="loading-state">Loading creators…</div>`;
+    document.getElementById("modsList").innerHTML = `<div class="loading-state"><i class="fa-solid fa-circle-notch fa-spin"></i><p>Loading creators…</p></div>`;
     await loadProfiles();
     renderCreators(allProfiles);
   } else {
@@ -388,10 +497,33 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// ---------- hero stats: a light count-up once mods have loaded ----------
+function countUpTo(el, target, duration = 700) {
+  if (!el) return;
+  const startTime = performance.now();
+  function tick(now) {
+    const p = Math.min(1, (now - startTime) / duration);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = LB_formatCount(Math.round(target * eased));
+    if (p < 1) requestAnimationFrame(tick);
+    else el.textContent = LB_formatCount(target);
+  }
+  requestAnimationFrame(tick);
+}
+function updateHeroStats() {
+  const creatorSet = new Set(allMods.map(m => m.user_id || m.author).filter(Boolean));
+  const downloadTotal = allMods.reduce((sum, m) => sum + (m.download_count || 0), 0);
+  countUpTo(document.getElementById("heroStatMods"), allMods.length);
+  countUpTo(document.getElementById("heroStatCreators"), creatorSet.size);
+  countUpTo(document.getElementById("heroStatDownloads"), downloadTotal);
+}
+
 async function init() {
   const nav = await LB_mountHeaderNav();
   currentUserId = nav.user?.id || null;
+  document.getElementById("heroUploadBtn").href = nav.user ? "upload.html" : "login.html";
   await loadMods();
+  updateHeroStats();
 }
 
 init();
