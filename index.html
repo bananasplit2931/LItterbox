@@ -19,7 +19,7 @@ html { scroll-behavior: smooth; }
 /* ---------- hero ----------
    Sits between the header and the browse toolbar. Gradient backdrop with two
    slow-pulsing glow blobs (amber "sun", teal "water") reads as ambient
-   atmosphere rather than motion you have to wait out - it's decorative, seen
+   atmosphere rather than motion you have to wait out — it's decorative, seen
    once per visit, and prefers-reduced-motion (see shared stylesheet) kills it
    entirely for anyone who's opted out. A wave divider hands off into the
    flat page background so the browse section below feels like "shore". */
@@ -110,7 +110,7 @@ html { scroll-behavior: smooth; }
 .search-orb-wrap:focus-within .search-orb-btn { color: var(--color-accent); border-color: var(--color-accent); }
 .search-orb-btn:active { transform: scale(.9); }
 
-/* padding-left is reserved up front (not animated  animating padding
+/* padding-left is reserved up front (not animated — animating padding
    triggers layout) so only opacity/transform move, both GPU-only */
 .search-orb-input {
   position: absolute; left: 0; top: 0;
@@ -213,17 +213,17 @@ html { scroll-behavior: smooth; }
     <div class="hero-inner">
       <img src="assets/logo.png" alt="Litterbox" class="hero-logo">
       <h1 class="hero-title">Mods for <span class="hero-highlight">Cat Goes Fishing</span></h1>
-      <p class="hero-sub">Browse community-made mods, rate the ones you love, and share your own  new drops land here first.</p>
+      <p class="hero-sub">Browse community-made mods, rate the ones you love, and share your own — new drops land here first.</p>
       <div class="hero-actions">
         <a href="login.html" class="btn btn-primary" id="heroUploadBtn"><i class="fa-solid fa-upload"></i> Upload a mod</a>
         <a href="#browse" class="btn btn-secondary"><i class="fa-solid fa-fish"></i> Start browsing</a>
       </div>
       <div class="hero-stats" id="heroStats">
-        <span><strong id="heroStatMods">-</strong> mods</span>
+        <span><strong id="heroStatMods">—</strong> mods</span>
         <span class="hero-stat-dot">&middot;</span>
-        <span><strong id="heroStatCreators">-</strong> creators</span>
+        <span><strong id="heroStatCreators">—</strong> creators</span>
         <span class="hero-stat-dot">&middot;</span>
-        <span><strong id="heroStatDownloads">-</strong> downloads</span>
+        <span><strong id="heroStatDownloads">—</strong> downloads</span>
       </div>
     </div>
     <svg class="hero-wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true">
@@ -324,7 +324,7 @@ function renderMods(mods) {
   const countEl = document.getElementById("modCount");
 
   if (mods.length === 0) {
-    listEl.innerHTML = `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p>No mods found</p><span>Try a different search, or check back soon - new mods land here first.</span></div>`;
+    listEl.innerHTML = `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p>No mods found</p><span>Try a different search, or check back soon — new mods land here first.</span></div>`;
     countEl.textContent = "0 mods";
     return;
   }
@@ -373,7 +373,7 @@ async function loadMods() {
 
   if (error) {
     console.error("Error loading mods:", error);
-    listEl.innerHTML = `<div class="error-state"><i class="fa-solid fa-triangle-exclamation"></i><p>Couldn't load mods</p><span>Something went wrong on our end - please try again in a moment.</span></div>`;
+    listEl.innerHTML = `<div class="error-state"><i class="fa-solid fa-triangle-exclamation"></i><p>Couldn't load mods</p><span>Something went wrong on our end — please try again in a moment.</span></div>`;
     countEl.textContent = "";
     return;
   }
