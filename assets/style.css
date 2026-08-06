@@ -1,47 +1,52 @@
 
 :root {
-  /* ---- palette: "sunset cove" — deep teal-navy water at dusk, warm amber
-     sun-glow accent, aqua ripple secondary. Replaces the old indigo/mauve
-     scheme with something that actually points back at a cat who fishes:
-     warmer, higher-contrast accent, cooler/calmer neutrals. ---- */
-  --color-bg: #0A1622;
-  --color-bg-soft: #060E17;
-  --color-surface: #112537;
-  --color-surface-hover: #1B3547;
-  --color-border: #142A3B;
-  --color-border-strong: #2E4E62;
+  /* ---- palette: "pond at dusk" — deep forest green-black surfaces with a
+     fresh leaf-green accent and a chartreuse highlight. Hues sampled directly
+     from the user-provided "Green" swatch (#F0FB43 / #83CD48 / #56B436 /
+     #399238 = "nature, peace, healthy wealth, tranquility") and built out
+     into a full dark-UI system: swatch tones are too mid-toned/saturated to
+     use as literal backgrounds, so bg/surface go much darker while staying
+     in the same hue family, and the swatch's brighter greens become the
+     accent + highlight. ---- */
+  --color-bg: #0A1710;
+  --color-bg-soft: #060F09;
+  --color-surface: #132318;
+  --color-surface-hover: #1D3324;
+  --color-border: #16281B;
+  --color-border-strong: #35573D;
 
-  --color-text: #F7F1E4;
-  --color-text-muted: #9FB6C2;
-  --color-text-faint: #62808E;
+  --color-text: #F5F3E9;
+  --color-text-muted: #A9C2AC;
+  --color-text-faint: #6C8770;
 
-  --color-accent: #F5B942;
-  --color-accent-dark: #DE9F28;
-  --color-accent-ink: #2B1B02;
-  --color-accent-tint: rgba(245, 185, 66, 0.16);
-  --color-accent-border: rgba(245, 185, 66, 0.4);
+  --color-accent: #6FCB4D;
+  --color-accent-dark: #57A93B;
+  --color-accent-ink: #0D2007;
+  --color-accent-tint: rgba(111, 203, 77, 0.16);
+  --color-accent-border: rgba(111, 203, 77, 0.4);
 
-  --color-gold: #5FCBC4;
-  --color-gold-bg: rgba(95, 203, 196, 0.12);
-  --color-gold-border: rgba(95, 203, 196, 0.4);
+  --color-gold: #D8E85A;
+  --color-gold-bg: rgba(216, 232, 90, 0.12);
+  --color-gold-border: rgba(216, 232, 90, 0.4);
 
-  --color-info: #8FA6B0;
-  --color-info-bg: rgba(143, 166, 176, 0.14);
-  --color-info-border: rgba(143, 166, 176, 0.4);
+  --color-info: #93AC97;
+  --color-info-bg: rgba(147, 172, 151, 0.14);
+  --color-info-border: rgba(147, 172, 151, 0.4);
 
-  --color-error: #E56B76;
-  --color-error-bg: rgba(229, 107, 118, 0.1);
-  --color-error-border: rgba(229, 107, 118, 0.35);
+  --color-error: #E2665F;
+  --color-error-bg: rgba(226, 102, 95, 0.1);
+  --color-error-border: rgba(226, 102, 95, 0.35);
 
-  --color-btn-secondary-bg: #1C3245;
-  --color-btn-secondary-bg-hover: #244054;
+  --color-btn-secondary-bg: #17301F;
+  --color-btn-secondary-bg-hover: #1F3E28;
 
-  /* ---- emoji rating scale, angry (1) → grinning (5) ---- */
-  --rating-1: #E0685A;
-  --rating-2: #E8A659;
-  --rating-3: #8FA6B0;
-  --rating-4: #F6CE7B;
-  --rating-5: #F5B942;
+  /* ---- emoji rating scale, angry (1) → grinning (5) — trends from red
+     through to the accent green, so "best" mod rating = brand color ---- */
+  --rating-1: #D9615A;
+  --rating-2: #D99A4B;
+  --rating-3: #93AC97;
+  --rating-4: #9ED66B;
+  --rating-5: #6FCB4D;
 
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -111,7 +116,7 @@ h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; line-he
 *::-webkit-scrollbar { width: 10px; height: 10px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: var(--radius-pill); border: 2px solid var(--color-bg); }
-*::-webkit-scrollbar-thumb:hover { background: #3E6478; }
+*::-webkit-scrollbar-thumb:hover { background: #4A7355; }
 
 /* ---------- header ---------- */
 .site-header {
@@ -122,10 +127,10 @@ h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; line-he
   height: var(--header-h);
   padding: 0 clamp(16px, 5vw, 40px);
   border-bottom: 1px solid transparent;
-  background: rgba(10, 22, 34, 0.82);
+  background: rgba(10, 23, 16, 0.82);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 1px 0 rgba(46, 78, 98, 0.35), 0 12px 24px -12px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 1px 0 rgba(53, 87, 61, 0.35), 0 12px 24px -12px rgba(0, 0, 0, 0.55);
   position: sticky;
   top: 0;
   z-index: 10;
