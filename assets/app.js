@@ -92,30 +92,7 @@ function LB_renderRatingChip(rating, count) {
     return `<span class="stat-chip stat-rating no-rating"><i class="fa-solid fa-face-meh"></i><strong>—</strong>${countLabel}</span>`;
   }
   const face = LB_ratingFace(value);
-  const pct = Math.max(6, Math.min(100, (value / 5) * 100));
-  return `<span class="stat-chip stat-rating" style="--rating-color:${face.color}"><i class="fa-solid ${face.icon}"></i><strong>${value.toFixed(1)}</strong>${countLabel}<span class="rating-meter"><span class="rating-meter-fill" style="width:${pct}%"></span></span></span>`;
-}
-
-// Deterministic icon-tile gradient for mods without an uploaded icon — picked
-// by hashing the mod's id/name, so a given mod always lands on the same tile
-// rather than reshuffling every re-render. All stops stay mid-to-dark so the
-// cream initials text on top stays readable everywhere on the gradient.
-const LB_TILE_GRADIENTS = [
-  ["#2E5A38", "#0F2415"],
-  ["#3F7A34", "#123018"],
-  ["#355E4A", "#10241C"],
-  ["#4A6B3E", "#16241A"],
-  ["#3B4A40", "#151F19"],
-];
-function LB_hashSeed(str) {
-  let h = 0;
-  const s = String(str || "x");
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return h;
-}
-function LB_tileGradient(seed) {
-  const [a, b] = LB_TILE_GRADIENTS[LB_hashSeed(seed) % LB_TILE_GRADIENTS.length];
-  return `linear-gradient(135deg, ${a}, ${b})`;
+  return `<span class="stat-chip stat-rating" style="--rating-color:${face.color}"><i class="fa-solid ${face.icon}"></i><strong>${value.toFixed(1)}</strong>${countLabel}</span>`;
 }
 
 // Renders one mod-row card — the single source of truth used by the browse
@@ -123,14 +100,19 @@ function LB_tileGradient(seed) {
 function LB_renderModCard(mod, opts = {}) {
   const { currentUserId = null, clickable = true, localIconUrl = null } = opts;
   const safeIconUrl = localIconUrl || (isTrustedStorageUrl(mod.icon_url) ? escapeHtml(mod.icon_url) : null);
+  const safeBannerUrl = isTrustedStorageUrl(mod.banner_url) ? escapeHtml(mod.banner_url) : null;
   const tag = clickable ? "a" : "div";
   const hrefAttr = clickable ? ` href="mod.html?id=${encodeURIComponent(mod.id)}"` : "";
-  const tileStyle = safeIconUrl ? "" : ` style="background:${LB_tileGradient(mod.id || mod.name)}"`;
   return `
-  <${tag} class="mod-row"${hrefAttr}>
-  <div class="mod-icon"${tileStyle}>
+  <${tag} class="mod-row${mod.is_preview ? " is-preview" : ""}"${hrefAttr}>
+  <div class="mod-banner-wrap">
+  <div class="mod-banner-img"${safeBannerUrl ? ` style="background-image:url('${safeBannerUrl}')"` : ""}></div>
+  ${mod.is_preview ? `<span class="preview-chip">Preview</span>` : ""}
+  </div>
+  <div class="mod-icon">
   ${safeIconUrl ? `<img src="${safeIconUrl}" alt="" loading="lazy">` : iconInitials(mod.name)}
   </div>
+  <div class="mod-body">
   <div class="mod-main">
   <div class="mod-title-row">
   <h3 class="mod-name">${escapeHtml(mod.name || "Untitled mod")}</h3>
@@ -138,9 +120,8 @@ function LB_renderModCard(mod, opts = {}) {
   </div>
   <p class="mod-desc">${escapeHtml(LB_stripMarkdown(mod.description) || "")}</p>
   <div class="mod-tags">
-  ${mod.is_preview ? `<span class="tag-pill preview-pill"><i class="fa-solid fa-flask"></i> Preview</span>` : ""}
-  ${mod.review_status === "pending" ? `<span class="tag-pill pending-pill"><i class="fa-solid fa-hourglass-half"></i> Awaiting review</span>` : ""}
-  ${mod.review_status === "rejected" ? `<span class="tag-pill rejected-pill"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>` : ""}
+  ${mod.review_status === "pending" ? `<span class="tag-pill pending-pill">Awaiting review</span>` : ""}
+  ${mod.review_status === "rejected" ? `<span class="tag-pill rejected-pill">Rejected</span>` : ""}
   ${clickable && currentUserId && mod.user_id === currentUserId ? `<span class="manage-link">Manage this mod <i class="fa-solid fa-arrow-right"></i></span>` : ""}
   </div>
   </div>
@@ -150,6 +131,7 @@ function LB_renderModCard(mod, opts = {}) {
   <span class="stat-chip">${DOWNLOAD_ICON}<strong>${LB_formatCount(mod.download_count ?? 0)}</strong></span>
   </div>
   <span class="stat-chip">${CLOCK_ICON}${mod.created_at ? timeAgo(mod.created_at) : "just now"}</span>
+  </div>
   </div>
   </${tag}>
   `;

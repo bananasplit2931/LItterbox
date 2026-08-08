@@ -1,12 +1,11 @@
+
 :root {
   /* ---- palette: "pond at dusk" — deep forest green-black surfaces with a
-     fresh leaf-green accent and a chartreuse highlight. Hues sampled directly
-     from the user-provided "Green" swatch (#F0FB43 / #83CD48 / #56B436 /
-     #399238 = "nature, peace, healthy wealth, tranquility") and built out
-     into a full dark-UI system: swatch tones are too mid-toned/saturated to
-     use as literal backgrounds, so bg/surface go much darker while staying
-     in the same hue family, and the swatch's brighter greens become the
-     accent + highlight. ---- */
+     fresh leaf-green accent and a chartreuse highlight. Every value below is
+     copied 1:1 from the LItterbox-main (green) build. --color-preview* has
+     no counterpart there since that build has no preview-mod feature — kept
+     as its own teal identity so it still reads as a distinct status now
+     that the main accent is green too. ---- */
   --color-bg: #0A1710;
   --color-bg-soft: #060F09;
   --color-surface: #132318;
@@ -22,11 +21,15 @@
   --color-accent-dark: #57A93B;
   --color-accent-ink: #0D2007;
   --color-accent-tint: rgba(111, 203, 77, 0.16);
-  --color-accent-border: rgba(111, 203, 77, 0.4);
 
   --color-gold: #D8E85A;
   --color-gold-bg: rgba(216, 232, 90, 0.12);
   --color-gold-border: rgba(216, 232, 90, 0.4);
+
+  /* preview-mod status only — teal, kept distinct from the leaf-green accent */
+  --color-preview: #4DBFA0;
+  --color-preview-bg: rgba(77, 191, 160, 0.12);
+  --color-preview-border: rgba(77, 191, 160, 0.42);
 
   --color-info: #93AC97;
   --color-info-bg: rgba(147, 172, 151, 0.14);
@@ -39,8 +42,7 @@
   --color-btn-secondary-bg: #17301F;
   --color-btn-secondary-bg-hover: #1F3E28;
 
-  /* ---- emoji rating scale, angry (1) → grinning (5) — trends from red
-     through to the accent green, so "best" mod rating = brand color ---- */
+  /* ---- emoji rating scale, angry (1) → grinning (5) ---- */
   --rating-1: #D9615A;
   --rating-2: #D99A4B;
   --rating-3: #93AC97;
@@ -49,6 +51,7 @@
 
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Fraunces', serif;
   --weight-heading: 800;
 
   --radius-lg: 16px;
@@ -281,7 +284,7 @@ textarea { resize: vertical; min-height: 90px; }
   border-radius: var(--radius-pill); padding: 4px 10px;
 }
 .verified-badge { color: var(--color-accent); font-size: 13px; vertical-align: -1px; margin-left: 3px; flex-shrink: 0; }
-.preview-pill { color: var(--color-gold); border-color: var(--color-gold-border); background: var(--color-gold-bg); }
+.preview-pill { color: var(--color-preview); border-color: var(--color-preview-border); background: var(--color-preview-bg); }
 .pending-pill { color: var(--color-info); border-color: var(--color-info-border); background: var(--color-info-bg); }
 .rejected-pill { color: var(--color-error); border-color: var(--color-error-border); background: var(--color-error-bg); }
 
@@ -402,7 +405,7 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 .changelog-item { padding: 14px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
 .changelog-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
 .changelog-item-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.announcement-pill { color: var(--color-accent); border-color: var(--color-accent-border); background: var(--color-accent-tint); }
+.announcement-pill { color: var(--color-accent); border-color: rgba(111, 203, 77, 0.4); background: var(--color-accent-tint); }
 .changelog-title { font-size: 14.5px; font-weight: 700; margin: 0; letter-spacing: -0.2px; color: var(--color-text); }
 .changelog-date { font-size: 12px; color: var(--color-text-faint); white-space: nowrap; }
 .changelog-body { font-size: 13.5px; }
@@ -483,20 +486,22 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 
 /* ---------- mod card (browse list, live preview, anywhere) ---------- */
 .mod-row {
-  display: flex; gap: 18px; padding: 16px 20px;
+  position: relative;
+  display: flex; gap: 18px; padding: 18px 20px;
   background: var(--color-surface); border: 1px solid var(--color-border);
   border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
-  transition: border-color .16s ease, background .16s ease, transform .16s var(--ease-out), box-shadow .16s var(--ease-out);
+  transition: border-color .12s ease, background .12s ease, transform .12s ease, box-shadow .12s ease;
   text-decoration: none; color: inherit;
 }
+.mod-row.is-preview { border: 1.5px solid var(--color-preview); background: var(--color-preview-bg); }
 @media (hover: hover) and (pointer: fine) {
   a.mod-row:hover {
-    border-color: var(--color-accent-border); background: var(--color-surface-hover);
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-hover), 0 0 0 1px var(--color-accent-tint);
+    border-color: var(--color-border-strong); background: var(--color-surface-hover);
+    transform: translateY(-2px) rotate(-0.4deg); box-shadow: var(--shadow-hover);
   }
+  a.mod-row.is-preview:hover { border-color: var(--color-preview); }
   a.mod-row:hover .mod-name { color: var(--color-accent); }
-  a.mod-row:hover .mod-icon { transform: scale(1.04); }
+  a.mod-row.is-preview:hover .mod-name { color: var(--color-preview); }
 }
 a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 
@@ -512,20 +517,47 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .mods-list .mod-row:nth-child(6) { animation-delay: 125ms; }
 .mods-list .mod-row:nth-child(n+7) { animation-delay: 140ms; }
 
+/* ---- banner (cover image the card is built around) ----
+   Hidden by default (list view stays compact/icon-led); grid view and the
+   narrow preview-pane switch it on below, where there's room for it to
+   actually read as a cover photo instead of a stretched icon.
+   Mods without an uploaded banner fall back to a gradient wash — cycled
+   across four on-brand pairings by card position so a grid of un-bannered
+   mods doesn't read as identical stamped-out tiles. Real banner_url images
+   (set inline by JS) always win over these. */
+.mod-banner-wrap { display: none; position: relative; }
+.mod-banner-img {
+  width: 100%; height: 100%;
+  background-image: linear-gradient(135deg, var(--color-accent-tint), var(--color-surface-hover));
+  background-size: cover; background-position: center;
+}
+.mods-list .mod-row:nth-child(4n+2) .mod-banner-img { background-image: linear-gradient(135deg, rgba(53, 87, 61, 0.55), rgba(29, 51, 36, 0.6)); }
+.mods-list .mod-row:nth-child(4n+3) .mod-banner-img { background-image: linear-gradient(135deg, rgba(216, 232, 90, 0.28), rgba(131, 136, 45, 0.4)); }
+.mods-list .mod-row:nth-child(4n+4) .mod-banner-img { background-image: linear-gradient(135deg, rgba(95, 90, 125, 0.4), rgba(53, 87, 61, 0.45)); }
+.mod-row.is-preview .mod-banner-img { background-image: linear-gradient(135deg, rgba(77, 191, 160, 0.4), rgba(15, 41, 35, 0.7)); }
+.preview-chip {
+  display: none; align-items: center;
+  position: absolute; top: 10px; right: 10px;
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--color-preview); background: rgba(10, 23, 16, 0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--color-preview-border); border-radius: var(--radius-pill);
+  padding: 4px 10px;
+}
+
 .mod-icon {
   width: 72px; height: 72px; border-radius: var(--radius-md);
   background: var(--color-accent-tint); flex-shrink: 0; object-fit: cover;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-mono); font-weight: 700; font-size: 15px; letter-spacing: 0.5px;
-  color: var(--color-text); overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  transition: transform .2s var(--ease-out);
+  font-family: var(--font-mono); font-weight: 700; font-size: 14px; color: var(--color-accent);
+  border: 1px solid var(--color-border); overflow: hidden;
+  transition: border-color .12s ease;
 }
 .mod-icon img { width: 100%; height: 100%; object-fit: cover; }
 
+.mod-body { display: contents; }
 .mod-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; justify-content: center; }
 .mod-title-row { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
-.mod-name { font-weight: 800; font-size: 17.5px; margin: 0; letter-spacing: -0.3px; color: var(--color-text); transition: color .12s ease; }
+.mod-name { font-family: var(--font-display); font-weight: 600; font-size: 18.5px; margin: 0; letter-spacing: -0.01em; color: var(--color-text); transition: color .12s ease; }
 .mod-author { font-family: var(--font-mono); font-size: 12.5px; color: var(--color-text-faint); }
 
 .mod-desc {
@@ -535,53 +567,40 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 }
 
 .mod-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 1px; }
-.manage-link {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 11.5px; font-weight: 700; color: var(--color-accent-ink);
-  background: var(--color-accent); padding: 3px 10px 3px 10px; border-radius: var(--radius-pill);
-}
-.manage-link i { font-size: 9px; }
+.manage-link { font-size: 12px; font-weight: 700; color: var(--color-accent); }
 
-.mod-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 7px; flex-shrink: 0; }
-.mod-stats-row { display: flex; align-items: center; gap: 10px; }
+.mod-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; flex-shrink: 0; }
+.mod-stats-row { display: flex; align-items: center; gap: 14px; }
 
-/* rating chip gets its own tinted pill + a tiny fill-meter so quality reads
-   at a glance without parsing the number first */
-.stat-chip.stat-rating {
-  padding: 4px 10px 4px 8px; border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--rating-color, var(--color-gold)) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--rating-color, var(--color-gold)) 32%, transparent);
+/* ---- grid view + preview-pane (both are single-column "cards", so they
+   share the exact same banner treatment) ---- */
+.mods-list.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.mods-list.grid .mod-row, .preview-pane .mod-row {
+  flex-direction: column; align-items: flex-start; padding: 0; overflow: hidden;
 }
-.stat-chip.stat-rating.no-rating { background: none; border-color: var(--color-border); }
-.rating-meter { position: relative; width: 30px; height: 4px; border-radius: 2px; background: var(--color-border-strong); overflow: hidden; margin-left: 3px; }
-.rating-meter-fill { position: absolute; inset: 0; border-radius: 2px; background: var(--rating-color, var(--color-gold)); }
-
-/* ---- grid view: a real card, not a squashed row — full-width banner tile
-   up top, content below, stats as a footer row split off with a divider ---- */
-.mods-list.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
-.mods-list.grid .mod-row { flex-direction: column; align-items: stretch; padding: 0; overflow: hidden; }
-.mods-list.grid .mod-icon {
-  width: 100%; height: 84px; border-radius: 0;
-  font-size: 20px; box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+.mods-list.grid .mod-banner-wrap, .preview-pane .mod-banner-wrap { display: block; width: 100%; height: 112px; }
+.mods-list.grid .mod-icon, .preview-pane .mod-icon {
+  width: 56px; height: 56px; margin: -28px 0 0 14px;
+  border: 3px solid var(--color-surface); box-shadow: 0 3px 10px rgba(0, 0, 0, .4);
 }
-.mods-list.grid .mod-main { width: 100%; padding: 14px 16px 0; }
-.mods-list.grid .mod-title-row { flex-direction: column; align-items: flex-start; gap: 2px; }
-.mods-list.grid .mod-desc { -webkit-line-clamp: 2; }
-.mods-list.grid .mod-side {
-  flex-direction: row-reverse; justify-content: space-between; width: 100%; align-items: center;
-  margin-top: 10px; padding: 10px 16px 14px; border-top: 1px solid var(--color-border);
-}
-.mods-list.grid .mod-stats-row { flex-direction: row-reverse; }
 @media (hover: hover) and (pointer: fine) {
-  .mods-list.grid a.mod-row:hover .mod-icon { transform: none; filter: brightness(1.08); }
+  a.mod-row:hover .mod-icon { border-color: var(--color-surface-hover); }
+  a.mod-row.is-preview:hover .mod-icon { border-color: var(--color-preview-bg); }
 }
+.mods-list.grid .preview-chip, .preview-pane .preview-chip { display: inline-flex; }
+.mods-list.grid .mod-body, .preview-pane .mod-body { display: block; width: 100%; padding: 8px 14px 14px; }
+.mods-list.grid .mod-main, .preview-pane .mod-main { width: 100%; }
+.mods-list.grid .mod-desc, .preview-pane .mod-desc { -webkit-line-clamp: 3; margin-top: 6px; }
+.mods-list.grid .mod-side, .preview-pane .mod-side { flex-direction: row-reverse; justify-content: space-between; width: 100%; align-items: center; margin-top: 10px; }
+.mods-list.grid .mod-stats-row, .preview-pane .mod-stats-row { flex-direction: row-reverse; }
 
 @media (max-width: 480px) {
-  .mod-row { flex-wrap: wrap; padding: 12px; gap: 10px; }
-  .mod-icon { width: 48px; height: 48px; border-radius: var(--radius-sm); }
-  .mod-name { font-size: 14.5px; }
+  .mods-list:not(.grid) .mod-row { flex-wrap: wrap; padding: 12px; gap: 10px; }
+  .mods-list:not(.grid) .mod-icon { width: 48px; height: 48px; border-radius: var(--radius-sm); }
+  .mods-list.grid .mod-banner-wrap { height: 92px; }
+  .mod-name { font-size: 15.5px; }
   .mod-desc { font-size: 13px; }
-  .mod-side { width: 100%; align-items: flex-start; flex-direction: row; justify-content: space-between; }
+  .mods-list:not(.grid) .mod-side { width: 100%; align-items: flex-start; flex-direction: row; justify-content: space-between; }
   .mods-list.grid .mod-side { flex-direction: row; }
 }
 
@@ -627,11 +646,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 /* ---------- live card preview (upload / edit) ---------- */
 .form-with-preview { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
 .preview-pane { position: sticky; top: calc(var(--header-h) + 20px); }
-.preview-pane .mod-row { flex-direction: column; align-items: flex-start; cursor: default; }
-.preview-pane .mod-row .mod-main { width: 100%; }
-.preview-pane .mod-row .mod-desc { -webkit-line-clamp: 3; }
-.preview-pane .mod-row .mod-side { flex-direction: row-reverse; justify-content: space-between; width: 100%; align-items: center; margin-top: 4px; }
-.preview-pane .mod-row .mod-stats-row { flex-direction: row-reverse; }
+.preview-pane .mod-row { cursor: default; }
 @media (max-width: 860px) {
   .form-with-preview { grid-template-columns: 1fr; }
   .preview-pane { position: static; }
