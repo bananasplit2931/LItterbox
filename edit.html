@@ -115,7 +115,7 @@
 
   <div class="preview-banner" id="previewBanner" style="display:none;">
     <i class="fa-solid fa-rocket"></i>
-    <div><strong>This mod is a preview.</strong> It has no file yet, so it only shows a Follow button on its page. Add the <code>data.win</code> file below and save to publish it - everyone following will be notified automatically.</div>
+    <div><strong>This mod is a preview.</strong> It has no link yet, so it only shows a Follow button on its page. Add a GameJolt or itch.io link below and save to publish it - everyone following will be notified automatically.</div>
   </div>
 
   <div class="form-with-preview">
@@ -189,11 +189,9 @@
           </div>
 
           <div class="field" style="margin-bottom:0;">
-            <label for="dataFile">Mod file</label>
-            <div class="file-input">
-              <input type="file" id="dataFile" accept=".win,.zip">
-            </div>
-            <p class="field-hint">Adding this publishes the mod and notifies everyone following it - it'll go through a quick manual review first.</p>
+            <label for="modLink">Mod link</label>
+            <input type="url" id="modLink" placeholder="https://gamejolt.com/games/... or https://you.itch.io/your-mod">
+            <p class="field-hint" id="modLinkHint">Adding this publishes the mod and notifies everyone following it - it'll go through a quick manual review first.</p>
           </div>
         </div>
 
@@ -228,11 +226,9 @@
           </div>
 
           <div class="field" id="changelogFileField" style="display:none;">
-            <label for="changelogFile">New <code>data.win</code> <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
-            <div class="file-input">
-              <input type="file" id="changelogFile" accept=".win,.zip">
-            </div>
-            <p class="field-hint">Attach this to replace the current file with a new version when you post - the new version goes back through review before it's public.</p>
+            <label for="changelogLink">New mod link <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
+            <input type="url" id="changelogLink" placeholder="https://gamejolt.com/games/... or https://you.itch.io/your-mod">
+            <p class="field-hint">Fill this in to replace the current link with a new version when you post - the new version goes back through review before it's public.</p>
           </div>
 
           <button type="submit" class="btn btn-secondary" id="changelogSubmitBtn">Post update</button>
@@ -403,6 +399,9 @@ async function checkAuth() {
     document.getElementById("previewBanner").style.display = "flex";
     document.getElementById("dataFileField").style.display = "block";
   }
+  if (mod.mod_link) {
+    document.getElementById("changelogLink").placeholder = mod.mod_link;
+  }
 
   document.getElementById("changelogCard").style.display = "block";
   updateChangelogKindUI();
@@ -483,8 +482,8 @@ document.getElementById("changelogForm").addEventListener("submit", async (e) =>
   const changelogSubmitBtn = document.getElementById("changelogSubmitBtn");
   const title = document.getElementById("changelogTitle").value.trim();
   const content = changelogEditor.getValue().trim();
-  const fileInput = document.getElementById("changelogFile");
-  const newFile = selectedChangelogKind === "changelog" && fileInput ? fileInput.files[0] : null;
+  const linkInput = document.getElementById("changelogLink");
+  const newLinkRaw = selectedChangelogKind === "changelog" && linkInput ? linkInput.value.trim() : "";
 
   if (!content) {
     changelogMsgEl.textContent = "Write something for this update first.";
@@ -492,19 +491,29 @@ document.getElementById("changelogForm").addEventListener("submit", async (e) =>
     return;
   }
 
+  let parsedNewLink = null;
+  if (newLinkRaw) {
+    parsedNewLink = LB_parseModLink(newLinkRaw);
+    if (!parsedNewLink) {
+      changelogMsgEl.textContent = "That mod link needs to be a GameJolt or itch.io URL.";
+      changelogMsgEl.className = "form-msg error";
+      return;
+    }
+  }
+
   changelogSubmitBtn.disabled = true;
   changelogSubmitBtn.textContent = "Posting…";
   changelogMsgEl.className = "form-msg";
 
   try {
-    let newFileUrl = null;
-    if (newFile) {
-      newFileUrl = await uploadToStorage(newFile, "files");
-      const { error: fileError } = await supabaseClient
+    if (parsedNewLink) {
+      // A new link goes back through manual review before it replaces the
+      // public one, same as a brand new mod's link does.
+      const { error: linkError } = await supabaseClient
         .from("mods")
-        .update({ file_url: newFileUrl })
+        .update({ mod_link: parsedNewLink.url, review_status: "pending" })
         .eq("id", currentMod.id);
-      if (fileError) throw fileError;
+      if (linkError) throw linkError;
     }
 
     const { error: postError } = await supabaseClient
@@ -516,14 +525,18 @@ document.getElementById("changelogForm").addEventListener("submit", async (e) =>
       });
     if (postError) throw postError;
 
-    if (newFileUrl && currentMod.file_url) await deleteFromStorage(currentMod.file_url);
-    if (newFileUrl) currentMod.file_url = newFileUrl;
+    if (parsedNewLink) {
+      currentMod.mod_link = parsedNewLink.url;
+      currentMod.review_status = "pending";
+    }
 
-    changelogMsgEl.textContent = "Posted! Everyone following this mod has been notified.";
+    changelogMsgEl.textContent = parsedNewLink
+      ? "Posted! The new link is now awaiting review before it goes live."
+      : "Posted! Everyone following this mod has been notified.";
     changelogMsgEl.className = "form-msg success";
     document.getElementById("changelogTitle").value = "";
     changelogEditor.setValue("");
-    if (fileInput) fileInput.value = "";
+    if (linkInput) linkInput.value = "";
     await loadChangelogs();
   } catch (err) {
     console.error(err);
@@ -604,12 +617,21 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   const description = descEditor.getValue().trim();
   const iconFile = document.getElementById("icon").files[0];
   const bannerFile = document.getElementById("banner").files[0];
-  const dataFileInput = document.getElementById("dataFile");
-  const dataFile = dataFileInput ? dataFileInput.files[0] : null;
+  const modLinkInput = document.getElementById("modLink");
+  const linkRaw = modLinkInput ? modLinkInput.value.trim() : "";
 
   if (!description) {
     showMessage("Please write a description.", "error");
     return;
+  }
+
+  let parsedLink = null;
+  if (currentMod.is_preview && linkRaw) {
+    parsedLink = LB_parseModLink(linkRaw);
+    if (!parsedLink) {
+      showMessage("That mod link needs to be a GameJolt or itch.io URL.", "error");
+      return;
+    }
   }
 
   submitBtn.disabled = true;
@@ -635,10 +657,9 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
     if (updateError) throw updateError;
 
     let justPublished = false;
-    if (currentMod.is_preview && dataFile) {
-      const newFileUrl = await uploadToStorage(dataFile, "files");
+    if (currentMod.is_preview && parsedLink) {
       const { error: publishError } = await supabaseClient
-        .rpc("publish_mod_preview", { target_mod_id: currentMod.id, new_file_url: newFileUrl });
+        .rpc("publish_mod_preview", { target_mod_id: currentMod.id, new_mod_link: parsedLink.url });
       if (publishError) throw publishError;
       justPublished = true;
     }
