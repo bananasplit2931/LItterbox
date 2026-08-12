@@ -57,6 +57,40 @@ function isTrustedStorageUrl(url) {
   return typeof url === "string" && url.startsWith(TRUSTED_STORAGE_PREFIX);
 }
 
+// ---------- Mod links (GameJolt / itch.io) ----------
+// Mods can now point at an external download page instead of hosting a
+// data.win/zip in Supabase storage. We only accept these two hosts so the
+// "goes to review" flow still means something (admin can trust what kind
+// of page they're clicking into).
+const LB_LINK_SOURCES = [
+  { test: (h) => h === "gamejolt.com" || h === "www.gamejolt.com", label: "GameJolt", icon: "fa-solid fa-rocket" },
+  { test: (h) => h === "itch.io" || h.endsWith(".itch.io"), label: "itch.io", icon: "fa-solid fa-gamepad" },
+];
+
+// Returns { url, label, icon } if the string is a well-formed http(s) URL
+// on an allowed host, otherwise null.
+function LB_parseModLink(raw) {
+  const value = (raw || "").trim();
+  if (!value) return null;
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+  const host = parsed.hostname.toLowerCase();
+  const source = LB_LINK_SOURCES.find(s => s.test(host));
+  if (!source) return null;
+  return { url: parsed.href, label: source.label, icon: source.icon };
+}
+
+function LB_renderLinkSourceBadge(url) {
+  const parsed = LB_parseModLink(url);
+  if (!parsed) return "";
+  return `<span class="link-source-badge"><i class="${parsed.icon}"></i>${parsed.label}</span>`;
+}
+
 function iconInitials(name) {
   if (!name) return "?";
   const words = name.trim().split(/\s+/);
@@ -122,6 +156,7 @@ function LB_renderModCard(mod, opts = {}) {
   <div class="mod-tags">
   ${mod.review_status === "pending" ? `<span class="tag-pill pending-pill">Awaiting review</span>` : ""}
   ${mod.review_status === "rejected" ? `<span class="tag-pill rejected-pill">Rejected</span>` : ""}
+  ${!mod.is_preview && mod.mod_link ? LB_renderLinkSourceBadge(mod.mod_link) : ""}
   ${clickable && currentUserId && mod.user_id === currentUserId ? `<span class="manage-link">Manage this mod <i class="fa-solid fa-arrow-right"></i></span>` : ""}
   </div>
   </div>
