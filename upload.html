@@ -49,7 +49,7 @@
 
 <div class="form-wrap page-reveal" id="formWrap" style="display:none;">
   <h1>Upload a mod</h1>
-  <p class="sub">Add a name, a short description, an icon, an optional banner, and the <code>data.win</code> file itself. This all shows up on your mod's own page.</p>
+  <p class="sub">Add a name, a short description, an icon, an optional banner, and a link to your mod's GameJolt or itch.io page. This all shows up on your mod's own page.</p>
 
   <div class="form-with-preview">
   <div class="card">
@@ -86,11 +86,9 @@
       </div>
 
       <div class="field">
-        <label for="dataFile">Mod file <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
-        <div class="file-input" id="dataWrap">
-          <input type="file" id="dataFile" accept=".win,.zip">
-        </div>
-        <p class="field-hint">Leave this empty to publish a <strong>Preview</strong> instead - people can follow it, and everyone following gets notified the moment you add the file from Manage. Mods with a file go through a quick manual review before they're public.</p>
+        <label for="modLink">Mod link <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
+        <input type="url" id="modLink" placeholder="https://gamejolt.com/games/... or https://you.itch.io/your-mod">
+        <p class="field-hint" id="modLinkHint">Leave this empty to publish a <strong>Preview</strong> instead - people can follow it, and everyone following gets notified the moment you add a link from Manage. A GameJolt or itch.io link goes through a quick manual review before it's public.</p>
       </div>
 
       <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Upload mod</button>
@@ -155,21 +153,35 @@ wirePreview("icon", "iconPreviewWrap", "iconPreview");
 wirePreview("banner", "bannerPreviewWrap", "bannerPreview");
 
 let previewIconUrl = null;
+const modLinkInput = document.getElementById("modLink");
+const modLinkHint = document.getElementById("modLinkHint");
+const defaultModLinkHint = modLinkHint.innerHTML;
+
 function updateCardPreview() {
   const name = document.getElementById("name").value.trim();
   const iconFile = document.getElementById("icon").files[0];
-  const dataFile = document.getElementById("dataFile").files[0];
+  const linkRaw = modLinkInput.value.trim();
+  const parsedLink = LB_parseModLink(linkRaw);
 
   if (iconFile) {
     if (previewIconUrl) URL.revokeObjectURL(previewIconUrl);
     previewIconUrl = URL.createObjectURL(iconFile);
   }
 
+  // Show a gentle inline warning if something's typed but it isn't a
+  // GameJolt/itch.io link yet, without blocking typing mid-paste.
+  if (linkRaw && !parsedLink) {
+    modLinkHint.innerHTML = `<span style="color:var(--color-error);">That doesn't look like a GameJolt or itch.io link.</span>`;
+  } else {
+    modLinkHint.innerHTML = defaultModLinkHint;
+  }
+
   const previewMod = {
     name: name || "Untitled mod",
     author: currentUsername || "you",
     description: descEditor.getValue(),
-    is_preview: !dataFile,
+    is_preview: !parsedLink,
+    mod_link: parsedLink ? parsedLink.url : null,
     rating: 0,
     rating_count: 0,
     download_count: 0,
@@ -177,18 +189,16 @@ function updateCardPreview() {
 
   document.getElementById("cardPreview").innerHTML =
     LB_renderModCard(previewMod, { clickable: false, localIconUrl: previewIconUrl });
+
+  submitBtn.textContent = parsedLink ? "Upload mod" : (linkRaw ? "Upload mod" : "Create preview");
 }
 
-["name", "icon", "dataFile"].forEach(id => {
+["name", "icon", "modLink"].forEach(id => {
   document.getElementById(id).addEventListener("input", updateCardPreview);
   document.getElementById(id).addEventListener("change", updateCardPreview);
 });
 document.getElementById("descriptionEditor").addEventListener("input", updateCardPreview);
 updateCardPreview();
-
-document.getElementById("dataFile").addEventListener("change", (e) => {
-  submitBtn.textContent = e.target.files[0] ? "Upload mod" : "Create preview";
-});
 
 function resizeImage(file, maxSize) {
   return new Promise((resolve, reject) => {
@@ -253,11 +263,20 @@ form.addEventListener("submit", async (e) => {
   const description = descEditor.getValue().trim();
   const iconFile = document.getElementById("icon").files[0];
   const bannerFile = document.getElementById("banner").files[0];
-  const dataFile = document.getElementById("dataFile").files[0];
+  const linkRaw = modLinkInput.value.trim();
 
   if (!description) {
     showMessage("Please write a description.", "error");
     return;
+  }
+
+  let parsedLink = null;
+  if (linkRaw) {
+    parsedLink = LB_parseModLink(linkRaw);
+    if (!parsedLink) {
+      showMessage("That mod link needs to be a GameJolt or itch.io URL.", "error");
+      return;
+    }
   }
 
   submitBtn.disabled = true;
@@ -265,12 +284,11 @@ form.addEventListener("submit", async (e) => {
   msgEl.className = "form-msg";
 
   try {
-    const isPreview = !dataFile;
+    const isPreview = !parsedLink;
 
     const resizedIcon = await resizeImage(iconFile, 500);
     const iconUrl = await uploadToStorage(resizedIcon, "icons");
     const bannerUrl = bannerFile ? await uploadToStorage(bannerFile, "banners") : null;
-    const fileUrl = dataFile ? await uploadToStorage(dataFile, "files") : null;
 
     const { data: inserted, error: insertError } = await supabaseClient.from("mods").insert({
       name,
@@ -279,8 +297,9 @@ form.addEventListener("submit", async (e) => {
       user_id: currentUser.id,
       icon_url: iconUrl,
       banner_url: bannerUrl,
-      file_url: fileUrl,
+      mod_link: parsedLink ? parsedLink.url : null,
       is_preview: isPreview,
+      review_status: isPreview ? null : "pending",
       rating: 0
     }).select().single();
 
@@ -288,8 +307,8 @@ form.addEventListener("submit", async (e) => {
 
     showMessage(
       isPreview
-        ? "Preview created, redirecting to its page… add the file anytime from Manage to publish it."
-        : "Mod uploaded, redirecting to its page…",
+        ? "Preview created, redirecting to its page… add a link anytime from Manage to publish it."
+        : "Mod link submitted for review, redirecting to its page…",
       "success"
     );
     setTimeout(() => { window.location.href = `mod.html?id=${inserted.id}`; }, 900);
