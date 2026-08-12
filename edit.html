@@ -115,7 +115,7 @@
 
   <div class="preview-banner" id="previewBanner" style="display:none;">
     <i class="fa-solid fa-rocket"></i>
-    <div><strong>This mod is a preview.</strong> It has no link yet, so it only shows a Follow button on its page. Add a GameJolt or itch.io link below and save to publish it - everyone following will be notified automatically.</div>
+    <div><strong>This mod is a preview.</strong> It has no link yet, so it only shows a Follow button on its page. Add a link below and save to publish it - everyone following will be notified automatically.</div>
   </div>
 
   <div class="form-with-preview">
@@ -184,14 +184,14 @@
             <span class="section-icon"><i class="fa-solid fa-rocket"></i></span>
             <div class="section-head-text">
               <h2>Publish</h2>
-              <p>Add the file to make this mod public.</p>
+              <p>Add a link to make this mod public.</p>
             </div>
           </div>
 
           <div class="field" style="margin-bottom:0;">
             <label for="modLink">Mod link</label>
-            <input type="url" id="modLink" placeholder="https://gamejolt.com/games/... or https://you.itch.io/your-mod">
-            <p class="field-hint" id="modLinkHint">Adding this publishes the mod and notifies everyone following it - it'll go through a quick manual review first.</p>
+            <input type="url" id="modLink" placeholder="https://gamejolt.com/games/… or https://yourname.itch.io/yourmod" maxlength="500">
+            <p class="field-hint" id="modLinkHint">Only GameJolt and itch.io links are accepted. Adding this publishes the mod and notifies everyone following it - it'll go through a quick manual review first.</p>
           </div>
         </div>
 
@@ -227,8 +227,8 @@
 
           <div class="field" id="changelogFileField" style="display:none;">
             <label for="changelogLink">New mod link <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
-            <input type="url" id="changelogLink" placeholder="https://gamejolt.com/games/... or https://you.itch.io/your-mod">
-            <p class="field-hint">Fill this in to replace the current link with a new version when you post - the new version goes back through review before it's public.</p>
+            <input type="url" id="changelogLink" placeholder="https://gamejolt.com/games/… or https://yourname.itch.io/yourmod" maxlength="500">
+            <p class="field-hint" id="changelogLinkHint">Add this to replace the current link with a new version when you post - only GameJolt and itch.io links are accepted, and the new version goes back through review before it's public.</p>
           </div>
 
           <button type="submit" class="btn btn-secondary" id="changelogSubmitBtn">Post update</button>
@@ -399,9 +399,6 @@ async function checkAuth() {
     document.getElementById("previewBanner").style.display = "flex";
     document.getElementById("dataFileField").style.display = "block";
   }
-  if (mod.mod_link) {
-    document.getElementById("changelogLink").placeholder = mod.mod_link;
-  }
 
   document.getElementById("changelogCard").style.display = "block";
   updateChangelogKindUI();
@@ -414,6 +411,18 @@ async function checkAuth() {
   formWrapEl.style.display = "block";
   requestAnimationFrame(() => formWrapEl.classList.add("is-visible"));
 }
+
+function wireLinkValidation(inputId, hintId) {
+  const inputEl = document.getElementById(inputId);
+  const hintEl = document.getElementById(hintId);
+  if (!inputEl || !hintEl) return;
+  inputEl.addEventListener("input", () => {
+    const val = inputEl.value.trim();
+    hintEl.style.color = !val ? "" : (isTrustedModLink(val) ? "var(--color-accent)" : "var(--color-error)");
+  });
+}
+wireLinkValidation("modLink", "modLinkHint");
+wireLinkValidation("changelogLink", "changelogLinkHint");
 
 document.getElementById("name").addEventListener("input", updatePreview);
 document.querySelector("#descriptionEditor .md-textarea").addEventListener("input", updatePreview);
@@ -483,7 +492,7 @@ document.getElementById("changelogForm").addEventListener("submit", async (e) =>
   const title = document.getElementById("changelogTitle").value.trim();
   const content = changelogEditor.getValue().trim();
   const linkInput = document.getElementById("changelogLink");
-  const newLinkRaw = selectedChangelogKind === "changelog" && linkInput ? linkInput.value.trim() : "";
+  const newLink = selectedChangelogKind === "changelog" && linkInput ? linkInput.value.trim() : "";
 
   if (!content) {
     changelogMsgEl.textContent = "Write something for this update first.";
@@ -491,14 +500,10 @@ document.getElementById("changelogForm").addEventListener("submit", async (e) =>
     return;
   }
 
-  let parsedNewLink = null;
-  if (newLinkRaw) {
-    parsedNewLink = LB_parseModLink(newLinkRaw);
-    if (!parsedNewLink) {
-      changelogMsgEl.textContent = "That mod link needs to be a GameJolt or itch.io URL.";
-      changelogMsgEl.className = "form-msg error";
-      return;
-    }
+  if (newLink && !isTrustedModLink(newLink)) {
+    changelogMsgEl.textContent = "That link isn't a GameJolt or itch.io link. Double-check the URL.";
+    changelogMsgEl.className = "form-msg error";
+    return;
   }
 
   changelogSubmitBtn.disabled = true;
@@ -506,14 +511,13 @@ document.getElementById("changelogForm").addEventListener("submit", async (e) =>
   changelogMsgEl.className = "form-msg";
 
   try {
-    if (parsedNewLink) {
-      // A new link goes back through manual review before it replaces the
-      // public one, same as a brand new mod's link does.
+    if (newLink) {
       const { error: linkError } = await supabaseClient
         .from("mods")
-        .update({ mod_link: parsedNewLink.url, review_status: "pending" })
+        .update({ file_url: newLink })
         .eq("id", currentMod.id);
       if (linkError) throw linkError;
+      currentMod.file_url = newLink;
     }
 
     const { error: postError } = await supabaseClient
@@ -525,14 +529,7 @@ document.getElementById("changelogForm").addEventListener("submit", async (e) =>
       });
     if (postError) throw postError;
 
-    if (parsedNewLink) {
-      currentMod.mod_link = parsedNewLink.url;
-      currentMod.review_status = "pending";
-    }
-
-    changelogMsgEl.textContent = parsedNewLink
-      ? "Posted! The new link is now awaiting review before it goes live."
-      : "Posted! Everyone following this mod has been notified.";
+    changelogMsgEl.textContent = "Posted! Everyone following this mod has been notified.";
     changelogMsgEl.className = "form-msg success";
     document.getElementById("changelogTitle").value = "";
     changelogEditor.setValue("");
@@ -618,20 +615,16 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   const iconFile = document.getElementById("icon").files[0];
   const bannerFile = document.getElementById("banner").files[0];
   const modLinkInput = document.getElementById("modLink");
-  const linkRaw = modLinkInput ? modLinkInput.value.trim() : "";
+  const modLink = modLinkInput ? modLinkInput.value.trim() : "";
 
   if (!description) {
     showMessage("Please write a description.", "error");
     return;
   }
 
-  let parsedLink = null;
-  if (currentMod.is_preview && linkRaw) {
-    parsedLink = LB_parseModLink(linkRaw);
-    if (!parsedLink) {
-      showMessage("That mod link needs to be a GameJolt or itch.io URL.", "error");
-      return;
-    }
+  if (currentMod.is_preview && modLink && !isTrustedModLink(modLink)) {
+    showMessage("That link isn't a GameJolt or itch.io link. Double-check the URL.", "error");
+    return;
   }
 
   submitBtn.disabled = true;
@@ -657,9 +650,9 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
     if (updateError) throw updateError;
 
     let justPublished = false;
-    if (currentMod.is_preview && parsedLink) {
+    if (currentMod.is_preview && modLink) {
       const { error: publishError } = await supabaseClient
-        .rpc("publish_mod_preview", { target_mod_id: currentMod.id, new_mod_link: parsedLink.url });
+        .rpc("publish_mod_preview", { target_mod_id: currentMod.id, new_file_url: modLink });
       if (publishError) throw publishError;
       justPublished = true;
     }

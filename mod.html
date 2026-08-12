@@ -182,7 +182,7 @@ function renderMetaRow(mod) {
   return `
     ${mod.is_preview
       ? `<span class="stat-chip">${BELL_ICON}<strong>${LB_formatCount(mod.follow_count ?? 0)}</strong> following</span>`
-      : `<span class="stat-chip">${DOWNLOAD_ICON}<strong>${LB_formatCount(mod.download_count ?? 0)}</strong> downloads</span>`}
+      : `<span class="stat-chip">${DOWNLOAD_ICON}<strong>${LB_formatCount(mod.download_count ?? 0)}</strong> clicks</span>`}
     <span class="stat-chip">${HEART_ICON}<strong>${LB_formatCount(mod.favorite_count ?? 0)}</strong> favorites</span>
     ${LB_renderRatingChip(mod.rating, mod.rating_count)}
     <span class="stat-chip">${CLOCK_ICON}Added ${timeAgo(mod.created_at)}</span>
@@ -281,7 +281,8 @@ function renderMod() {
   const mod = currentMod;
   const safeIconUrl = isTrustedStorageUrl(mod.icon_url) ? escapeHtml(mod.icon_url) : null;
   const safeBannerUrl = isTrustedStorageUrl(mod.banner_url) ? escapeHtml(mod.banner_url) : null;
-  const safeFileUrl = isTrustedStorageUrl(mod.file_url) ? escapeHtml(mod.file_url) : null;
+  const linkPlatform = LB_modLinkPlatform(mod.file_url);
+  const safeFileUrl = linkPlatform ? escapeHtml(mod.file_url) : null;
 
   document.title = `${mod.name} - Litterbox`;
 
@@ -322,10 +323,10 @@ function renderMod() {
   const actionsEl = document.getElementById("actionsCard");
   actionsEl.innerHTML = `
     ${safeFileUrl
-      ? `<a class="btn btn-primary btn-block" id="downloadBtn" href="${safeFileUrl}" download><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 3v9.5M6 9l4 4 4-4M4 16.5h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Download data.win</a>`
+      ? `<a class="btn btn-primary btn-block" id="downloadBtn" href="${safeFileUrl}" target="_blank" rel="noopener noreferrer">${linkPlatform.icon}Get it on ${linkPlatform.label}<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="opacity:.7;"><path d="M7 13 13 7M8 7h5v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>`
       : mod.is_preview
-        ? `<div class="preview-notice">This mod is a preview - the creator hasn't added the file yet. Follow it below to get notified the moment it's released.</div>`
-        : `<span class="file-unavailable">File unavailable</span>`}
+        ? `<div class="preview-notice">This mod is a preview - the creator hasn't added a link yet. Follow it below to get notified the moment it's released.</div>`
+        : `<span class="file-unavailable">Link unavailable</span>`}
     ${(showFav || showFollow || showManage) ? `<div class="actions-row">
       ${showFav ? LB_renderFavoriteBtn(myFavorited, mod.favorite_count) : ""}
       ${showFollow ? LB_renderFollowBtn(myFollowing, mod.follow_count) : ""}

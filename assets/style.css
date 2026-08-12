@@ -1,3 +1,4 @@
+
 :root {
   /* ---- palette: "pond at dusk" — deep forest green-black surfaces with a
      fresh leaf-green accent and a chartreuse highlight. Every value below is
@@ -25,10 +26,12 @@
   --color-gold-bg: rgba(216, 232, 90, 0.12);
   --color-gold-border: rgba(216, 232, 90, 0.4);
 
-  /* preview-mod status only — warm amber (firefly-glow), kept distinct from the leaf-green accent */
-  --color-preview: #E3A857;
-  --color-preview-bg: rgba(227, 168, 87, 0.13);
-  --color-preview-border: rgba(227, 168, 87, 0.42);
+  /* preview-mod status — chartreuse (same hue as --color-gold), kept a
+     shade brighter/flatter so it still reads as its own status pill
+     against gold "featured" usage elsewhere in the UI */
+  --color-preview: #EAF37E;
+  --color-preview-bg: rgba(216, 232, 90, 0.12);
+  --color-preview-border: rgba(216, 232, 90, 0.4);
 
   --color-info: #93AC97;
   --color-info-bg: rgba(147, 172, 151, 0.14);
@@ -249,14 +252,6 @@ input[type="text"], input[type="email"], input[type="password"], input[type="url
 input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="url"]:focus, textarea:focus {
   outline: 2px solid var(--color-accent); outline-offset: 1px; border-color: transparent;
 }
-
-/* small source badge on link-based mod cards (GameJolt / itch.io) */
-.link-source-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-  color: var(--color-text-faint);
-}
-.link-source-badge i { font-size: 11px; }
 input::placeholder, textarea::placeholder { color: var(--color-text-faint); }
 textarea { resize: vertical; min-height: 90px; }
 
@@ -528,27 +523,42 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
    Hidden by default (list view stays compact/icon-led); grid view and the
    narrow preview-pane switch it on below, where there's room for it to
    actually read as a cover photo instead of a stretched icon.
-   Mods without an uploaded banner fall back to a gradient wash — cycled
-   across four on-brand pairings by card position so a grid of un-bannered
-   mods doesn't read as identical stamped-out tiles. Real banner_url images
-   (set inline by JS) always win over these. */
+   Mods without an uploaded banner fall back to a flat duotone + dot-grid
+   pattern, picked per mod (by id hash, see LB_renderModCard) rather than
+   by position - a card keeps the same look as the list re-sorts. Three
+   variants, all built from the site's own leaf-green/chartreuse palette
+   instead of a generic gradient-mesh wash. Real banner_url images (set
+   inline by JS) always win over these. */
 .mod-banner-wrap { display: none; position: relative; }
 .mod-banner-img {
   width: 100%; height: 100%;
-  background-image: linear-gradient(135deg, var(--color-accent-tint), var(--color-surface-hover));
-  background-size: cover; background-position: center;
+  background-size: 14px 14px, cover;
+  background-position: 0 0, center;
+  background-repeat: repeat, no-repeat;
 }
-.mods-list .mod-row:nth-child(4n+2) .mod-banner-img { background-image: linear-gradient(135deg, rgba(53, 87, 61, 0.55), rgba(29, 51, 36, 0.6)); }
-.mods-list .mod-row:nth-child(4n+3) .mod-banner-img { background-image: linear-gradient(135deg, rgba(216, 232, 90, 0.28), rgba(131, 136, 45, 0.4)); }
-.mods-list .mod-row:nth-child(4n+4) .mod-banner-img { background-image: linear-gradient(135deg, rgba(95, 90, 125, 0.4), rgba(53, 87, 61, 0.45)); }
-.mod-row.is-preview .mod-banner-img { background-image: linear-gradient(135deg, rgba(227, 168, 87, 0.35), rgba(15, 41, 35, 0.7)); }
+.pattern-0 .mod-banner-img {
+  background-image: radial-gradient(var(--color-border-strong) 1px, transparent 1px), linear-gradient(115deg, var(--color-accent-ink) 45%, var(--color-accent-tint) 45%);
+  background-color: var(--color-accent-ink);
+}
+.pattern-1 .mod-banner-img {
+  background-image: radial-gradient(rgba(216, 232, 90, 0.3) 1px, transparent 1px), linear-gradient(115deg, var(--color-bg-soft) 45%, var(--color-gold-bg) 45%);
+  background-color: var(--color-bg-soft);
+}
+.pattern-2 .mod-banner-img {
+  background-image: radial-gradient(var(--color-border-strong) 1px, transparent 1px), linear-gradient(115deg, var(--color-surface) 45%, var(--color-accent-dark) 45%);
+  background-color: var(--color-surface);
+}
+.mod-row.is-preview .mod-banner-img {
+  background-image: radial-gradient(rgba(216, 232, 90, 0.35) 1px, transparent 1px), linear-gradient(115deg, var(--color-bg-soft) 55%, var(--color-gold-bg) 55%);
+  background-color: var(--color-bg-soft);
+}
 .preview-chip {
-  display: none; align-items: center;
-  position: absolute; top: 10px; right: 10px;
+  display: none; align-items: center; gap: 5px;
+  position: absolute; top: 0; right: 14px;
   font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
-  color: var(--color-preview); background: rgba(10, 23, 16, 0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  border: 1px solid var(--color-preview-border); border-radius: var(--radius-pill);
-  padding: 4px 10px;
+  color: var(--color-accent-ink); background: var(--color-preview);
+  padding: 5px 10px 6px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
 }
 
 .mod-icon {

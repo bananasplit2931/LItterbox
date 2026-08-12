@@ -105,16 +105,22 @@ async function loadPending() {
     return;
   }
 
-  listEl.innerHTML = mods.map(mod => `
+  listEl.innerHTML = mods.map(mod => {
+    const linkPlatform = LB_modLinkPlatform(mod.file_url);
+    return `
     <div class="pending-item" data-mod-id="${mod.id}">
       ${LB_renderModCard(mod, { clickable: false })}
+      ${linkPlatform
+        ? `<p class="admin-row-meta" style="margin:6px 0 0;">${linkPlatform.icon} <a href="${escapeHtml(mod.file_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(mod.file_url)}</a></p>`
+        : `<p class="admin-row-meta" style="margin:6px 0 0;color:var(--color-error);">No valid GameJolt/itch.io link on this mod.</p>`}
       <div class="pending-actions">
         <a class="btn btn-secondary" href="mod.html?id=${mod.id}" target="_blank" rel="noopener">Open page ↗</a>
         <button type="button" class="btn btn-primary" data-action="approve">Approve</button>
         <button type="button" class="btn btn-danger" data-action="reject">Reject</button>
       </div>
     </div>
-  `).join("");
+  `;
+  }).join("");
 
   listEl.querySelectorAll("[data-action]").forEach(btn => {
     btn.addEventListener("click", async () => {

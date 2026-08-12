@@ -57,38 +57,29 @@ function isTrustedStorageUrl(url) {
   return typeof url === "string" && url.startsWith(TRUSTED_STORAGE_PREFIX);
 }
 
-// ---------- Mod links (GameJolt / itch.io) ----------
-// Mods can now point at an external download page instead of hosting a
-// data.win/zip in Supabase storage. We only accept these two hosts so the
-// "goes to review" flow still means something (admin can trust what kind
-// of page they're clicking into).
-const LB_LINK_SOURCES = [
-  { test: (h) => h === "gamejolt.com" || h === "www.gamejolt.com", label: "GameJolt", icon: "fa-solid fa-rocket" },
-  { test: (h) => h === "itch.io" || h.endsWith(".itch.io"), label: "itch.io", icon: "fa-solid fa-gamepad" },
+// ---------- Mod links (gamejolt.com / itch.io) ----------
+// Mods are no longer uploaded as files - the creator links out to the
+// mod's page on GameJolt or itch.io instead, and that page goes through
+// the same manual admin review a file used to. LB_MOD_LINK_HOSTS is the
+// single source of truth for which hosts are allowed, used both for the
+// upload/edit form validation and for deciding whether to trust a link
+// enough to render it as a clickable button on a mod's page.
+const LB_MOD_LINK_HOSTS = [
+  { match: (h) => h === "gamejolt.com" || h.endsWith(".gamejolt.com"), label: "GameJolt", icon: `<i class="fa-solid fa-bolt"></i>` },
+  { match: (h) => h === "itch.io" || h.endsWith(".itch.io"), label: "itch.io", icon: `<i class="fa-solid fa-heart-crack"></i>` },
 ];
 
-// Returns { url, label, icon } if the string is a well-formed http(s) URL
-// on an allowed host, otherwise null.
-function LB_parseModLink(raw) {
-  const value = (raw || "").trim();
-  if (!value) return null;
+function LB_modLinkPlatform(url) {
+  if (typeof url !== "string") return null;
   let parsed;
-  try {
-    parsed = new URL(value);
-  } catch {
-    return null;
-  }
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+  try { parsed = new URL(url); } catch { return null; }
+  if (parsed.protocol !== "https:") return null;
   const host = parsed.hostname.toLowerCase();
-  const source = LB_LINK_SOURCES.find(s => s.test(host));
-  if (!source) return null;
-  return { url: parsed.href, label: source.label, icon: source.icon };
+  return LB_MOD_LINK_HOSTS.find(h => h.match(host)) || null;
 }
 
-function LB_renderLinkSourceBadge(url) {
-  const parsed = LB_parseModLink(url);
-  if (!parsed) return "";
-  return `<span class="link-source-badge"><i class="${parsed.icon}"></i>${parsed.label}</span>`;
+function isTrustedModLink(url) {
+  return !!LB_modLinkPlatform(url);
 }
 
 function iconInitials(name) {
@@ -99,7 +90,7 @@ function iconInitials(name) {
 
 const VERIFIED_BADGE = `<i class="fa-solid fa-circle-check verified-badge" aria-label="Verified creator" title="Verified creator"></i>`;
 const CLOCK_ICON = `<i class="fa-solid fa-clock"></i>`;
-const DOWNLOAD_ICON = `<i class="fa-solid fa-download"></i>`;
+const DOWNLOAD_ICON = `<i class="fa-solid fa-arrow-up-right-from-square"></i>`;
 const CUBE_ICON = `<i class="fa-solid fa-cube"></i>`;
 
 // ---------- Emoji rating scale (replaces 1–5 stars) ----------
@@ -131,14 +122,24 @@ function LB_renderRatingChip(rating, count) {
 
 // Renders one mod-row card — the single source of truth used by the browse
 // list, the live upload/edit preview, and anywhere else a mod card appears.
+// Small, stable string hash - used to pick a fallback banner pattern per
+// mod (by id/name) instead of by list position, so a card's look doesn't
+// shift around as the list re-sorts or filters.
+function LB_hashStr(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 function LB_renderModCard(mod, opts = {}) {
   const { currentUserId = null, clickable = true, localIconUrl = null } = opts;
   const safeIconUrl = localIconUrl || (isTrustedStorageUrl(mod.icon_url) ? escapeHtml(mod.icon_url) : null);
   const safeBannerUrl = isTrustedStorageUrl(mod.banner_url) ? escapeHtml(mod.banner_url) : null;
+  const patternIdx = LB_hashStr(String(mod.id ?? mod.name ?? "")) % 3;
   const tag = clickable ? "a" : "div";
   const hrefAttr = clickable ? ` href="mod.html?id=${encodeURIComponent(mod.id)}"` : "";
   return `
-  <${tag} class="mod-row${mod.is_preview ? " is-preview" : ""}"${hrefAttr}>
+  <${tag} class="mod-row pattern-${patternIdx}${mod.is_preview ? " is-preview" : ""}"${hrefAttr}>
   <div class="mod-banner-wrap">
   <div class="mod-banner-img"${safeBannerUrl ? ` style="background-image:url('${safeBannerUrl}')"` : ""}></div>
   ${mod.is_preview ? `<span class="preview-chip">Preview</span>` : ""}
@@ -156,7 +157,6 @@ function LB_renderModCard(mod, opts = {}) {
   <div class="mod-tags">
   ${mod.review_status === "pending" ? `<span class="tag-pill pending-pill">Awaiting review</span>` : ""}
   ${mod.review_status === "rejected" ? `<span class="tag-pill rejected-pill">Rejected</span>` : ""}
-  ${!mod.is_preview && mod.mod_link ? LB_renderLinkSourceBadge(mod.mod_link) : ""}
   ${clickable && currentUserId && mod.user_id === currentUserId ? `<span class="manage-link">Manage this mod <i class="fa-solid fa-arrow-right"></i></span>` : ""}
   </div>
   </div>
