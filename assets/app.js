@@ -141,7 +141,7 @@ function LB_renderModCard(mod, opts = {}) {
   return `
   <${tag} class="mod-row pattern-${patternIdx}${mod.is_preview ? " is-preview" : ""}"${hrefAttr}>
   <div class="mod-banner-wrap">
-  <div class="mod-banner-img"${safeBannerUrl ? ` style="background-image:url('${safeBannerUrl}')"` : ""}></div>
+  <div class="mod-banner-img"${safeBannerUrl ? ` style="background:center/cover no-repeat url('${safeBannerUrl}')"` : ""}></div>
   ${mod.is_preview ? `<span class="preview-chip">Preview</span>` : ""}
   </div>
   <div class="mod-icon">

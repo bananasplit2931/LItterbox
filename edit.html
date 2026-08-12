@@ -513,9 +513,7 @@ document.getElementById("changelogForm").addEventListener("submit", async (e) =>
   try {
     if (newLink) {
       const { error: linkError } = await supabaseClient
-        .from("mods")
-        .update({ file_url: newLink })
-        .eq("id", currentMod.id);
+        .rpc("resubmit_mod_link", { target_mod_id: currentMod.id, new_link: newLink });
       if (linkError) throw linkError;
       currentMod.file_url = newLink;
     }

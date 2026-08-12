@@ -291,6 +291,7 @@ form.addEventListener("submit", async (e) => {
       banner_url: bannerUrl,
       file_url: modLink || null,
       is_preview: isPreview,
+      review_status: isPreview ? "approved" : "pending",
       rating: 0
     }).select().single();
 
