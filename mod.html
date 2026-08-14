@@ -139,14 +139,14 @@
 
   <div class="content-grid">
     <div class="main-col">
+      <div class="card" id="screenshotCard" style="display:none; margin-bottom: -4px;">
+        <h2>Screenshots</h2>
+        <div id="screenshotGallery" class="horizontal-gallery"></div>
+      </div>
+
       <div class="card">
         <h2>Description</h2>
         <div class="mod-desc-full md-content" id="modDesc"></div>
-      </div>
-      
-      <div class="card" id="screenshotCard" style="display:none;">
-        <h2>Screenshots</h2>
-        <div id="screenshotGallery" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 12px;"></div>
       </div>
 
       <div class="card">
@@ -310,7 +310,7 @@ function renderMod() {
   if (mod.screenshots && mod.screenshots.length > 0) {
     gallery.innerHTML = mod.screenshots.map(url => {
       const safeUrl = isTrustedStorageUrl(url) ? escapeHtml(url) : null;
-      return safeUrl ? `<a href="${safeUrl}" target="_blank"><img src="${safeUrl}" style="width:100%; border-radius:var(--radius-sm); border:1px solid var(--color-border); object-fit:cover; aspect-ratio:16/9; background:var(--color-bg);" alt="Mod screenshot"></a>` : "";
+      return safeUrl ? `<a href="${safeUrl}" target="_blank"><img src="${safeUrl}" alt="Mod screenshot"></a>` : "";
     }).join("");
     screenshotCard.style.display = "block";
   }
