@@ -15,26 +15,13 @@
 <script src="assets/app.js"></script>
 <style>
 .mods-section { padding: 30px clamp(16px, 5vw, 56px) 64px; max-width: 1180px; margin: 0 auto; }
-
 .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-
-/* ---- expanding search: a lens button that a search bar slides out from ----
-   The wrap itself grows, so its neighbors (sort pill, view toggle, count)
-   naturally slide over to make room. Driven by a JS-toggled .expanded class
-   (mouseenter/leave + click) rather than CSS :hover - hovering an element
-   that resizes itself is a classic flicker trap, since the box growing can
-   nudge the cursor across its own edge and re-trigger/un-trigger :hover
-   mid-transition. JS enter/leave events don't have that feedback loop. */
 .search-orb-wrap {
-  position: relative; flex-shrink: 0;
-  width: 42px; height: 42px;
-  transition: width .22s var(--ease-out);
+  position: relative; flex-shrink: 0; width: 42px; height: 42px; transition: width .22s var(--ease-out);
 }
 .search-orb-wrap.expanded, .search-orb-wrap:focus-within { width: min(280px, 50vw); }
-
 .search-orb-btn {
-  position: relative; z-index: 2;
-  width: 42px; height: 42px; border-radius: 50%;
+  position: relative; z-index: 2; width: 42px; height: 42px; border-radius: 50%;
   background: var(--color-surface); border: 1px solid var(--color-border);
   display: flex; align-items: center; justify-content: center; font-size: 14px;
   color: var(--color-text-muted); cursor: pointer;
@@ -43,28 +30,20 @@
 .search-orb-wrap.expanded .search-orb-btn,
 .search-orb-wrap:focus-within .search-orb-btn { color: var(--color-accent); border-color: var(--color-accent); }
 .search-orb-btn:active { transform: scale(.9); }
-
-/* padding-left is reserved up front (not animated — animating padding
-   triggers layout) so only opacity/transform move, both GPU-only */
 .search-orb-input {
-  position: absolute; left: 0; top: 0;
-  height: 42px; width: 100%; box-sizing: border-box;
+  position: absolute; left: 0; top: 0; height: 42px; width: 100%; box-sizing: border-box;
   padding: 0 16px 0 44px; border: 1px solid transparent; outline: none;
   background: var(--color-surface); border-radius: var(--radius-pill);
   color: var(--color-text); font-family: var(--font-body); font-size: 14px;
-  opacity: 0; pointer-events: none;
-  transform: translateX(-4px);
+  opacity: 0; pointer-events: none; transform: translateX(-4px);
   transition: opacity .18s var(--ease-out), transform .18s var(--ease-out), border-color .15s ease;
 }
 .search-orb-wrap.expanded .search-orb-input,
 .search-orb-wrap:focus-within .search-orb-input {
-  opacity: 1; pointer-events: auto; transform: translateX(0);
-  border-color: var(--color-border);
+  opacity: 1; pointer-events: auto; transform: translateX(0); border-color: var(--color-border);
 }
 .search-orb-wrap:focus-within .search-orb-input { border-color: var(--color-accent); }
-
 .toolbar-row2 { display: flex; align-items: center; gap: 10px; flex: 1; flex-wrap: wrap; }
-
 .pill-select {
   position: relative; display: flex; align-items: center; gap: 6px;
   background: var(--color-surface); border: 1px solid var(--color-border);
@@ -81,11 +60,7 @@
   position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
   font-size: 9px; color: var(--color-text-faint); pointer-events: none;
 }
-
 .view-toggle { display: flex; border: 1px solid var(--color-border); border-radius: var(--radius-pill); overflow: hidden; }
-
-/* ---- preview-mods toggle: same pill language as the sort control, same
-   active-state treatment as the view-toggle buttons — not a foreign switch ---- */
 .pill-toggle {
   display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 15px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-pill);
@@ -99,25 +74,15 @@
 .view-btn {
   display: flex; align-items: center; justify-content: center;
   width: 38px; height: 38px; background: var(--color-surface); border: none; cursor: pointer;
-  color: var(--color-text-faint); font-size: 14px;
-  transition: color .12s ease, background .12s ease;
+  color: var(--color-text-faint); font-size: 14px; transition: color .12s ease, background .12s ease;
 }
 .view-btn:hover { color: var(--color-text); }
 .view-btn.active { background: var(--color-accent-tint); color: var(--color-accent); }
 .view-btn + .view-btn { border-left: 1px solid var(--color-border); }
-
 #modCount { font-size: 13px; color: var(--color-text-faint); white-space: nowrap; margin-left: auto; }
-
-/* ---- list view (default) ---- */
 .mods-list { display: flex; flex-direction: column; gap: 10px; }
-
-@media (max-width: 600px) {
-  .mods-section { padding: 20px 16px 48px; }
-}
-@media (max-width: 480px) {
-  .toolbar-row2 { flex-wrap: wrap; }
-  #modCount { order: 3; margin-left: 0; width: 100%; }
-}
+@media (max-width: 600px) { .mods-section { padding: 20px 16px 48px; } }
+@media (max-width: 480px) { .toolbar-row2 { flex-wrap: wrap; } #modCount { order: 3; margin-left: 0; width: 100%; } }
 </style>
 </head>
 <body>
@@ -156,6 +121,20 @@
             <option value="new">Newest</option>
             <option value="rating">Top rated</option>
             <option value="name">Name (A-Z)</option>
+          </select>
+          <i class="fa-solid fa-chevron-down"></i>
+        </div>
+
+        <div class="pill-select">
+          <label for="categoryFilter">Category</label>
+          <select id="categoryFilter">
+            <option value="all">All</option>
+            <option value="New Fish">New Fish</option>
+            <option value="Hats">Hats</option>
+            <option value="Map Edits">Map Edits</option>
+            <option value="QoL Tweaks">QoL Tweaks</option>
+            <option value="Total Conversion">Total Conversion</option>
+            <option value="Other">Other</option>
           </select>
           <i class="fa-solid fa-chevron-down"></i>
         </div>
@@ -234,13 +213,12 @@ function renderMods(mods) {
   const visible = showPreview ? mods : mods.filter(m => !m.is_preview);
 
   if (visible.length === 0) {
-    listEl.innerHTML = `<div class="empty-state">${mods.length ? "No mods match with previews hidden." : "No mods found."}</div>`;
+    listEl.innerHTML = `<div class="empty-state">${mods.length ? "No mods match your filters." : "No mods found."}</div>`;
     countEl.textContent = "0 mods";
     return;
   }
 
   countEl.textContent = `${visible.length} mod${visible.length === 1 ? "" : "s"}`;
-
   listEl.innerHTML = sortMods(visible).map(mod => LB_renderModCard(mod, { currentUserId })).join("");
 }
 
@@ -252,6 +230,8 @@ function escapeHtml(str) {
 
 function applyFilters() {
   const query = document.getElementById("search").value.trim().toLowerCase();
+  const selectedCat = document.getElementById("categoryFilter").value;
+
   if (currentBrowseTab === "creators") {
     if (!query) { renderCreators(allProfiles); return; }
     renderCreators(allProfiles.filter(p =>
@@ -260,15 +240,16 @@ function applyFilters() {
     ));
     return;
   }
-  if (!query) {
-    renderMods(allMods);
-    return;
-  }
-  const filtered = allMods.filter(mod =>
-    (mod.name || "").toLowerCase().includes(query) ||
-    (mod.author || "").toLowerCase().includes(query) ||
-    (mod.description || "").toLowerCase().includes(query)
-  );
+
+  const filtered = allMods.filter(mod => {
+    const matchesSearch = !query ||
+      (mod.name || "").toLowerCase().includes(query) ||
+      (mod.author || "").toLowerCase().includes(query) ||
+      (mod.description || "").toLowerCase().includes(query);
+    const matchesCat = selectedCat === "all" || mod.category === selectedCat;
+    return matchesSearch && matchesCat;
+  });
+
   renderMods(filtered);
 }
 
@@ -289,7 +270,7 @@ async function loadMods() {
   }
 
   allMods = data || [];
-  renderMods(allMods);
+  applyFilters(); // Initial render with filters applied
 }
 
 function renderCreators(profiles) {
@@ -355,13 +336,14 @@ async function switchTab(tab) {
     await loadProfiles();
     renderCreators(allProfiles);
   } else {
-    renderMods(allMods);
+    applyFilters();
   }
 }
 document.getElementById("modsTabBtn").addEventListener("click", () => switchTab("mods"));
 document.getElementById("creatorsTabBtn").addEventListener("click", () => switchTab("creators"));
 
 document.getElementById("search").addEventListener("input", applyFilters);
+document.getElementById("categoryFilter").addEventListener("change", applyFilters);
 document.getElementById("sort").addEventListener("change", (e) => {
   currentSort = e.target.value;
   applyFilters();
@@ -391,7 +373,6 @@ showPreviewToggle.addEventListener("click", () => {
   applyFilters();
 });
 
-// ---------- expanding search: click/tap the lens to slide the bar out ----------
 const searchOrbWrap = document.getElementById("searchOrbWrap");
 const searchOrbBtn = document.getElementById("searchOrbBtn");
 const searchInput = document.getElementById("search");
