@@ -16,15 +16,12 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <style>
 .edit-page-wrap { max-width: 1040px; margin: 0 auto; padding: 32px clamp(16px, 5vw, 56px) 64px; }
-
 .edit-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .edit-hero-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .edit-hero h1 { font-size: 27px; margin: 0; letter-spacing: -0.5px; }
 .edit-hero-sub { color: var(--color-text-muted); font-size: 14px; margin: 6px 0 0; max-width: 56ch; }
 .edit-hero .btn i { font-size: 12px; }
-
 .status-banner { margin: 18px 0 0; }
-
 .preview-banner {
   margin-top: 18px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px;
   border: 1px solid var(--color-preview-border); background: var(--color-preview-bg);
@@ -32,10 +29,8 @@
 }
 .preview-banner i { color: var(--color-preview); font-size: 15px; margin-top: 2px; flex-shrink: 0; }
 .preview-banner strong { color: var(--color-preview); }
-
 .form-with-preview { margin-top: 26px; }
 #editForm { display: contents; }
-
 .section-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
 .section-icon {
   width: 34px; height: 34px; border-radius: var(--radius-sm); flex-shrink: 0; margin-top: 1px;
@@ -44,7 +39,6 @@
 }
 .section-head-text h2 { font-size: 15px; margin: 0 0 2px; letter-spacing: -0.2px; font-weight: 800; color: var(--color-text); text-transform: none; }
 .section-head-text p { font-size: 12.5px; color: var(--color-text-faint); margin: 0; line-height: 1.4; }
-
 .current-preview { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
 .current-preview img {
   width: 56px; height: 56px; border-radius: var(--radius-md); object-fit: cover;
@@ -52,9 +46,7 @@
 }
 .current-preview.banner-preview img { width: 100%; height: 84px; border-radius: var(--radius-md); object-fit: cover; }
 .current-preview span { font-size: 12px; color: var(--color-text-faint); font-weight: 600; }
-
 .preview-pane { display: flex; flex-direction: column; gap: 16px; }
-
 .stats-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .stats-mini-item { display: flex; align-items: center; gap: 10px; }
 .stats-mini-icon {
@@ -64,7 +56,6 @@
 }
 .stats-mini-item strong { display: block; font-size: 15px; font-weight: 800; color: var(--color-text); line-height: 1.25; }
 .stats-mini-item small { display: block; font-size: 11px; color: var(--color-text-faint); font-weight: 600; }
-
 .card.danger-zone-mini { border-color: var(--color-error-border); background: var(--color-error-bg); }
 .danger-zone-mini h2 {
   text-transform: none; font-size: 13px; letter-spacing: 0; color: var(--color-error);
@@ -149,7 +140,29 @@
             <span class="section-icon"><i class="fa-solid fa-images"></i></span>
             <div class="section-head-text">
               <h2>Media</h2>
-              <p>The icon and banner shown on your mod's card and page.</p>
+              <p>The icon, banner, and categories shown on your mod's card and page.</p>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="field">
+              <label for="category">Category</label>
+              <select id="category" required style="width: 100%; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--color-text); font-family: var(--font-body); font-size: 14px;">
+                <option value="New Fish">New Fish</option>
+                <option value="Hats">Hats</option>
+                <option value="Map Edits">Map Edits</option>
+                <option value="QoL Tweaks">QoL Tweaks</option>
+                <option value="Total Conversion">Total Conversion</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="screenshots">Screenshots</label>
+              <div class="file-input">
+                <input type="file" id="screenshots" accept="image/*" multiple>
+              </div>
+              <p class="field-hint">Upload up to 4 images (this will overwrite your current gallery).</p>
             </div>
           </div>
 
@@ -259,7 +272,6 @@
 </div>
 
 <script>
-
 const gateEl = document.getElementById("gate");
 const formWrapEl = document.getElementById("formWrap");
 const msgEl = document.getElementById("formMsg");
@@ -367,6 +379,7 @@ async function checkAuth() {
 
   document.getElementById("viewModLink").href = `mod.html?id=${mod.id}`;
   document.getElementById("name").value = mod.name || "";
+  document.getElementById("category").value = mod.category || "Other";
   descEditor.setValue(mod.description || "");
 
   if (mod.icon_url) {
@@ -610,8 +623,10 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
 
   const name = document.getElementById("name").value.trim();
   const description = descEditor.getValue().trim();
+  const category = document.getElementById("category").value;
   const iconFile = document.getElementById("icon").files[0];
   const bannerFile = document.getElementById("banner").files[0];
+  const screenshotFiles = document.getElementById("screenshots").files;
   const modLinkInput = document.getElementById("modLink");
   const modLink = modLinkInput ? modLinkInput.value.trim() : "";
 
@@ -630,7 +645,7 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   msgEl.className = "form-msg";
 
   try {
-    const updates = { name, description };
+    const updates = { name, description, category };
 
     if (iconFile) {
       const resizedIcon = await resizeImage(iconFile, 500);
@@ -638,6 +653,21 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
     }
     if (bannerFile) {
       updates.banner_url = await uploadToStorage(bannerFile, "banners");
+    }
+
+    if (screenshotFiles.length > 0) {
+      let screenshotUrls = [];
+      for (let i = 0; i < Math.min(screenshotFiles.length, 4); i++) {
+        const resizedShot = await resizeImage(screenshotFiles[i], 1280);
+        const shotUrl = await uploadToStorage(resizedShot, "screenshots");
+        screenshotUrls.push(shotUrl);
+      }
+      updates.screenshots = screenshotUrls;
+      
+      // Attempt to clean up old screenshots from bucket 
+      if (currentMod.screenshots && currentMod.screenshots.length > 0) {
+        Promise.all(currentMod.screenshots.map(url => deleteFromStorage(url))).catch(e => console.error("Could not delete old screenshots", e));
+      }
     }
 
     const { error: updateError } = await supabaseClient
@@ -689,11 +719,13 @@ deleteBtn.addEventListener("click", async () => {
 
     if (deleteError) throw deleteError;
 
-    await Promise.all([
-      currentMod.icon_url ? deleteFromStorage(currentMod.icon_url) : null,
-      currentMod.banner_url ? deleteFromStorage(currentMod.banner_url) : null,
-      currentMod.file_url ? deleteFromStorage(currentMod.file_url) : null,
-    ]);
+    const filesToDelete = [];
+    if (currentMod.icon_url) filesToDelete.push(deleteFromStorage(currentMod.icon_url));
+    if (currentMod.banner_url) filesToDelete.push(deleteFromStorage(currentMod.banner_url));
+    if (currentMod.file_url) filesToDelete.push(deleteFromStorage(currentMod.file_url));
+    if (currentMod.screenshots) currentMod.screenshots.forEach(url => filesToDelete.push(deleteFromStorage(url)));
+
+    await Promise.all(filesToDelete);
 
     window.location.href = "index.html";
   } catch (err) {
