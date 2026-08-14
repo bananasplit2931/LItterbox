@@ -68,6 +68,28 @@
 
       <div class="two-col">
         <div class="field">
+          <label for="category">Category</label>
+          <select id="category" required style="width: 100%; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--color-text); font-family: var(--font-body); font-size: 14px;">
+            <option value="New Fish">New Fish</option>
+            <option value="Hats">Hats</option>
+            <option value="Map Edits">Map Edits</option>
+            <option value="QoL Tweaks">QoL Tweaks</option>
+            <option value="Total Conversion">Total Conversion</option>
+            <option value="Other" selected>Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="screenshots">Screenshots <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
+          <div class="file-input">
+            <input type="file" id="screenshots" accept="image/*" multiple>
+          </div>
+          <p class="field-hint">Select up to 4 images (sprites, gameplay) to show off.</p>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
           <label for="icon">Icon</label>
           <div class="file-input" id="iconWrap">
             <input type="file" id="icon" accept="image/*" required>
@@ -104,7 +126,6 @@
 </div>
 
 <script>
-
 const gateEl = document.getElementById("gate");
 const formWrapEl = document.getElementById("formWrap");
 
@@ -233,7 +254,6 @@ function resizeImage(file, maxSize) {
       URL.revokeObjectURL(objectUrl);
       reject(new Error("Could not read image file."));
     };
-
     img.src = objectUrl;
   });
 }
@@ -257,8 +277,10 @@ form.addEventListener("submit", async (e) => {
 
   const name = document.getElementById("name").value.trim();
   const description = descEditor.getValue().trim();
+  const category = document.getElementById("category").value;
   const iconFile = document.getElementById("icon").files[0];
   const bannerFile = document.getElementById("banner").files[0];
+  const screenshotFiles = document.getElementById("screenshots").files;
   const modLink = document.getElementById("modLink").value.trim();
 
   if (!description) {
@@ -282,9 +304,20 @@ form.addEventListener("submit", async (e) => {
     const iconUrl = await uploadToStorage(resizedIcon, "icons");
     const bannerUrl = bannerFile ? await uploadToStorage(bannerFile, "banners") : null;
 
+    let screenshotUrls = [];
+    if (screenshotFiles.length > 0) {
+      for (let i = 0; i < Math.min(screenshotFiles.length, 4); i++) {
+        const resizedShot = await resizeImage(screenshotFiles[i], 1280);
+        const shotUrl = await uploadToStorage(resizedShot, "screenshots");
+        screenshotUrls.push(shotUrl);
+      }
+    }
+
     const { data: inserted, error: insertError } = await supabaseClient.from("mods").insert({
       name,
       description,
+      category,
+      screenshots: screenshotUrls,
       author: currentUsername,
       user_id: currentUser.id,
       icon_url: iconUrl,
