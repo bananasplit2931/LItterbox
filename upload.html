@@ -66,45 +66,41 @@
         <div id="descriptionEditor"></div>
       </div>
 
-      <div class="two-col">
-        <div class="field">
-          <label for="category">Category</label>
-          <select id="category" required style="width: 100%; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--color-text); font-family: var(--font-body); font-size: 14px;">
-            <option value="New Fish">New Fish</option>
-            <option value="Hats">Hats</option>
-            <option value="Map Edits">Map Edits</option>
-            <option value="QoL Tweaks">QoL Tweaks</option>
-            <option value="Total Conversion">Total Conversion</option>
-            <option value="Other" selected>Other</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="screenshots">Screenshots <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
-          <div class="file-input">
-            <input type="file" id="screenshots" accept="image/*" multiple>
-          </div>
-          <p class="field-hint">Select up to 4 images (sprites, gameplay) to show off.</p>
-        </div>
+      <div class="field">
+        <label for="category">Category</label>
+        <select id="category" required style="width: 100%; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--color-text); font-family: var(--font-body); font-size: 14px;">
+          <option value="New Fish">New Fish</option>
+          <option value="Hats">Hats</option>
+          <option value="Map Edits">Map Edits</option>
+          <option value="QoL Tweaks">QoL Tweaks</option>
+          <option value="Total Conversion">Total Conversion</option>
+          <option value="Other" selected>Other</option>
+        </select>
       </div>
 
-      <div class="two-col">
-        <div class="field">
-          <label for="icon">Icon</label>
-          <div class="file-input" id="iconWrap">
-            <input type="file" id="icon" accept="image/*" required>
-          </div>
-          <div class="preview-thumb icon-shape" id="iconPreviewWrap"><img id="iconPreview" alt=""></div>
+      <div class="field">
+        <label for="icon">Icon</label>
+        <div class="file-input" id="iconWrap">
+          <input type="file" id="icon" accept="image/*" required>
         </div>
+        <div class="preview-thumb icon-shape" id="iconPreviewWrap"><img id="iconPreview" alt=""></div>
+      </div>
 
-        <div class="field">
-          <label for="banner">Banner <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
-          <div class="file-input" id="bannerWrap">
-            <input type="file" id="banner" accept="image/*">
-          </div>
-          <div class="preview-thumb" id="bannerPreviewWrap"><img id="bannerPreview" alt=""></div>
-          <p class="field-hint">Shown as the wide cover image at the top of your mod's page.</p>
+      <div class="field">
+        <label for="banner">Banner <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
+        <div class="file-input" id="bannerWrap">
+          <input type="file" id="banner" accept="image/*">
         </div>
+        <div class="preview-thumb" id="bannerPreviewWrap"><img id="bannerPreview" alt=""></div>
+        <p class="field-hint">Shown as the wide cover image at the top of your mod's page.</p>
+      </div>
+
+      <div class="field">
+        <label for="screenshots">Screenshots <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
+        <div class="file-input">
+          <input type="file" id="screenshots" accept="image/*" multiple>
+        </div>
+        <p class="field-hint">Select up to 4 images (sprites, gameplay) to show off.</p>
       </div>
 
       <div class="field">
