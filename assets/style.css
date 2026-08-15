@@ -1,3 +1,4 @@
+
 :root {
   /* ---- palette: "pond at dusk" — deep forest green-black surfaces with a
      fresh leaf-green accent and a chartreuse highlight. Every value below is
@@ -705,31 +706,89 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
   .nav-link { padding: 7px 10px; font-size: 13px; }
 }
 
-/* GameJolt-style horizontal screenshot gallery */
-.horizontal-gallery {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scrollbar-width: thin;
+/* ---------- category picker (upload/edit forms + index filter row) ---------- */
+.category-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.category-chip-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-body); font-weight: 600; font-size: 13px;
+  color: var(--color-text-muted); background: var(--color-surface);
+  border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+  padding: 7px 14px; cursor: pointer;
+  transition: background .12s ease, border-color .12s ease, color .12s ease;
 }
-.horizontal-gallery a {
-  flex-shrink: 0;
-  display: block;
+.category-chip-btn i { font-size: 12px; color: var(--color-text-faint); transition: color .12s ease; }
+.category-chip-btn:hover { border-color: var(--color-border-strong); color: var(--color-text); }
+.category-chip-btn.active { background: var(--color-accent-tint); border-color: var(--color-accent); color: var(--color-accent); }
+.category-chip-btn.active i { color: var(--color-accent); }
+
+/* read-only chip row shown on mod cards / mod page */
+.category-chip-row { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.category-pill i { color: var(--color-accent); font-size: 10px; }
+.category-pill-more { color: var(--color-text-faint); }
+
+/* ---------- screenshot upload (upload/edit forms) ---------- */
+.screenshot-upload-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px;
+  margin-top: 10px;
 }
-.horizontal-gallery img {
-  height: 160px;
-  width: auto;
-  aspect-ratio: 16/9;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg);
-  transition: filter .12s ease;
+.screenshot-upload-item {
+  position: relative; aspect-ratio: 16 / 10; border-radius: var(--radius-sm); overflow: hidden;
+  background: var(--color-accent-tint); border: 1px solid var(--color-border);
+  animation: lb-thumb-in .2s var(--ease-out);
 }
-.horizontal-gallery img:hover {
-  filter: brightness(1.1);
+.screenshot-upload-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.screenshot-upload-item .screenshot-remove-btn {
+  position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,.65); color: #fff; border: none; cursor: pointer; font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s ease;
 }
+.screenshot-upload-item .screenshot-remove-btn:hover { background: rgba(0,0,0,.85); }
+.screenshot-upload-item.is-existing::after {
+  content: "Saved"; position: absolute; left: 4px; bottom: 4px;
+  font-size: 10px; font-weight: 700; color: #fff; background: rgba(0,0,0,.55);
+  border-radius: var(--radius-pill); padding: 2px 7px;
+}
+.screenshot-upload-empty {
+  border: 1px dashed var(--color-border-strong); border-radius: var(--radius-sm);
+  aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-faint); font-size: 12px; text-align: center; padding: 8px;
+}
+
+/* ---------- screenshot gallery + lightbox (mod page) ---------- */
+.screenshot-gallery {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;
+}
+.screenshot-thumb {
+  padding: 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden;
+  background: var(--color-accent-tint); cursor: pointer; aspect-ratio: 16 / 10;
+  transition: border-color .12s ease, transform .12s var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .screenshot-thumb:hover { border-color: var(--color-accent); transform: translateY(-2px); }
+}
+.screenshot-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.screenshot-lightbox {
+  position: fixed; inset: 0; z-index: 60; background: rgba(6, 10, 9, .92);
+  display: flex; align-items: center; justify-content: center; padding: 40px;
+  animation: lb-msg-in .16s var(--ease-out);
+}
+.screenshot-lightbox img { max-width: 100%; max-height: 100%; border-radius: var(--radius-md); box-shadow: 0 12px 40px rgba(0,0,0,.5); }
+.lightbox-close, .lightbox-nav {
+  position: absolute; background: var(--color-surface); border: 1px solid var(--color-border);
+  color: var(--color-text); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; transition: background .12s ease, border-color .12s ease;
+}
+.lightbox-close:hover, .lightbox-nav:hover { border-color: var(--color-accent); color: var(--color-accent); }
+.lightbox-close { top: 18px; right: 18px; width: 40px; height: 40px; font-size: 15px; }
+.lightbox-nav { top: 50%; transform: translateY(-50%); width: 46px; height: 46px; font-size: 16px; }
+.lightbox-prev { left: 18px; }
+.lightbox-next { right: 18px; }
 @media (max-width: 600px) {
-  .horizontal-gallery img { height: 120px; }
+  .screenshot-lightbox { padding: 16px; }
+  .lightbox-nav { width: 38px; height: 38px; }
+  .lightbox-close { width: 34px; height: 34px; top: 10px; right: 10px; }
+  .lightbox-prev { left: 6px; }
+  .lightbox-next { right: 6px; }
 }

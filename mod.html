@@ -130,6 +130,7 @@
         <span class="mod-head-author" id="modAuthor"></span>
         <span class="tag-pill preview-pill" id="previewPill" style="display:none;">Preview</span>
       </div>
+      <div id="modCategoryChips" style="margin-top:8px;"></div>
     </div>
   </div>
 
@@ -139,14 +140,14 @@
 
   <div class="content-grid">
     <div class="main-col">
-      <div class="card" id="screenshotCard" style="display:none; margin-bottom: -4px;">
-        <h2>Screenshots</h2>
-        <div id="screenshotGallery" class="horizontal-gallery"></div>
-      </div>
-
       <div class="card">
         <h2>Description</h2>
         <div class="mod-desc-full md-content" id="modDesc"></div>
+      </div>
+
+      <div class="card" id="screenshotsCard" style="display:none;">
+        <h2>Screenshots</h2>
+        <div id="screenshotsWrap"></div>
       </div>
 
       <div class="card">
@@ -164,6 +165,7 @@
 </div>
 
 <script>
+
 const gateEl = document.getElementById("gate");
 const pageWrapEl = document.getElementById("pageWrap");
 
@@ -173,13 +175,17 @@ let myRating = 0;
 let myFavorited = false;
 let myFollowing = false;
 
+// escapeHtml, isTrustedStorageUrl, iconInitials, timeAgo, DOWNLOAD_ICON,
+// CLOCK_ICON, VERIFIED_BADGE and LB_renderRatingChip all come from
+// assets/app.js - don't redeclare them here (see profile.html's note on
+// why that crashes the page).
+
 function getModIdFromUrl() {
-  return newSearchParams(window.location.search).get("id");
+  return new URLSearchParams(window.location.search).get("id");
 }
 
 function renderMetaRow(mod) {
   return `
-    <span class="tag-pill">${escapeHtml(mod.category || "Other")}</span>
     ${mod.is_preview
       ? `<span class="stat-chip">${BELL_ICON}<strong>${LB_formatCount(mod.follow_count ?? 0)}</strong> following</span>`
       : `<span class="stat-chip">${DOWNLOAD_ICON}<strong>${LB_formatCount(mod.download_count ?? 0)}</strong> clicks</span>`}
@@ -301,19 +307,21 @@ function renderMod() {
   document.getElementById("modDesc").innerHTML = LB_renderMarkdown(mod.description || "") || `<p class="empty-inline">No description yet.</p>`;
 
   document.getElementById("previewPill").style.display = mod.is_preview ? "inline-flex" : "none";
-  document.getElementById("modHeadMeta").innerHTML = renderMetaRow(mod);
 
-  // Render Screenshots
-  const screenshotCard = document.getElementById("screenshotCard");
-  const gallery = document.getElementById("screenshotGallery");
+  const categories = LB_flattenModCategories(mod);
+  document.getElementById("modCategoryChips").innerHTML = LB_renderCategoryChips(categories);
 
-  if (mod.screenshots && mod.screenshots.length > 0) {
-    gallery.innerHTML = mod.screenshots.map(url => {
-      const safeUrl = isTrustedStorageUrl(url) ? escapeHtml(url) : null;
-      return safeUrl ? `<a href="${safeUrl}" target="_blank"><img src="${safeUrl}" alt="Mod screenshot"></a>` : "";
-    }).join("");
-    screenshotCard.style.display = "block";
+  const screenshots = LB_flattenModScreenshots(mod);
+  const screenshotsCard = document.getElementById("screenshotsCard");
+  if (screenshots.length > 0) {
+    screenshotsCard.style.display = "block";
+    document.getElementById("screenshotsWrap").innerHTML = LB_renderScreenshotGallery(screenshots);
+    LB_wireScreenshotGallery(screenshots);
+  } else {
+    screenshotsCard.style.display = "none";
   }
+
+  document.getElementById("modHeadMeta").innerHTML = renderMetaRow(mod);
 
   const statusBanner = document.getElementById("statusBanner");
   if (mod.review_status === "pending") {
@@ -348,8 +356,13 @@ function renderMod() {
   const downloadBtn = document.getElementById("downloadBtn");
   if (downloadBtn) {
     downloadBtn.addEventListener("click", async () => {
+      // Only bump the on-screen count once the database write actually
+      // succeeds - this is what used to make the number revert on refresh.
       const { error } = await supabaseClient.rpc("increment_download_count", { target_mod_id: mod.id });
-      if (error) return;
+      if (error) {
+        console.error("Couldn't record the download (check that the increment_download_count function exists in Supabase):", error);
+        return;
+      }
       mod.download_count = (mod.download_count || 0) + 1;
       document.getElementById("modHeadMeta").innerHTML = renderMetaRow(mod);
     });
@@ -358,6 +371,7 @@ function renderMod() {
   wireFavButton();
   wireFollowButton();
   renderReportCard();
+
   renderRateBox();
 
   gateEl.style.display = "none";
@@ -415,6 +429,7 @@ function renderReportCard() {
       });
 
       if (error) {
+        console.error(error);
         msg.textContent = "Couldn't submit the report - try again.";
         btn.disabled = false;
         btn.textContent = "Submit report";
@@ -432,6 +447,9 @@ function wireFavButton() {
     favBtn.disabled = true;
     const wasFavorited = myFavorited;
     myFavorited = await LB_toggleFavorite(currentMod.id, currentUser.id, myFavorited);
+    // Only touch the count/meta row if the toggle actually went through -
+    // otherwise a rejected write (e.g. an RLS policy blocking the insert)
+    // would still bump the displayed number even though nothing saved.
     if (myFavorited !== wasFavorited) {
       currentMod.favorite_count = Math.max(0, (currentMod.favorite_count || 0) + (myFavorited ? 1 : -1));
       document.getElementById("modHeadMeta").innerHTML = renderMetaRow(currentMod);
@@ -448,6 +466,8 @@ function wireFollowButton() {
     followBtn.disabled = true;
     const wasFollowing = myFollowing;
     myFollowing = await LB_toggleFollow(currentMod.id, currentUser.id, myFollowing);
+    // Same reasoning as wireFavButton: don't move the counter unless the
+    // follow/unfollow write actually succeeded.
     if (myFollowing !== wasFollowing) {
       currentMod.follow_count = Math.max(0, (currentMod.follow_count || 0) + (myFollowing ? 1 : -1));
       document.getElementById("modHeadMeta").innerHTML = renderMetaRow(currentMod);
@@ -469,7 +489,7 @@ async function loadMyRating() {
 }
 
 async function init() {
-  const modId = new URLSearchParams(window.location.search).get("id");
+  const modId = getModIdFromUrl();
   if (!modId) {
     gateEl.textContent = "No mod specified.";
     return;
@@ -480,7 +500,7 @@ async function init() {
 
   const { data, error } = await supabaseClient
     .from("mods")
-    .select("*, profiles!mods_profiles_fkey(is_verified)")
+    .select("*, profiles!mods_profiles_fkey(is_verified), mod_categories(categories(id, slug, name, icon)), mod_screenshots(id, url, sort_order)")
     .eq("id", modId)
     .single();
 

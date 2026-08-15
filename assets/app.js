@@ -157,6 +157,7 @@ function LB_renderModCard(mod, opts = {}) {
   <div class="mod-tags">
   ${mod.review_status === "pending" ? `<span class="tag-pill pending-pill">Awaiting review</span>` : ""}
   ${mod.review_status === "rejected" ? `<span class="tag-pill rejected-pill">Rejected</span>` : ""}
+  ${mod.categories && mod.categories.length ? LB_renderCategoryChips(mod.categories, { limit: 3 }) : ""}
   ${clickable && currentUserId && mod.user_id === currentUserId ? `<span class="manage-link">Manage this mod <i class="fa-solid fa-arrow-right"></i></span>` : ""}
   </div>
   </div>
@@ -561,6 +562,147 @@ function LB_renderChangelogList(changelogs, opts = {}) {
       ${showDelete ? `<button type="button" class="changelog-delete-btn" data-delete-id="${c.id}">Delete this update</button>` : ""}
       </div>
       `).join("")}</div>`;
+}
+
+// ---------- Categories (filters/tags — see "categories" + "mod_categories" tables) ----------
+// Cached for the life of the page since the category list barely changes;
+// LB_loadCategories() re-fetches only if the cache is still empty.
+let _lbCategoriesCache = null;
+async function LB_loadCategories() {
+  if (_lbCategoriesCache) return _lbCategoriesCache;
+  const { data, error } = await supabaseClient
+    .from("categories")
+    .select("*")
+    .order("sort_order", { ascending: true });
+  if (error) {
+    console.error("Error loading categories:", error);
+    return [];
+  }
+  _lbCategoriesCache = data || [];
+  return _lbCategoriesCache;
+}
+
+// Flattens the nested `mod_categories(categories(...))` shape returned by
+// a Supabase select like `.select("*, mod_categories(categories(*))")`
+// into a plain `mod.categories` array.
+function LB_flattenModCategories(mod) {
+  return (mod.mod_categories || []).map(mc => mc.categories).filter(Boolean);
+}
+
+// Renders a row of toggleable pill buttons for picking categories on the
+// upload/edit forms, or filtering on the browse page. Call
+// LB_wireCategoryPicker() on the returned container to make it interactive.
+function LB_renderCategoryPicker(categories, selectedIds = []) {
+  if (!categories || categories.length === 0) {
+    return `<p class="empty-inline">No categories set up yet.</p>`;
+  }
+  const selectedSet = new Set(selectedIds.map(String));
+  return `<div class="category-picker" role="group" aria-label="Categories">${categories.map(c => `
+    <button type="button" class="category-chip-btn${selectedSet.has(String(c.id)) ? " active" : ""}" data-cat-id="${c.id}">
+      <i class="${escapeHtml(c.icon || "fa-solid fa-tag")}"></i>${escapeHtml(c.name)}
+    </button>
+  `).join("")}</div>`;
+}
+
+// Wires click-to-toggle on a container rendered by LB_renderCategoryPicker.
+// Returns a live Set of selected category ids - it's mutated in place as
+// the user clicks, so read it directly (no re-querying the DOM) at submit
+// time or whenever a filter needs to be re-applied.
+function LB_wireCategoryPicker(container, onChange) {
+  const selected = new Set(
+    Array.from(container.querySelectorAll(".category-chip-btn.active")).map(b => Number(b.dataset.catId))
+  );
+  container.addEventListener("click", (e) => {
+    const btn = e.target.closest(".category-chip-btn");
+    if (!btn) return;
+    const id = Number(btn.dataset.catId);
+    btn.classList.toggle("active");
+    if (btn.classList.contains("active")) selected.add(id);
+    else selected.delete(id);
+    if (typeof onChange === "function") onChange(selected);
+  });
+  return selected;
+}
+
+// Small read-only chip row for a mod's page/card - not interactive.
+function LB_renderCategoryChips(categories, opts = {}) {
+  const { limit = null } = opts;
+  if (!categories || categories.length === 0) return "";
+  const shown = limit ? categories.slice(0, limit) : categories;
+  const extra = limit && categories.length > limit ? categories.length - limit : 0;
+  return `<div class="category-chip-row">${shown.map(c => `
+    <span class="tag-pill category-pill"><i class="${escapeHtml(c.icon || "fa-solid fa-tag")}"></i>${escapeHtml(c.name)}</span>
+  `).join("")}${extra ? `<span class="tag-pill category-pill category-pill-more">+${extra}</span>` : ""}</div>`;
+}
+
+// ---------- Screenshots (mod_screenshots table) ----------
+// Flattens/sorts the nested `mod_screenshots(...)` shape from a Supabase
+// select into a plain, ordered array.
+function LB_flattenModScreenshots(mod) {
+  return (mod.mod_screenshots || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+}
+
+// Renders a thumbnail grid + hidden lightbox shell for a mod's page.
+// Call LB_wireScreenshotGallery() with the same array right after
+// inserting this HTML to make the thumbnails clickable.
+function LB_renderScreenshotGallery(screenshots) {
+  const safe = (screenshots || []).filter(s => isTrustedStorageUrl(s.url));
+  if (safe.length === 0) return "";
+  return `
+    <div class="screenshot-gallery" id="lbScreenshotGallery">
+      ${safe.map((s, i) => `
+        <button type="button" class="screenshot-thumb" data-idx="${i}" aria-label="View screenshot ${i + 1} of ${safe.length}">
+          <img src="${escapeHtml(s.url)}" alt="" loading="lazy">
+        </button>
+      `).join("")}
+    </div>
+    <div class="screenshot-lightbox" id="lbScreenshotLightbox" hidden>
+      <button type="button" class="lightbox-close" id="lbLightboxClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      ${safe.length > 1 ? `<button type="button" class="lightbox-nav lightbox-prev" id="lbLightboxPrev" aria-label="Previous screenshot"><i class="fa-solid fa-chevron-left"></i></button>` : ""}
+      <img id="lbLightboxImg" src="" alt="Screenshot">
+      ${safe.length > 1 ? `<button type="button" class="lightbox-nav lightbox-next" id="lbLightboxNext" aria-label="Next screenshot"><i class="fa-solid fa-chevron-right"></i></button>` : ""}
+    </div>
+  `;
+}
+
+function LB_wireScreenshotGallery(screenshots) {
+  const safe = (screenshots || []).filter(s => isTrustedStorageUrl(s.url));
+  const galleryEl = document.getElementById("lbScreenshotGallery");
+  const lightboxEl = document.getElementById("lbScreenshotLightbox");
+  if (!galleryEl || !lightboxEl || safe.length === 0) return;
+
+  const imgEl = document.getElementById("lbLightboxImg");
+  let idx = 0;
+
+  function show(i) {
+    idx = (i + safe.length) % safe.length;
+    imgEl.src = safe[idx].url;
+  }
+  function open(i) {
+    show(i);
+    lightboxEl.hidden = false;
+  }
+  function close() {
+    lightboxEl.hidden = true;
+  }
+
+  galleryEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".screenshot-thumb");
+    if (!btn) return;
+    open(Number(btn.dataset.idx));
+  });
+  document.getElementById("lbLightboxClose").addEventListener("click", close);
+  const prevBtn = document.getElementById("lbLightboxPrev");
+  const nextBtn = document.getElementById("lbLightboxNext");
+  if (prevBtn) prevBtn.addEventListener("click", () => show(idx - 1));
+  if (nextBtn) nextBtn.addEventListener("click", () => show(idx + 1));
+  lightboxEl.addEventListener("click", (e) => { if (e.target === lightboxEl) close(); });
+  document.addEventListener("keydown", (e) => {
+    if (lightboxEl.hidden) return;
+    if (e.key === "Escape") close();
+    else if (e.key === "ArrowLeft" && prevBtn) show(idx - 1);
+    else if (e.key === "ArrowRight" && nextBtn) show(idx + 1);
+  });
 }
 
 // ---------- Badge chips (for profile pages / mod owner strip) ----------

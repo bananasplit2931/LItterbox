@@ -49,7 +49,7 @@
 
 <div class="form-wrap page-reveal" id="formWrap" style="display:none;">
   <h1>Upload a mod</h1>
-  <p class="sub">Add a name, a short description, an icon, an optional banner, and a link to your mod's page on GameJolt or itch.io. This all shows up on your mod's own page.</p>
+  <p class="sub">Add a name, a short description, an icon, an optional banner and screenshots, a few categories, and a link to your mod's page on GameJolt or itch.io. This all shows up on your mod's own page.</p>
 
   <div class="form-with-preview">
   <div class="card">
@@ -66,47 +66,44 @@
         <div id="descriptionEditor"></div>
       </div>
 
-      <div class="field">
-        <label for="category">Category</label>
-        <select id="category" required style="width: 100%; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--color-text); font-family: var(--font-body); font-size: 14px;">
-          <option value="New Fish">New Fish</option>
-          <option value="Hats">Hats</option>
-          <option value="Map Edits">Map Edits</option>
-          <option value="QoL Tweaks">QoL Tweaks</option>
-          <option value="Total Conversion">Total Conversion</option>
-          <option value="Other" selected>Other</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="icon">Icon</label>
-        <div class="file-input" id="iconWrap">
-          <input type="file" id="icon" accept="image/*" required>
+      <div class="two-col">
+        <div class="field">
+          <label for="icon">Icon</label>
+          <div class="file-input" id="iconWrap">
+            <input type="file" id="icon" accept="image/*" required>
+          </div>
+          <div class="preview-thumb icon-shape" id="iconPreviewWrap"><img id="iconPreview" alt=""></div>
         </div>
-        <div class="preview-thumb icon-shape" id="iconPreviewWrap"><img id="iconPreview" alt=""></div>
-      </div>
 
-      <div class="field">
-        <label for="banner">Banner <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
-        <div class="file-input" id="bannerWrap">
-          <input type="file" id="banner" accept="image/*">
+        <div class="field">
+          <label for="banner">Banner <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
+          <div class="file-input" id="bannerWrap">
+            <input type="file" id="banner" accept="image/*">
+          </div>
+          <div class="preview-thumb" id="bannerPreviewWrap"><img id="bannerPreview" alt=""></div>
+          <p class="field-hint">Shown as the wide cover image at the top of your mod's page.</p>
         </div>
-        <div class="preview-thumb" id="bannerPreviewWrap"><img id="bannerPreview" alt=""></div>
-        <p class="field-hint">Shown as the wide cover image at the top of your mod's page.</p>
-      </div>
-
-      <div class="field">
-        <label for="screenshots">Screenshots <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
-        <div class="file-input">
-          <input type="file" id="screenshots" accept="image/*" multiple>
-        </div>
-        <p class="field-hint">Select up to 4 images (sprites, gameplay) to show off.</p>
       </div>
 
       <div class="field">
         <label for="modLink">Mod link <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
         <input type="url" id="modLink" placeholder="https://gamejolt.com/games/… or https://yourname.itch.io/yourmod" maxlength="500">
         <p class="field-hint" id="modLinkHint">Only GameJolt and itch.io links are accepted. Leave this empty to publish a <strong>Preview</strong> instead - people can follow it, and everyone following gets notified the moment you add a link from Manage. Mods with a link go through a quick manual review before they're public.</p>
+      </div>
+
+      <div class="field">
+        <label>Categories <span style="font-weight:400;color:var(--color-text-faint);">(optional)</span></label>
+        <div id="categoryPicker"><p class="empty-inline">Loading categories…</p></div>
+        <p class="field-hint">Pick whatever fits - new fish, hats, QoL tweaks, map edits, total conversions, and so on. Helps people filter for exactly what they want.</p>
+      </div>
+
+      <div class="field">
+        <label for="screenshots">Screenshots <span style="font-weight:400;color:var(--color-text-faint);">(optional, up to 6)</span></label>
+        <div class="file-input" id="screenshotsWrap">
+          <input type="file" id="screenshots" accept="image/*" multiple>
+        </div>
+        <div class="screenshot-upload-grid" id="screenshotsPreview"></div>
+        <p class="field-hint">Show off what the mod actually looks like in-game - these appear as a gallery on your mod's page.</p>
       </div>
 
       <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Upload mod</button>
@@ -122,11 +119,15 @@
 </div>
 
 <script>
+
 const gateEl = document.getElementById("gate");
 const formWrapEl = document.getElementById("formWrap");
 
 let currentUser = null;
 let currentUsername = null;
+let selectedCategoryIds = new Set();
+let selectedScreenshotFiles = [];
+const MAX_SCREENSHOTS = 6;
 
 async function checkAuth() {
   const nav = await LB_mountHeaderNav();
@@ -144,6 +145,45 @@ async function checkAuth() {
 }
 
 checkAuth();
+
+async function initCategoryPicker() {
+  const categories = await LB_loadCategories();
+  const wrap = document.getElementById("categoryPicker");
+  wrap.innerHTML = LB_renderCategoryPicker(categories, []);
+  selectedCategoryIds = LB_wireCategoryPicker(wrap, (selected) => {
+    previewCategories = categories.filter(c => selected.has(c.id));
+    updateCardPreview();
+  });
+}
+initCategoryPicker();
+
+function renderScreenshotPreview() {
+  const wrap = document.getElementById("screenshotsPreview");
+  wrap.innerHTML = selectedScreenshotFiles.map((file, i) => `
+    <div class="screenshot-upload-item" data-idx="${i}">
+      <img src="${URL.createObjectURL(file)}" alt="">
+      <button type="button" class="screenshot-remove-btn" data-remove-idx="${i}" title="Remove" aria-label="Remove screenshot"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  `).join("");
+}
+
+document.getElementById("screenshots").addEventListener("change", (e) => {
+  const incoming = Array.from(e.target.files || []);
+  const room = MAX_SCREENSHOTS - selectedScreenshotFiles.length;
+  if (incoming.length > room) {
+    showMessage(`You can add up to ${MAX_SCREENSHOTS} screenshots - only added the first ${Math.max(room, 0)}.`, "error");
+  }
+  selectedScreenshotFiles = selectedScreenshotFiles.concat(incoming.slice(0, Math.max(room, 0)));
+  e.target.value = "";
+  renderScreenshotPreview();
+});
+
+document.getElementById("screenshotsPreview").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-remove-idx]");
+  if (!btn) return;
+  selectedScreenshotFiles.splice(Number(btn.dataset.removeIdx), 1);
+  renderScreenshotPreview();
+});
 
 const descEditor = LB_mountMarkdownEditor(document.getElementById("descriptionEditor"), "");
 
@@ -170,6 +210,7 @@ wirePreview("icon", "iconPreviewWrap", "iconPreview");
 wirePreview("banner", "bannerPreviewWrap", "bannerPreview");
 
 let previewIconUrl = null;
+let previewCategories = [];
 function updateCardPreview() {
   const name = document.getElementById("name").value.trim();
   const iconFile = document.getElementById("icon").files[0];
@@ -188,6 +229,7 @@ function updateCardPreview() {
     rating: 0,
     rating_count: 0,
     download_count: 0,
+    categories: previewCategories,
   };
 
   document.getElementById("cardPreview").innerHTML =
@@ -250,6 +292,7 @@ function resizeImage(file, maxSize) {
       URL.revokeObjectURL(objectUrl);
       reject(new Error("Could not read image file."));
     };
+
     img.src = objectUrl;
   });
 }
@@ -273,10 +316,8 @@ form.addEventListener("submit", async (e) => {
 
   const name = document.getElementById("name").value.trim();
   const description = descEditor.getValue().trim();
-  const category = document.getElementById("category").value;
   const iconFile = document.getElementById("icon").files[0];
   const bannerFile = document.getElementById("banner").files[0];
-  const screenshotFiles = document.getElementById("screenshots").files;
   const modLink = document.getElementById("modLink").value.trim();
 
   if (!description) {
@@ -300,20 +341,9 @@ form.addEventListener("submit", async (e) => {
     const iconUrl = await uploadToStorage(resizedIcon, "icons");
     const bannerUrl = bannerFile ? await uploadToStorage(bannerFile, "banners") : null;
 
-    let screenshotUrls = [];
-    if (screenshotFiles.length > 0) {
-      for (let i = 0; i < Math.min(screenshotFiles.length, 4); i++) {
-        const resizedShot = await resizeImage(screenshotFiles[i], 1280);
-        const shotUrl = await uploadToStorage(resizedShot, "screenshots");
-        screenshotUrls.push(shotUrl);
-      }
-    }
-
     const { data: inserted, error: insertError } = await supabaseClient.from("mods").insert({
       name,
       description,
-      category,
-      screenshots: screenshotUrls,
       author: currentUsername,
       user_id: currentUser.id,
       icon_url: iconUrl,
@@ -325,6 +355,27 @@ form.addEventListener("submit", async (e) => {
     }).select().single();
 
     if (insertError) throw insertError;
+
+    if (selectedCategoryIds.size > 0) {
+      const { error: catError } = await supabaseClient.from("mod_categories").insert(
+        Array.from(selectedCategoryIds).map(category_id => ({ mod_id: inserted.id, category_id }))
+      );
+      if (catError) console.error("Error saving categories (mod was still created):", catError);
+    }
+
+    if (selectedScreenshotFiles.length > 0) {
+      submitBtn.textContent = "Uploading screenshots…";
+      for (let i = 0; i < selectedScreenshotFiles.length; i++) {
+        try {
+          const resized = await resizeImage(selectedScreenshotFiles[i], 1600);
+          const url = await uploadToStorage(resized, "screenshots");
+          const { error: shotError } = await supabaseClient.from("mod_screenshots").insert({ mod_id: inserted.id, url, sort_order: i });
+          if (shotError) console.error("Error saving a screenshot (mod was still created):", shotError);
+        } catch (shotErr) {
+          console.error("Error uploading a screenshot (mod was still created):", shotErr);
+        }
+      }
+    }
 
     showMessage(
       isPreview
