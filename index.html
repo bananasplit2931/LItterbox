@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <meta name="description" content="Browse and share mods for Cat Goes Fishing.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css">
 <link rel="stylesheet" href="assets/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -108,8 +108,10 @@
 
 #modCount { font-size: 13px; color: var(--color-text-faint); white-space: nowrap; margin-left: auto; }
 
-.category-filter-row { margin: -6px 0 18px; }
-.category-filter-row .category-picker { row-gap: 8px; }
+.category-filter-row {
+  margin: -6px 0 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+}
+.category-filter-row .category-picker { display: contents; }
 .category-filter-row .category-chip-btn { font-size: 12.5px; padding: 6px 12px; }
 .category-filter-clear {
   display: inline-flex; align-items: center; gap: 6px;

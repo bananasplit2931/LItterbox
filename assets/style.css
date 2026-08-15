@@ -53,7 +53,6 @@
 
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --font-display: 'Fraunces', serif;
   --weight-heading: 800;
 
   --radius-lg: 16px;
@@ -61,8 +60,8 @@
   --radius-sm: 8px;
   --radius-pill: 999px;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 1px 2px rgba(0, 0, 0, 0.3);
 
   --header-h: 64px;
 
@@ -495,13 +494,12 @@ a.notif-item:hover { background: var(--color-surface-hover); }
   transition: border-color .12s ease, background .12s ease, transform .12s ease, box-shadow .12s ease;
   text-decoration: none; color: inherit;
 }
-.mod-row.is-preview { border: 1.5px solid var(--color-preview); background: var(--color-preview-bg); }
+.mod-row.is-preview { background: var(--color-preview-bg); }
 @media (hover: hover) and (pointer: fine) {
   a.mod-row:hover {
     border-color: var(--color-border-strong); background: var(--color-surface-hover);
-    transform: translateY(-2px) rotate(-0.4deg); box-shadow: var(--shadow-hover);
   }
-  a.mod-row.is-preview:hover { border-color: var(--color-preview); }
+  a.mod-row.is-preview:hover { background: var(--color-gold-bg); }
   a.mod-row:hover .mod-name { color: var(--color-accent); }
   a.mod-row.is-preview:hover .mod-name { color: var(--color-preview); }
 }
@@ -532,33 +530,17 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .mod-banner-wrap { display: none; position: relative; }
 .mod-banner-img {
   width: 100%; height: 100%;
-  background-size: 14px 14px, cover;
-  background-position: 0 0, center;
-  background-repeat: repeat, no-repeat;
 }
-.pattern-0 .mod-banner-img {
-  background-image: radial-gradient(var(--color-border-strong) 1px, transparent 1px), linear-gradient(115deg, var(--color-accent-ink) 45%, var(--color-accent-tint) 45%);
-  background-color: var(--color-accent-ink);
-}
-.pattern-1 .mod-banner-img {
-  background-image: radial-gradient(rgba(216, 232, 90, 0.3) 1px, transparent 1px), linear-gradient(115deg, var(--color-bg-soft) 45%, var(--color-gold-bg) 45%);
-  background-color: var(--color-bg-soft);
-}
-.pattern-2 .mod-banner-img {
-  background-image: radial-gradient(var(--color-border-strong) 1px, transparent 1px), linear-gradient(115deg, var(--color-surface) 45%, var(--color-accent-dark) 45%);
-  background-color: var(--color-surface);
-}
-.mod-row.is-preview .mod-banner-img {
-  background-image: radial-gradient(rgba(216, 232, 90, 0.35) 1px, transparent 1px), linear-gradient(115deg, var(--color-bg-soft) 55%, var(--color-gold-bg) 55%);
-  background-color: var(--color-bg-soft);
-}
+.pattern-0 .mod-banner-img { background-color: var(--color-accent-ink); }
+.pattern-1 .mod-banner-img { background-color: var(--color-bg-soft); }
+.pattern-2 .mod-banner-img { background-color: var(--color-surface); }
+.mod-row.is-preview .mod-banner-img { background-color: var(--color-gold-bg); }
 .preview-chip {
   display: none; align-items: center; gap: 5px;
-  position: absolute; top: 0; right: 14px;
+  position: absolute; top: 10px; right: 10px;
   font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
   color: var(--color-accent-ink); background: var(--color-preview);
-  padding: 5px 10px 6px;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+  padding: 4px 9px; border-radius: var(--radius-pill);
 }
 
 .mod-icon {
@@ -574,7 +556,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .mod-body { display: contents; }
 .mod-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; justify-content: center; }
 .mod-title-row { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
-.mod-name { font-family: var(--font-display); font-weight: 600; font-size: 18.5px; margin: 0; letter-spacing: -0.01em; color: var(--color-text); transition: color .12s ease; }
+.mod-name { font-family: var(--font-body); font-weight: 700; font-size: 17.5px; margin: 0; letter-spacing: -0.01em; color: var(--color-text); transition: color .12s ease; }
 .mod-author { font-family: var(--font-mono); font-size: 12.5px; color: var(--color-text-faint); }
 
 .mod-desc {
@@ -598,7 +580,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .mods-list.grid .mod-banner-wrap, .preview-pane .mod-banner-wrap { display: block; width: 100%; height: 112px; }
 .mods-list.grid .mod-icon, .preview-pane .mod-icon {
   width: 56px; height: 56px; margin: -28px 0 0 14px;
-  border: 3px solid var(--color-surface); box-shadow: 0 3px 10px rgba(0, 0, 0, .4);
+  border: 3px solid var(--color-surface);
 }
 @media (hover: hover) and (pointer: fine) {
   a.mod-row:hover .mod-icon { border-color: var(--color-surface-hover); }
@@ -639,7 +621,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
   animation: lb-card-in .3s var(--ease-out) both;
 }
 @media (hover: hover) and (pointer: fine) {
-  .creator-row:hover { border-color: var(--color-border-strong); background: var(--color-surface-hover); transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+  .creator-row:hover { border-color: var(--color-border-strong); background: var(--color-surface-hover); }
 }
 .creator-row:active { transform: scale(.99); transition-duration: .08s; }
 .creator-row:nth-child(1) { animation-delay: 0ms; }
@@ -771,9 +753,11 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 
 .screenshot-lightbox {
   position: fixed; inset: 0; z-index: 60; background: rgba(6, 10, 9, .92);
-  display: flex; align-items: center; justify-content: center; padding: 40px;
+  align-items: center; justify-content: center; padding: 40px;
   animation: lb-msg-in .16s var(--ease-out);
 }
+.screenshot-lightbox[hidden] { display: none; }
+.screenshot-lightbox:not([hidden]) { display: flex; }
 .screenshot-lightbox img { max-width: 100%; max-height: 100%; border-radius: var(--radius-md); box-shadow: 0 12px 40px rgba(0,0,0,.5); }
 .lightbox-close, .lightbox-nav {
   position: absolute; background: var(--color-surface); border: 1px solid var(--color-border);
