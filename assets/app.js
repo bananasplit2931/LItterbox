@@ -12,6 +12,21 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const TRUSTED_STORAGE_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/mod-uploads/`;
 const STORAGE_PREFIX = TRUSTED_STORAGE_PREFIX;
 
+// Mod cards render as a single <a class="mod-row"> so the whole card is
+// clickable - nesting a real <a> for the author name inside that isn't
+// valid HTML (the browser silently closes the outer link early and
+// everything after the author name stops being clickable). Instead the
+// author name is a plain span with data-profile-href, and one delegated
+// listener here intercepts clicks on it and navigates directly, stopping
+// the click from also triggering the card's own link.
+document.addEventListener("click", (e) => {
+  const link = e.target.closest(".author-link[data-profile-href]");
+  if (!link) return;
+  e.preventDefault();
+  e.stopPropagation();
+  window.location.href = link.dataset.profileHref;
+});
+
 // ---------- Discord OAuth (used by login.html + register.html) ----------
 // One call handles both sign-in and sign-up: Supabase creates the account
 // on first login automatically. `button` gets disabled while the redirect
@@ -150,7 +165,7 @@ function LB_renderModCard(mod, opts = {}) {
   <div class="mod-main">
   <div class="mod-title-row">
   <h3 class="mod-name">${escapeHtml(mod.name || "Untitled mod")}</h3>
-  <span class="mod-author">by ${escapeHtml(mod.author || "unknown")}${mod.profiles?.is_verified ? VERIFIED_BADGE : ""}</span>
+  <span class="mod-author">by <span class="author-link" data-profile-href="profile.html?u=${encodeURIComponent(mod.author || "")}">${escapeHtml(mod.author || "unknown")}</span>${mod.profiles?.is_verified ? VERIFIED_BADGE : ""}</span>
   </div>
   <p class="mod-desc">${escapeHtml(LB_stripMarkdown(mod.description) || "")}</p>
   <div class="mod-tags">
