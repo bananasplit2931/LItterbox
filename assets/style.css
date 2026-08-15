@@ -1,4 +1,3 @@
-
 :root {
   /* ---- palette: "pond at dusk" — deep forest green-black surfaces with a
      fresh leaf-green accent and a chartreuse highlight. Every value below is
@@ -735,15 +734,21 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 
 /* ---------- screenshot gallery + lightbox (mod page) ---------- */
 .screenshot-gallery {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;
 }
 .screenshot-thumb {
-  padding: 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden;
-  background: var(--color-accent-tint); cursor: pointer; aspect-ratio: 16 / 10;
-  transition: border-color .12s ease, transform .12s var(--ease-out);
+  position: relative;
+  padding: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden;
+  background: var(--color-accent-tint); cursor: pointer; aspect-ratio: 16 / 9;
+  transition: border-color .12s ease;
+}
+.screenshot-thumb::after {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(10, 23, 16, 0); transition: background .12s ease;
 }
 @media (hover: hover) and (pointer: fine) {
-  .screenshot-thumb:hover { border-color: var(--color-accent); transform: translateY(-2px); }
+  .screenshot-thumb:hover { border-color: var(--color-accent); }
+  .screenshot-thumb:hover::after { background: rgba(10, 23, 16, .12); }
 }
 .screenshot-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
@@ -754,7 +759,19 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 }
 .screenshot-lightbox[hidden] { display: none; }
 .screenshot-lightbox:not([hidden]) { display: flex; }
-.screenshot-lightbox img { max-width: 100%; max-height: 100%; border-radius: var(--radius-md); box-shadow: 0 12px 40px rgba(0,0,0,.5); }
+.screenshot-lightbox-inner { position: relative; display: flex; align-items: center; justify-content: center; max-width: 100%; max-height: 100%; }
+.screenshot-lightbox img {
+  max-width: 100%; max-height: 100%; max-height: calc(100vh - 80px); border-radius: var(--radius-md);
+  border: 1px solid var(--color-border); display: block;
+  opacity: 1; transition: opacity .12s ease;
+}
+.screenshot-lightbox img.is-switching { opacity: 0; }
+.lightbox-counter {
+  position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%);
+  font-family: var(--font-mono); font-size: 12.5px; color: var(--color-text-faint);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill); padding: 5px 12px; white-space: nowrap;
+}
 .lightbox-close, .lightbox-nav {
   position: absolute; background: var(--color-surface); border: 1px solid var(--color-border);
   color: var(--color-text); cursor: pointer; display: flex; align-items: center; justify-content: center;
