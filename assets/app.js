@@ -142,7 +142,6 @@ function LB_renderModCard(mod, opts = {}) {
   <${tag} class="mod-row pattern-${patternIdx}${mod.is_preview ? " is-preview" : ""}"${hrefAttr}>
   <div class="mod-banner-wrap">
   <div class="mod-banner-img"${safeBannerUrl ? ` style="background:center/cover no-repeat url('${safeBannerUrl}')"` : ""}></div>
-  ${mod.is_preview ? `<span class="preview-chip">Preview</span>` : ""}
   </div>
   <div class="mod-icon">
   ${safeIconUrl ? `<img src="${safeIconUrl}" alt="" loading="lazy">` : iconInitials(mod.name)}
@@ -155,7 +154,6 @@ function LB_renderModCard(mod, opts = {}) {
   </div>
   <p class="mod-desc">${escapeHtml(LB_stripMarkdown(mod.description) || "")}</p>
   <div class="mod-tags">
-  ${mod.is_preview ? `<span class="tag-pill preview-pill"><i class="fa-solid fa-flask"></i>Preview</span>` : ""}
   ${mod.review_status === "pending" ? `<span class="tag-pill pending-pill">Awaiting review</span>` : ""}
   ${mod.review_status === "rejected" ? `<span class="tag-pill rejected-pill">Rejected</span>` : ""}
   ${mod.categories && mod.categories.length ? LB_renderCategoryChips(mod.categories, { limit: 3 }) : ""}
