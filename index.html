@@ -27,14 +27,14 @@
    mid-transition. JS enter/leave events don't have that feedback loop. */
 .search-orb-wrap {
   position: relative; flex-shrink: 0;
-  width: 42px; height: 42px;
+  width: 36px; height: 36px;
   transition: width .22s var(--ease-out);
 }
 .search-orb-wrap.expanded, .search-orb-wrap:focus-within { width: min(280px, 50vw); }
 
 .search-orb-btn {
   position: relative; z-index: 2;
-  width: 42px; height: 42px; border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
   background: var(--color-surface); border: 1px solid var(--color-border);
   display: flex; align-items: center; justify-content: center; font-size: 14px;
   color: var(--color-text-muted); cursor: pointer;
@@ -48,8 +48,8 @@
    triggers layout) so only opacity/transform move, both GPU-only */
 .search-orb-input {
   position: absolute; left: 0; top: 0;
-  height: 42px; width: 100%; box-sizing: border-box;
-  padding: 0 16px 0 44px; border: 1px solid transparent; outline: none;
+  height: 36px; width: 100%; box-sizing: border-box;
+  padding: 0 14px 0 38px; border: 1px solid transparent; outline: none;
   background: var(--color-surface); border-radius: var(--radius-pill);
   color: var(--color-text); font-family: var(--font-body); font-size: 14px;
   opacity: 0; pointer-events: none;
@@ -74,7 +74,7 @@
 .pill-select select {
   appearance: none; background: none; border: none; color: var(--color-text);
   font-family: var(--font-body); font-weight: 600; font-size: 13px;
-  padding: 9px 24px 9px 4px; cursor: pointer;
+  padding: 7px 22px 7px 4px; cursor: pointer;
 }
 .pill-select select:focus { outline: none; }
 .pill-select i {
@@ -87,7 +87,7 @@
 /* ---- preview-mods toggle: same pill language as the sort control, same
    active-state treatment as the view-toggle buttons — not a foreign switch ---- */
 .pill-toggle {
-  display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 15px;
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-pill);
   color: var(--color-text-muted); font-family: var(--font-body); font-weight: 600; font-size: 13px;
   cursor: pointer; transition: background .12s ease, border-color .12s ease, color .12s ease;
@@ -98,7 +98,7 @@
 .pill-toggle.active i { color: var(--color-preview); }
 .view-btn {
   display: flex; align-items: center; justify-content: center;
-  width: 38px; height: 38px; background: var(--color-surface); border: none; cursor: pointer;
+  width: 34px; height: 34px; background: var(--color-surface); border: none; cursor: pointer;
   color: var(--color-text-faint); font-size: 14px;
   transition: color .12s ease, background .12s ease;
 }
@@ -112,12 +112,12 @@
   margin: -6px 0 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
 }
 .category-filter-row .category-picker { display: contents; }
-.category-filter-row .category-chip-btn { font-size: 12.5px; padding: 6px 12px; }
+.category-filter-row .category-chip-btn { font-size: 12px; padding: 5px 11px; }
 .category-filter-clear {
   display: inline-flex; align-items: center; gap: 6px;
-  font-family: var(--font-body); font-weight: 600; font-size: 12.5px;
+  font-family: var(--font-body); font-weight: 600; font-size: 12px;
   color: var(--color-text-faint); background: none; border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-pill); padding: 6px 12px; cursor: pointer;
+  border-radius: var(--radius-pill); padding: 5px 11px; cursor: pointer;
   transition: color .12s ease, border-color .12s ease;
 }
 .category-filter-clear:hover { color: var(--color-text); border-color: var(--color-text-faint); }
