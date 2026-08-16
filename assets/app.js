@@ -673,7 +673,10 @@ function LB_renderScreenshotGallery(screenshots) {
     <div class="screenshot-lightbox" id="lbScreenshotLightbox" hidden>
       <button type="button" class="lightbox-close" id="lbLightboxClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       ${safe.length > 1 ? `<button type="button" class="lightbox-nav lightbox-prev" id="lbLightboxPrev" aria-label="Previous screenshot"><i class="fa-solid fa-chevron-left"></i></button>` : ""}
-      <img id="lbLightboxImg" src="" alt="Screenshot">
+      <div class="screenshot-lightbox-inner">
+        <img id="lbLightboxImg" src="" alt="Screenshot">
+        ${safe.length > 1 ? `<span class="lightbox-counter" id="lbLightboxCounter"></span>` : ""}
+      </div>
       ${safe.length > 1 ? `<button type="button" class="lightbox-nav lightbox-next" id="lbLightboxNext" aria-label="Next screenshot"><i class="fa-solid fa-chevron-right"></i></button>` : ""}
     </div>
   `;
@@ -686,11 +689,18 @@ function LB_wireScreenshotGallery(screenshots) {
   if (!galleryEl || !lightboxEl || safe.length === 0) return;
 
   const imgEl = document.getElementById("lbLightboxImg");
+  const counterEl = document.getElementById("lbLightboxCounter");
   let idx = 0;
 
   function show(i) {
     idx = (i + safe.length) % safe.length;
-    imgEl.src = safe[idx].url;
+    if (counterEl) counterEl.textContent = `${idx + 1} / ${safe.length}`;
+    if (imgEl.src === safe[idx].url) return;
+    imgEl.classList.add("is-switching");
+    window.setTimeout(() => {
+      imgEl.src = safe[idx].url;
+      imgEl.classList.remove("is-switching");
+    }, 90);
   }
   function open(i) {
     show(i);
