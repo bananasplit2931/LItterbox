@@ -735,12 +735,17 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 
 /* ---------- screenshot gallery + lightbox (mod page) ---------- */
 .screenshot-gallery {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;
+  display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;
+  scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin; scrollbar-color: var(--color-border) transparent;
 }
+.screenshot-gallery::-webkit-scrollbar { height: 7px; }
+.screenshot-gallery::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: var(--radius-pill); }
+.screenshot-gallery::-webkit-scrollbar-track { background: transparent; }
 .screenshot-thumb {
-  position: relative;
+  position: relative; flex: 0 0 auto; scroll-snap-align: start;
   padding: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden;
-  background: var(--color-accent-tint); cursor: pointer; aspect-ratio: 16 / 9;
+  background: var(--color-accent-tint); cursor: pointer; aspect-ratio: 16 / 9; height: 150px;
   transition: border-color .12s ease;
 }
 .screenshot-thumb::after {
@@ -789,4 +794,5 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
   .lightbox-close { width: 34px; height: 34px; top: 10px; right: 10px; }
   .lightbox-prev { left: 6px; }
   .lightbox-next { right: 6px; }
+  .screenshot-thumb { height: 110px; }
 }
