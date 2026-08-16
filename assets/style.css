@@ -779,7 +779,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
   border-radius: var(--radius-pill); padding: 5px 12px; white-space: nowrap;
 }
 .lightbox-close {
-  position: absolute; top: 14px; right: 18px; z-index: 2;
+  position: absolute; top: 14px; right: 18px; z-index: 3;
   background: transparent; border: none;
   width: 40px; height: 40px; font-size: 18px;
   color: var(--color-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -787,7 +787,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 }
 .lightbox-close:hover { background: rgba(255,255,255,.08); color: var(--color-text); }
 .lightbox-nav {
-  position: absolute; top: 0; bottom: 0; z-index: 2;
+  position: absolute; top: 64px; bottom: 0; z-index: 1;
   background: transparent; border: none; width: 15%; min-width: 60px;
   color: rgba(255,255,255,.55); cursor: pointer; display: flex; align-items: center; justify-content: center;
   font-size: 22px; transition: background .12s ease, color .12s ease;

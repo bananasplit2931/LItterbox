@@ -688,6 +688,15 @@ function LB_wireScreenshotGallery(screenshots) {
   const lightboxEl = document.getElementById("lbScreenshotLightbox");
   if (!galleryEl || !lightboxEl || safe.length === 0) return;
 
+  // #pageWrap animates in with a CSS transform (.page-reveal), which creates
+  // its own stacking context. That traps this fixed-position lightbox's
+  // z-index inside pageWrap, so it can never paint above the sticky site
+  // header even with a higher z-index value. Moving it to be a direct child
+  // of <body> makes it a true sibling of the header and fixes that.
+  if (lightboxEl.parentElement !== document.body) {
+    document.body.appendChild(lightboxEl);
+  }
+
   const imgEl = document.getElementById("lbLightboxImg");
   const counterEl = document.getElementById("lbLightboxCounter");
   let idx = 0;
