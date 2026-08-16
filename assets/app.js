@@ -705,9 +705,11 @@ function LB_wireScreenshotGallery(screenshots) {
   function open(i) {
     show(i);
     lightboxEl.hidden = false;
+    document.body.style.overflow = "hidden";
   }
   function close() {
     lightboxEl.hidden = true;
+    document.body.style.overflow = "";
   }
 
   galleryEl.addEventListener("click", (e) => {
