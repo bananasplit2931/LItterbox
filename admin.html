@@ -159,6 +159,7 @@ function reportReasonLabel(reason) {
     spam: "Spam",
     inappropriate: "Inappropriate content",
     stolen: "Stolen work / not the creator",
+    unwanted_credit: "Doesn't want to be credited",
     other: "Other",
   }[reason] || reason;
 }
@@ -186,13 +187,14 @@ async function loadReports() {
   }
 
   listEl.innerHTML = reports.map(r => `
-    <div class="admin-row" data-report-id="${r.id}">
+    <div class="admin-row" data-report-id="${r.id}" data-mod-id="${r.mods ? r.mods.id : ""}" data-credited-user-id="${r.credited_user_id || ""}">
       <div class="admin-row-main">
         <p class="admin-row-title">${escapeHtml(reportReasonLabel(r.reason))} — ${r.mods ? escapeHtml(r.mods.name) : "(mod deleted)"}</p>
         <p class="admin-row-meta">${r.details ? escapeHtml(r.details) + " · " : ""}${timeAgo(r.created_at)}</p>
       </div>
       <div class="admin-row-actions">
         ${r.mods ? `<a class="btn btn-secondary" href="mod.html?id=${r.mods.id}" target="_blank" rel="noopener">Open ↗</a>` : ""}
+        ${r.mods && r.reason === "unwanted_credit" && r.credited_user_id ? `<button type="button" class="btn btn-danger" data-action="remove-credit">Remove from credits</button>` : ""}
         ${r.mods ? `<button type="button" class="btn btn-danger" data-action="delete-mod">Delete mod</button>` : ""}
         <button type="button" class="btn btn-secondary" data-action="dismiss">Dismiss</button>
         <button type="button" class="btn btn-primary" data-action="resolve">Resolve</button>
@@ -217,7 +219,16 @@ async function loadReports() {
             if (delError) throw delError;
           }
         }
-        if (action === "delete-mod" || action === "resolve" || action === "dismiss") {
+        if (action === "remove-credit") {
+          const { modId, creditedUserId } = row.dataset;
+          const { error: creditError } = await supabaseClient
+            .from("mod_credits")
+            .delete()
+            .eq("mod_id", modId)
+            .eq("credited_user_id", creditedUserId);
+          if (creditError) throw creditError;
+        }
+        if (action === "delete-mod" || action === "remove-credit" || action === "resolve" || action === "dismiss") {
           const { error } = await supabaseClient
             .from("reports")
             .update({ status: action === "dismiss" ? "dismissed" : "resolved", resolved_at: new Date().toISOString(), resolved_by: currentUser.id })

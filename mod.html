@@ -90,6 +90,22 @@
   border-radius: var(--radius-sm); padding: 12px 14px;
 }
 
+.credits-card h2 { display: flex; align-items: center; gap: 8px; }
+.credits-list { display: flex; flex-direction: column; gap: 10px; }
+.credit-row { display: flex; align-items: center; gap: 10px; }
+.credit-avatar {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--color-accent-tint); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  font-family: var(--font-mono); font-weight: 700; font-size: 12px; color: var(--color-accent);
+}
+.credit-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.credit-main { min-width: 0; flex: 1; }
+.credit-name-link { font-weight: 700; font-size: 13.5px; text-decoration: none; color: var(--color-text); }
+.credit-name-link:hover { color: var(--color-accent); text-decoration: underline; }
+.credit-name-text { font-weight: 700; font-size: 13.5px; color: var(--color-text); }
+.credit-role { font-size: 12px; color: var(--color-text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.credits-more { font-size: 12.5px; color: var(--color-text-faint); text-align: center; padding-top: 2px; }
+
 @media (max-width: 700px) {
   .content-grid { grid-template-columns: 1fr; }
   .mod-head { flex-wrap: wrap; margin-top: -36px; }
@@ -162,6 +178,7 @@
 
     <div class="side-stack">
       <div class="card actions-card" id="actionsCard"></div>
+      <div class="card credits-card" id="creditsCard" style="display:none;"></div>
       <div class="card rate-box" id="rateCard"></div>
       <div class="card" id="reportCard" style="display:none;"></div>
     </div>
@@ -375,12 +392,53 @@ function renderMod() {
   wireFavButton();
   wireFollowButton();
   renderReportCard();
+  renderCreditsCard();
 
   renderRateBox();
 
   gateEl.style.display = "none";
   pageWrapEl.style.display = "block";
   requestAnimationFrame(() => pageWrapEl.classList.add("is-visible"));
+}
+
+const CREDITS_VISIBLE_LIMIT = 10;
+
+function renderCreditsCard() {
+  const card = document.getElementById("creditsCard");
+  const credits = (currentMod.mod_credits || []).slice().sort((a, b) => a.sort_order - b.sort_order);
+
+  if (credits.length === 0) {
+    card.style.display = "none";
+    return;
+  }
+
+  const shown = credits.slice(0, CREDITS_VISIBLE_LIMIT);
+  const extra = credits.length - shown.length;
+
+  card.style.display = "block";
+  card.innerHTML = `
+    <h2><i class="fa-solid fa-user-group" style="font-size:12px;color:var(--color-accent);"></i>Credits</h2>
+    <div class="credits-list">
+      ${shown.map(c => {
+        const username = c.profiles?.username;
+        const name = username || c.display_name || "?";
+        const avatarInner = c.profiles?.avatar_url ? `<img src="${escapeHtml(c.profiles.avatar_url)}" alt="">` : iconInitials(name);
+        const nameHtml = username
+          ? `<a class="credit-name-link" href="profile.html?u=${encodeURIComponent(username)}">${escapeHtml(username)}</a>`
+          : `<span class="credit-name-text">${escapeHtml(name)}</span>`;
+        return `
+          <div class="credit-row">
+            <div class="credit-avatar">${avatarInner}</div>
+            <div class="credit-main">
+              ${nameHtml}
+              ${c.comment ? `<div class="credit-role">${escapeHtml(c.comment)}</div>` : ""}
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+    ${extra > 0 ? `<p class="credits-more">and ${extra} more…</p>` : ""}
+  `;
 }
 
 function renderReportCard() {
@@ -401,6 +459,8 @@ function renderReportCard() {
       return;
     }
 
+    const iAmCredited = (mod.mod_credits || []).some(c => c.credited_user_id === currentUser.id);
+
     card.innerHTML = `
       <form id="reportForm" class="report-form">
         <label for="reportReason">Why are you reporting this?</label>
@@ -410,6 +470,7 @@ function renderReportCard() {
           <option value="spam">Spam</option>
           <option value="inappropriate">Inappropriate content</option>
           <option value="stolen">Stolen work / not the creator</option>
+          ${iAmCredited ? `<option value="unwanted_credit">I don't want to be credited on this mod</option>` : ""}
           <option value="other">Other</option>
         </select>
         <textarea id="reportDetails" maxlength="400" placeholder="Any extra details (optional)"></textarea>
@@ -425,11 +486,15 @@ function renderReportCard() {
       btn.disabled = true;
       btn.textContent = "Submitting…";
 
+      const reason = document.getElementById("reportReason").value;
       const { error } = await supabaseClient.from("reports").insert({
         mod_id: mod.id,
         reporter_id: currentUser.id,
-        reason: document.getElementById("reportReason").value,
+        reason,
         details: document.getElementById("reportDetails").value.trim() || null,
+        // lets admin remove exactly this person's credit without guessing -
+        // only meaningful (and only settable) when reporting your own credit
+        credited_user_id: reason === "unwanted_credit" ? currentUser.id : null,
       });
 
       if (error) {
@@ -504,7 +569,7 @@ async function init() {
 
   const { data, error } = await supabaseClient
     .from("mods")
-    .select("*, profiles!mods_profiles_fkey(is_verified), mod_categories(categories(id, slug, name, icon)), mod_screenshots(id, url, sort_order)")
+    .select("*, profiles!mods_profiles_fkey(is_verified), mod_categories(categories(id, slug, name, icon)), mod_screenshots(id, url, sort_order), mod_credits(id, credited_user_id, display_name, comment, sort_order, profiles(username, avatar_url))")
     .eq("id", modId)
     .single();
 

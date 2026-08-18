@@ -77,6 +77,57 @@
   .card { padding: 18px; }
   .edit-hero h1 { font-size: 22px; }
 }
+
+/* ---------- Credits ("Add people") ---------- */
+.people-search-wrap { position: relative; margin-bottom: 20px; }
+.people-search-results {
+  position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 5;
+  background: var(--color-bg-soft); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-hover); overflow: hidden; max-height: 260px; overflow-y: auto;
+}
+.people-search-result {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+}
+.people-search-result:last-child { border-bottom: none; }
+.people-search-result:hover { background: var(--color-surface-hover); }
+.people-search-empty, .people-search-loading { padding: 12px; font-size: 12.5px; color: var(--color-text-faint); }
+.people-search-addcustom { color: var(--color-accent); font-weight: 700; font-size: 12.5px; }
+.credit-avatar {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--color-accent-tint); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  font-family: var(--font-mono); font-weight: 700; font-size: 12px; color: var(--color-accent);
+}
+.credit-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.credit-name { font-weight: 700; font-size: 13.5px; }
+
+.people-list { display: flex; flex-direction: column; gap: 8px; }
+.people-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  transition: border-color .12s ease, background .12s ease, opacity .12s ease;
+}
+.people-row.dragging { opacity: .45; }
+.people-row.drag-over { border-color: var(--color-accent); }
+.people-drag-handle { color: var(--color-text-faint); cursor: grab; padding: 4px; flex-shrink: 0; }
+.people-drag-handle:active { cursor: grabbing; }
+.people-row-main { flex: 1; min-width: 0; }
+.people-row-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.people-row-top .text-only-tag { font-size: 11px; color: var(--color-text-faint); font-weight: 500; }
+.people-row-comment {
+  width: 100%; background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); padding: 7px 10px; font-family: var(--font-body); font-size: 13px; color: var(--color-text);
+}
+.people-row-comment:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+.people-row-count { font-size: 11px; color: var(--color-text-faint); text-align: right; margin-top: 3px; }
+.people-row-count.warn { color: var(--color-gold); }
+.people-remove-btn {
+  background: none; border: none; color: var(--color-text-faint); cursor: pointer; flex-shrink: 0;
+  width: 28px; height: 28px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
+}
+.people-remove-btn:hover { background: var(--color-error-bg); color: var(--color-error); }
+.people-empty-hint { font-size: 13px; color: var(--color-text-faint); padding: 6px 2px; }
+.people-cap-hint { font-size: 12px; color: var(--color-text-faint); margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -220,6 +271,25 @@
           </div>
         </div>
 
+        <div class="card">
+          <div class="section-head">
+            <span class="section-icon"><i class="fa-solid fa-user-group"></i></span>
+            <div class="section-head-text">
+              <h2>Credits</h2>
+              <p>Tag anyone who helped - site users link to their profile, or add a name as plain text. Shown on the mod page under Download.</p>
+            </div>
+          </div>
+
+          <div class="people-search-wrap">
+            <input type="text" id="peopleSearchInput" placeholder="Search a Litterbox username…" autocomplete="off">
+            <div class="people-search-results" id="peopleSearchResults" style="display:none;"></div>
+          </div>
+
+          <div class="people-list" id="peopleList"></div>
+          <p class="people-empty-hint" id="peopleEmptyHint" style="display:none;">Nobody added yet.</p>
+          <p class="people-cap-hint"><i class="fa-solid fa-circle-info"></i> The first 10 people show on the mod page - the rest collapse into "and X more…". Drag the handle to reorder; higher means more credit.</p>
+        </div>
+
         <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Save changes</button>
       </form>
 
@@ -301,6 +371,17 @@ let removedScreenshotIds = [];
 let newScreenshotFiles = [];
 const MAX_SCREENSHOTS = 6;
 
+// Credits: kept purely in memory while editing, then saved as a full
+// delete-and-reinsert on submit (same "simplest correct" approach used
+// for categories below) - reordering, adding, and removing all just
+// mutate this array, and array order == sort_order on save.
+// Each entry: { credited_user_id, display_name, username, avatar_url, comment }
+let creditedPeople = [];
+const CREDIT_COMMENT_MAX = 80;
+const MAX_CREDITS_STORED = 40; // generous ceiling - only the first 10 show on the mod page
+let peopleDragFromIndex = null;
+let peopleSearchDebounce = null;
+
 const descEditor = LB_mountMarkdownEditor(document.getElementById("descriptionEditor"), "");
 const changelogEditor = LB_mountMarkdownEditor(document.getElementById("changelogEditor"), "");
 
@@ -322,7 +403,7 @@ function storagePathFromUrl(url) {
 async function loadMod(modId) {
   const { data, error } = await supabaseClient
     .from("mods")
-    .select("*, mod_categories(categories(id, slug, name, icon)), mod_screenshots(id, url, sort_order)")
+    .select("*, mod_categories(categories(id, slug, name, icon)), mod_screenshots(id, url, sort_order), mod_credits(id, credited_user_id, display_name, comment, sort_order, profiles(username, avatar_url, is_verified))")
     .eq("id", modId)
     .single();
 
@@ -423,6 +504,18 @@ async function checkAuth() {
   newScreenshotFiles = [];
   renderScreenshotEditor();
 
+  creditedPeople = (mod.mod_credits || [])
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map(c => ({
+      credited_user_id: c.credited_user_id,
+      display_name: c.display_name,
+      username: c.profiles?.username || null,
+      avatar_url: c.profiles?.avatar_url || null,
+      comment: c.comment || "",
+    }));
+  renderPeopleList();
+
   document.getElementById("previewPill").style.display = mod.is_preview ? "inline-flex" : "none";
   document.getElementById("pendingPill").style.display = mod.review_status === "pending" ? "inline-flex" : "none";
   document.getElementById("rejectedPill").style.display = mod.review_status === "rejected" ? "inline-flex" : "none";
@@ -512,6 +605,129 @@ document.getElementById("screenshots").addEventListener("change", (e) => {
   newScreenshotFiles = newScreenshotFiles.concat(incoming.slice(0, Math.max(room, 0)));
   e.target.value = "";
   renderScreenshotEditor();
+});
+
+// ---------- Credits ("Add people") ----------
+function creditLabel(person) {
+  return person.username || person.display_name || "?";
+}
+
+function renderPeopleList() {
+  const listEl = document.getElementById("peopleList");
+  document.getElementById("peopleEmptyHint").style.display = creditedPeople.length ? "none" : "block";
+
+  listEl.innerHTML = creditedPeople.map((p, i) => `
+    <div class="people-row" draggable="true" data-index="${i}">
+      <span class="people-drag-handle" title="Drag to reorder"><i class="fa-solid fa-grip-vertical"></i></span>
+      <div class="credit-avatar">${p.avatar_url ? `<img src="${escapeHtml(p.avatar_url)}" alt="">` : iconInitials(creditLabel(p))}</div>
+      <div class="people-row-main">
+        <div class="people-row-top">
+          <span class="credit-name">${escapeHtml(creditLabel(p))}</span>
+          ${!p.username ? `<span class="text-only-tag">(not a Litterbox user)</span>` : ""}
+        </div>
+        <input type="text" class="people-row-comment" maxlength="${CREDIT_COMMENT_MAX}" placeholder="What did they do? e.g. 'Rod & lure textures'" value="${escapeHtml(p.comment)}" data-index="${i}">
+        <div class="people-row-count" data-index="${i}">${p.comment.length}/${CREDIT_COMMENT_MAX}</div>
+      </div>
+      <button type="button" class="people-remove-btn" data-index="${i}" title="Remove"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  `).join("");
+
+  listEl.querySelectorAll(".people-row-comment").forEach(input => {
+    input.addEventListener("input", (e) => {
+      const i = Number(e.target.dataset.index);
+      creditedPeople[i].comment = e.target.value.slice(0, CREDIT_COMMENT_MAX);
+      const counter = listEl.querySelector(`.people-row-count[data-index="${i}"]`);
+      counter.textContent = `${creditedPeople[i].comment.length}/${CREDIT_COMMENT_MAX}`;
+      counter.classList.toggle("warn", creditedPeople[i].comment.length >= CREDIT_COMMENT_MAX - 15);
+    });
+  });
+
+  listEl.querySelectorAll(".people-remove-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      creditedPeople.splice(Number(e.currentTarget.dataset.index), 1);
+      renderPeopleList();
+    });
+  });
+
+  listEl.querySelectorAll(".people-row").forEach(row => {
+    row.addEventListener("dragstart", () => {
+      peopleDragFromIndex = Number(row.dataset.index);
+      row.classList.add("dragging");
+    });
+    row.addEventListener("dragend", () => row.classList.remove("dragging"));
+    row.addEventListener("dragover", (e) => { e.preventDefault(); row.classList.add("drag-over"); });
+    row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
+    row.addEventListener("drop", (e) => {
+      e.preventDefault();
+      row.classList.remove("drag-over");
+      const toIndex = Number(row.dataset.index);
+      if (peopleDragFromIndex === null || peopleDragFromIndex === toIndex) return;
+      const [moved] = creditedPeople.splice(peopleDragFromIndex, 1);
+      creditedPeople.splice(toIndex, 0, moved);
+      peopleDragFromIndex = null;
+      renderPeopleList();
+    });
+  });
+}
+
+const peopleSearchInput = document.getElementById("peopleSearchInput");
+const peopleSearchResults = document.getElementById("peopleSearchResults");
+
+peopleSearchInput.addEventListener("input", () => {
+  const query = peopleSearchInput.value.trim();
+  clearTimeout(peopleSearchDebounce);
+  if (!query) { peopleSearchResults.style.display = "none"; return; }
+
+  peopleSearchResults.innerHTML = `<p class="people-search-loading">Searching…</p>`;
+  peopleSearchResults.style.display = "block";
+
+  peopleSearchDebounce = setTimeout(async () => {
+    const alreadyAdded = new Set(creditedPeople.filter(p => p.credited_user_id).map(p => p.credited_user_id));
+    const { data, error } = await supabaseClient
+      .from("profiles")
+      .select("id, username, avatar_url")
+      .ilike("username", `%${query}%`)
+      .not("username", "is", null)
+      .limit(8);
+
+    const matches = (error ? [] : data).filter(u => !alreadyAdded.has(u.id));
+
+    let html = matches.map(u => `
+      <div class="people-search-result" data-user-id="${u.id}" data-username="${escapeHtml(u.username)}" data-avatar="${u.avatar_url ? escapeHtml(u.avatar_url) : ""}">
+        <div class="credit-avatar">${u.avatar_url ? `<img src="${escapeHtml(u.avatar_url)}" alt="">` : iconInitials(u.username)}</div>
+        <span class="credit-name">${escapeHtml(u.username)}</span>
+      </div>
+    `).join("");
+
+    if (query.length >= 2) {
+      html += `<div class="people-search-result" data-custom-name="${escapeHtml(query)}">
+        <span class="people-search-addcustom"><i class="fa-solid fa-plus"></i> Add "${escapeHtml(query)}" as text (not a Litterbox user)</span>
+      </div>`;
+    }
+
+    peopleSearchResults.innerHTML = html || `<p class="people-search-empty">No matching users.</p>`;
+  }, 250);
+});
+
+peopleSearchResults.addEventListener("click", (e) => {
+  const row = e.target.closest(".people-search-result");
+  if (!row) return;
+  if (creditedPeople.length >= MAX_CREDITS_STORED) {
+    peopleSearchResults.style.display = "none";
+    return;
+  }
+  if (row.dataset.userId) {
+    creditedPeople.push({ credited_user_id: row.dataset.userId, display_name: null, username: row.dataset.username, avatar_url: row.dataset.avatar || null, comment: "" });
+  } else if (row.dataset.customName) {
+    creditedPeople.push({ credited_user_id: null, display_name: row.dataset.customName, username: null, avatar_url: null, comment: "" });
+  }
+  peopleSearchInput.value = "";
+  peopleSearchResults.style.display = "none";
+  renderPeopleList();
+});
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".people-search-wrap")) peopleSearchResults.style.display = "none";
 });
 
 document.getElementById("screenshotsPreview").addEventListener("click", (e) => {
@@ -764,6 +980,23 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
         Array.from(selectedCategoryIds).map(category_id => ({ mod_id: currentMod.id, category_id }))
       );
       if (catInsertError) console.error("Error saving categories:", catInsertError);
+    }
+
+    // Credits: same delete-all-then-reinsert approach as categories above -
+    // array order (post drag & drop) becomes sort_order on save.
+    const { error: creditsDeleteError } = await supabaseClient.from("mod_credits").delete().eq("mod_id", currentMod.id);
+    if (creditsDeleteError) console.error("Error clearing old credits:", creditsDeleteError);
+    if (creditedPeople.length > 0) {
+      const { error: creditsInsertError } = await supabaseClient.from("mod_credits").insert(
+        creditedPeople.map((p, i) => ({
+          mod_id: currentMod.id,
+          credited_user_id: p.credited_user_id,
+          display_name: p.credited_user_id ? null : p.display_name,
+          comment: p.comment.slice(0, CREDIT_COMMENT_MAX),
+          sort_order: i,
+        }))
+      );
+      if (creditsInsertError) console.error("Error saving credits:", creditsInsertError);
     }
 
     // Screenshots: remove any the user deleted (row + storage file), then
