@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics - Litterbox</title>
+<link rel="icon" type="image/png" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/app.js"></script>
+<style>
+.stats-page-wrap { max-width: 920px; margin: 0 auto; padding: 32px clamp(16px, 5vw, 56px) 64px; }
+
+.stats-hero { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
+.stats-hero-icon {
+  width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--color-accent-tint); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  font-family: var(--font-mono); font-weight: 700; font-size: 14px; color: var(--color-accent);
+}
+.stats-hero-icon img { width: 100%; height: 100%; object-fit: cover; }
+.stats-hero-text h1 { font-size: 22px; margin: 0 0 3px; letter-spacing: -.4px; }
+.stats-hero-text a { font-size: 13px; color: var(--color-text-faint); text-decoration: none; }
+.stats-hero-text a:hover { color: var(--color-accent); }
+
+.overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.overview-card { background: var(--color-bg-soft); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 16px; }
+.overview-card .num { font-family: var(--font-mono); font-size: 24px; font-weight: 800; color: var(--color-text); line-height: 1.1; }
+.overview-card .label { font-size: 12px; color: var(--color-text-faint); margin-top: 4px; font-weight: 600; }
+
+.card { margin-bottom: 20px; }
+.card h2 { display: flex; align-items: center; gap: 8px; font-size: 15px; margin: 0 0 4px; }
+.card .card-sub { font-size: 12.5px; color: var(--color-text-faint); margin: 0 0 16px; }
+
+.trend-chart-wrap { overflow-x: auto; }
+.trend-legend { display: flex; gap: 16px; margin-bottom: 12px; font-size: 12.5px; color: var(--color-text-muted); }
+.trend-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.trend-legend .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+.country-list { display: flex; flex-direction: column; gap: 10px; }
+.country-row { display: flex; align-items: center; gap: 10px; }
+.country-flag { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+.country-name { font-size: 13.5px; font-weight: 600; width: 130px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.country-bar-track { flex: 1; height: 8px; border-radius: var(--radius-pill); background: var(--color-bg); overflow: hidden; }
+.country-bar-fill { height: 100%; background: var(--color-accent); border-radius: var(--radius-pill); }
+.country-count { font-family: var(--font-mono); font-size: 12.5px; color: var(--color-text-faint); width: 46px; text-align: right; flex-shrink: 0; }
+
+.countries-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 640px) { .countries-grid { grid-template-columns: 1fr; } }
+
+.empty-inline { font-size: 13px; color: var(--color-text-faint); padding: 8px 0; }
+
+@media (max-width: 480px) {
+  .stats-page-wrap { padding: 22px 14px 48px; }
+  .card { padding: 18px; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <img src="assets/logo.png" alt="" class="brand-mark">
+    <span class="brand-name">Litterbox</span>
+  </a>
+  <div class="header-right">
+    <span id="notifSlot"></span>
+    <a class="nav-link" href="index.html">← Back to mods</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-drawer" id="navDrawer"></div>
+  </div>
+</header>
+
+<div id="gate" class="gate-state">Checking your session…</div>
+
+<div class="stats-page-wrap page-reveal" id="pageWrap" style="display:none;">
+
+  <div class="stats-hero">
+    <div class="stats-hero-icon" id="modIconEl"></div>
+    <div class="stats-hero-text">
+      <h1 id="modNameEl"></h1>
+      <a id="backToModLink" href="#"><i class="fa-solid fa-arrow-left"></i> Back to mod page</a>
+    </div>
+  </div>
+
+  <div class="overview-grid" id="overviewGrid"></div>
+
+  <div class="card">
+    <h2><i class="fa-solid fa-chart-line" style="font-size:13px;color:var(--color-accent);"></i>Last 30 days</h2>
+    <p class="card-sub">Views and downloads recorded per day.</p>
+    <div class="trend-legend">
+      <span><span class="dot" style="background:var(--color-accent);"></span>Views</span>
+      <span><span class="dot" style="background:var(--color-gold);"></span>Downloads</span>
+    </div>
+    <div class="trend-chart-wrap" id="trendChartWrap"></div>
+  </div>
+
+  <div class="countries-grid">
+    <div class="card">
+      <h2><i class="fa-solid fa-eye" style="font-size:13px;color:var(--color-accent);"></i>Top countries - views</h2>
+      <div class="country-list" id="countryViewsList"></div>
+    </div>
+    <div class="card">
+      <h2><i class="fa-solid fa-arrow-up-right-from-square" style="font-size:13px;color:var(--color-accent);"></i>Top countries - downloads</h2>
+      <div class="country-list" id="countryDownloadsList"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+const gateEl = document.getElementById("gate");
+const pageWrapEl = document.getElementById("pageWrap");
+
+function getModIdFromUrl() {
+  return new URLSearchParams(window.location.search).get("id");
+}
+
+function countryFlag(code) {
+  if (!code || code.length !== 2) return "🌐";
+  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 127397 + c.charCodeAt(0)));
+}
+
+function renderOverview(mod) {
+  const downloads = mod.download_count ?? 0;
+  const views = mod.view_count ?? 0;
+  const rate = views > 0 ? Math.round((downloads / views) * 100) : 0;
+
+  const cards = [
+    { num: LB_formatCount(views), label: "Total views" },
+    { num: LB_formatCount(downloads), label: "Total downloads" },
+    { num: `${rate}%`, label: "View → download" },
+    { num: LB_formatCount(mod.favorite_count ?? 0), label: "Favorites" },
+    { num: LB_formatCount(mod.follow_count ?? 0), label: "Followers" },
+  ];
+
+  document.getElementById("overviewGrid").innerHTML = cards.map(c => `
+    <div class="overview-card"><div class="num">${c.num}</div><div class="label">${c.label}</div></div>
+  `).join("");
+}
+
+function renderCountryList(elId, rows, key) {
+  const el = document.getElementById(elId);
+  const sorted = rows.filter(r => (r[key] || 0) > 0).sort((a, b) => b[key] - a[key]).slice(0, 10);
+
+  if (sorted.length === 0) {
+    el.innerHTML = `<p class="empty-inline">No data yet.</p>`;
+    return;
+  }
+
+  const max = sorted[0][key];
+  el.innerHTML = sorted.map(r => `
+    <div class="country-row">
+      <span class="country-flag">${countryFlag(r.country_code)}</span>
+      <span class="country-name" title="${escapeHtml(r.country_name || r.country_code)}">${escapeHtml(r.country_name || r.country_code)}</span>
+      <span class="country-bar-track"><span class="country-bar-fill" style="width:${Math.max(4, Math.round((r[key] / max) * 100))}%;"></span></span>
+      <span class="country-count">${LB_formatCount(r[key])}</span>
+    </div>
+  `).join("");
+}
+
+function renderTrendChart(dailyRows) {
+  const wrap = document.getElementById("trendChartWrap");
+
+  // Build a full 30-day range (today inclusive) so gaps show as zero,
+  // not a shorter/misleading chart.
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+
+  const byDay = {};
+  dailyRows.forEach(r => { byDay[r.day] = r; });
+
+  const series = days.map(day => ({
+    day,
+    views: byDay[day]?.views || 0,
+    downloads: byDay[day]?.downloads || 0,
+  }));
+
+  const maxVal = Math.max(1, ...series.map(s => Math.max(s.views, s.downloads)));
+  const chartW = Math.max(560, days.length * 20);
+  const chartH = 140;
+  const barW = (chartW / days.length) * 0.32;
+  const gap = (chartW / days.length) * 0.1;
+
+  const bars = series.map((s, i) => {
+    const x0 = i * (chartW / days.length);
+    const viewsH = Math.round((s.views / maxVal) * (chartH - 8));
+    const downloadsH = Math.round((s.downloads / maxVal) * (chartH - 8));
+    const label = new Date(s.day + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return `
+      <g>
+        <title>${label}: ${s.views} views, ${s.downloads} downloads</title>
+        <rect x="${x0 + gap}" y="${chartH - viewsH}" width="${barW}" height="${viewsH}" fill="var(--color-accent)" rx="1.5"></rect>
+        <rect x="${x0 + gap + barW + 2}" y="${chartH - downloadsH}" width="${barW}" height="${downloadsH}" fill="var(--color-gold)" rx="1.5"></rect>
+      </g>
+    `;
+  }).join("");
+
+  wrap.innerHTML = `
+    <svg viewBox="0 0 ${chartW} ${chartH}" width="${chartW}" height="${chartH}" style="display:block;min-width:100%;">
+      <line x1="0" y1="${chartH - 0.5}" x2="${chartW}" y2="${chartH - 0.5}" stroke="var(--color-border)" stroke-width="1"></line>
+      ${bars}
+    </svg>
+  `;
+}
+
+async function init() {
+  const modId = getModIdFromUrl();
+  if (!modId) {
+    gateEl.textContent = "No mod specified.";
+    return;
+  }
+
+  const nav = await LB_mountHeaderNav();
+  if (!nav.user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  const { data: mod, error } = await supabaseClient
+    .from("mods")
+    .select("id, name, icon_url, user_id, view_count, download_count, favorite_count, follow_count")
+    .eq("id", modId)
+    .single();
+
+  if (error || !mod) {
+    gateEl.textContent = "That mod doesn't exist.";
+    return;
+  }
+
+  if (mod.user_id !== nav.user.id) {
+    gateEl.textContent = "You can only view statistics for your own mods.";
+    return;
+  }
+
+  document.getElementById("modNameEl").textContent = mod.name;
+  document.getElementById("backToModLink").href = `mod.html?id=${mod.id}`;
+  const safeIconUrl = isTrustedStorageUrl(mod.icon_url) ? escapeHtml(mod.icon_url) : null;
+  document.getElementById("modIconEl").innerHTML = safeIconUrl ? `<img src="${safeIconUrl}" alt="">` : iconInitials(mod.name);
+
+  renderOverview(mod);
+
+  const [countryRes, dailyRes] = await Promise.all([
+    supabaseClient.from("mod_country_stats").select("country_code, country_name, views, downloads").eq("mod_id", mod.id),
+    supabaseClient.from("mod_daily_stats").select("day, views, downloads").eq("mod_id", mod.id).gte("day", new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10)),
+  ]);
+
+  const countryRows = countryRes.data || [];
+  renderCountryList("countryViewsList", countryRows, "views");
+  renderCountryList("countryDownloadsList", countryRows, "downloads");
+  renderTrendChart(dailyRes.data || []);
+
+  gateEl.style.display = "none";
+  pageWrapEl.style.display = "block";
+  requestAnimationFrame(() => pageWrapEl.classList.add("is-visible"));
+}
+
+init();
+</script>
+
+</body>
+</html>

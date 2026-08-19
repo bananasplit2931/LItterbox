@@ -371,6 +371,7 @@ function renderMod() {
       ${showFav ? LB_renderFavoriteBtn(myFavorited, mod.favorite_count) : ""}
       ${showFollow ? LB_renderFollowBtn(myFollowing, mod.follow_count) : ""}
       ${showManage ? `<a class="btn btn-secondary" href="edit.html?id=${mod.id}">Manage</a>` : ""}
+      ${showManage ? `<a class="btn btn-secondary" href="statistics.html?id=${mod.id}"><i class="fa-solid fa-chart-line"></i> Statistics</a>` : ""}
     </div>` : ""}
   `;
 
@@ -379,7 +380,12 @@ function renderMod() {
     downloadBtn.addEventListener("click", async () => {
       // Only bump the on-screen count once the database write actually
       // succeeds - this is what used to make the number revert on refresh.
-      const { error } = await supabaseClient.rpc("increment_download_count", { target_mod_id: mod.id });
+      const geo = await LB_getVisitorCountry();
+      const { error } = await supabaseClient.rpc("increment_download_count", {
+        target_mod_id: mod.id,
+        p_country_code: geo?.code || null,
+        p_country_name: geo?.name || null,
+      });
       if (error) {
         console.error("Couldn't record the download (check that the increment_download_count function exists in Supabase):", error);
         return;
@@ -584,6 +590,26 @@ async function init() {
   myFollowing = await LB_isFollowing(currentMod.id, currentUser?.id);
   renderMod();
   loadChangelogs();
+  recordView();
+}
+
+function recordView() {
+  // One view per mod per browser session, and never count the owner
+  // browsing their own page.
+  if (currentUser && currentMod.user_id === currentUser.id) return;
+  const seenKey = `lb_viewed_${currentMod.id}`;
+  if (sessionStorage.getItem(seenKey)) return;
+  try { sessionStorage.setItem(seenKey, "1"); } catch { /* ignore */ }
+
+  LB_getVisitorCountry().then(geo => {
+    supabaseClient.rpc("record_mod_view", {
+      target_mod_id: currentMod.id,
+      p_country_code: geo?.code || null,
+      p_country_name: geo?.name || null,
+    }).then(({ error }) => {
+      if (error) console.error("Couldn't record the view:", error);
+    });
+  });
 }
 
 async function loadChangelogs() {

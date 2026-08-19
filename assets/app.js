@@ -137,6 +137,38 @@ function LB_renderSocialLinks(links) {
   }).join("")}</div>`;
 }
 
+// ---------- Visitor country (for mod view/download stats) ----------
+// Resolved client-side via a free, keyless GeoIP lookup - cached in
+// sessionStorage so it's fetched at most once per browser tab. Never
+// stores or sends the IP itself anywhere - only the resolved country.
+let LB_countryLookupPromise = null;
+async function LB_getVisitorCountry() {
+  const cached = sessionStorage.getItem("lb_geo_country");
+  if (cached) {
+    try { return JSON.parse(cached); } catch { /* fall through and re-fetch */ }
+  }
+  if (LB_countryLookupPromise) return LB_countryLookupPromise;
+
+  LB_countryLookupPromise = (async () => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch("https://get.geojs.io/v1/ip/geo.json", { signal: controller.signal });
+      clearTimeout(timeout);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data.country_code) return null;
+      const result = { code: data.country_code, name: data.country || data.country_code };
+      sessionStorage.setItem("lb_geo_country", JSON.stringify(result));
+      return result;
+    } catch {
+      return null; // ad blockers, offline, timeout - stats just skip the country breakdown
+    }
+  })();
+
+  return LB_countryLookupPromise;
+}
+
 // ---------- Emoji rating scale (replaces 1–5 stars) ----------
 // Same 1-5 integer stored in the DB as before — only the presentation
 // changed, from stars to a face that better carries how someone feels
@@ -221,6 +253,38 @@ function LB_formatCount(n) {
   if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "m";
   if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
   return String(num);
+}
+
+// ---------- visitor country lookup (for mod view/download stats) ----------
+// Cached in sessionStorage so we only hit the geo API once per browser
+// session, not on every page/view. Failure just means the view/download
+// still gets counted, only without a country attached.
+let _lbGeoPromise = null;
+function LB_getVisitorCountry() {
+  if (_lbGeoPromise) return _lbGeoPromise;
+
+  _lbGeoPromise = (async () => {
+    try {
+      const cached = sessionStorage.getItem("lb_geo_country");
+      if (cached) return JSON.parse(cached);
+    } catch { /* sessionStorage unavailable - fall through to a fresh lookup */ }
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch("https://get.geojs.io/v1/ip/geo.json", { signal: controller.signal });
+      clearTimeout(timeout);
+      if (!res.ok) return null;
+      const data = await res.json();
+      const result = data.country_code ? { code: data.country_code, name: data.country || null } : null;
+      try { sessionStorage.setItem("lb_geo_country", JSON.stringify(result)); } catch { /* ignore */ }
+      return result;
+    } catch {
+      return null;
+    }
+  })();
+
+  return _lbGeoPromise;
 }
 
 function timeAgo(dateStr) {
