@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit profile - Litterbox</title>
+<link rel="icon" type="image/png" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/app.js"></script>
+<style>
+.edit-page-wrap { max-width: 760px; margin: 0 auto; padding: 32px clamp(16px, 5vw, 56px) 64px; }
+.edit-hero h1 { font-size: 27px; margin: 0; letter-spacing: -0.5px; }
+.edit-hero-sub { color: var(--color-text-muted); font-size: 14px; margin: 6px 0 0; max-width: 56ch; }
+
+.section-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+.section-icon {
+  width: 34px; height: 34px; border-radius: var(--radius-sm); flex-shrink: 0; margin-top: 1px;
+  background: var(--color-accent-tint); color: var(--color-accent);
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.section-head-text h2 { font-size: 15px; margin: 0 0 2px; font-weight: 800; color: var(--color-text); }
+.section-head-text p { font-size: 12.5px; color: var(--color-text-faint); margin: 0; line-height: 1.4; }
+
+.card { margin-bottom: 20px; }
+
+.banner-preview-wrap {
+  width: 100%; height: 120px; border-radius: var(--radius-md); background: var(--color-accent-tint);
+  border: 1px solid var(--color-border); overflow: hidden; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: center; color: var(--color-text-faint); font-size: 13px;
+}
+.banner-preview-wrap img { width: 100%; height: 100%; object-fit: cover; }
+
+.avatar-edit-row { display: flex; align-items: center; gap: 16px; margin-bottom: 4px; }
+.avatar-edit-preview {
+  width: 64px; height: 64px; border-radius: 50%; background: var(--color-accent-tint);
+  display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
+  font-family: var(--font-mono); font-weight: 700; font-size: 18px; color: var(--color-accent);
+  border: 2px solid var(--color-border);
+}
+.avatar-edit-preview img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-field { flex: 1; margin-bottom: 0; }
+
+.social-links-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.social-link-row { display: flex; align-items: center; gap: 10px; }
+.social-link-icon {
+  width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--color-bg);
+  border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-faint); flex-shrink: 0; font-size: 14px;
+}
+.social-link-row input { flex: 1; }
+.social-link-remove {
+  background: none; border: none; color: var(--color-text-faint); cursor: pointer;
+  width: 30px; height: 30px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.social-link-remove:hover { background: var(--color-error-bg); color: var(--color-error); }
+.social-links-cap-hint { font-size: 12px; color: var(--color-text-faint); margin-top: 4px; }
+
+@media (max-width: 480px) {
+  .edit-page-wrap { padding: 22px 14px 48px; }
+  .card { padding: 18px; }
+  .edit-hero h1 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <img src="assets/logo.png" alt="" class="brand-mark">
+    <span class="brand-name">Litterbox</span>
+  </a>
+  <div class="header-right">
+    <span id="notifSlot"></span>
+    <a class="nav-link" href="index.html">← Back to mods</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-drawer" id="navDrawer"></div>
+  </div>
+</header>
+
+<div id="gate" class="gate-state">Checking your session…</div>
+
+<div class="edit-page-wrap page-reveal" id="formWrap" style="display:none;">
+
+  <div class="edit-hero">
+    <h1>Edit profile</h1>
+    <p class="edit-hero-sub">Your avatar, banner, bio, and links - shown to anyone who visits your profile.</p>
+    <a class="btn btn-secondary" id="viewProfileLink" href="#" style="margin-top:14px;"><i class="fa-solid fa-arrow-up-right-from-square"></i>View public profile</a>
+  </div>
+
+  <div id="formMsg" class="form-msg" style="margin-top:22px;"></div>
+
+  <form id="editProfileForm" style="margin-top:18px;">
+    <div class="card">
+      <div class="section-head">
+        <span class="section-icon"><i class="fa-solid fa-images"></i></span>
+        <div class="section-head-text">
+          <h2>Avatar & banner</h2>
+          <p>The banner shows at the top of your profile page.</p>
+        </div>
+      </div>
+
+      <div class="banner-preview-wrap" id="bannerPreviewWrap">No banner yet</div>
+      <div class="file-input" style="margin-bottom:18px;">
+        <input type="file" id="bannerInput" accept="image/*">
+      </div>
+
+      <div class="avatar-edit-row">
+        <div class="avatar-edit-preview" id="avatarPreviewEl"></div>
+        <div class="field avatar-field">
+          <label for="avatarInput">Avatar</label>
+          <div class="file-input">
+            <input type="file" id="avatarInput" accept="image/*">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <span class="section-icon"><i class="fa-solid fa-id-card"></i></span>
+        <div class="section-head-text">
+          <h2>About you</h2>
+          <p>A short line about what you do, and what you make.</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="roleTagInput">Role tag <span class="field-hint-inline" id="roleTagCount">0/40</span></label>
+        <input type="text" id="roleTagInput" maxlength="40" placeholder="e.g. Texture artist, Rhythm game dev, QA & bugs">
+      </div>
+
+      <div class="field" style="margin-bottom:0;">
+        <label for="bioInput">Bio <span class="field-hint-inline" id="bioCount">0/240</span></label>
+        <textarea id="bioInput" maxlength="240" placeholder="A short line about you and what you make."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <span class="section-icon"><i class="fa-solid fa-link"></i></span>
+        <div class="section-head-text">
+          <h2>Links</h2>
+          <p>Discord, itch.io, YouTube, or anywhere else people can find you - up to 5.</p>
+        </div>
+      </div>
+
+      <div class="social-links-list" id="socialLinksList"></div>
+      <button type="button" class="btn btn-secondary" id="addSocialLinkBtn"><i class="fa-solid fa-plus"></i> Add link</button>
+      <p class="social-links-cap-hint" id="socialLinksCapHint" style="display:none;">You can add up to 5 links.</p>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block" id="saveBtn">Save profile</button>
+  </form>
+</div>
+
+<script>
+
+const gateEl = document.getElementById("gate");
+const formWrapEl = document.getElementById("formWrap");
+const msgEl = document.getElementById("formMsg");
+const saveBtn = document.getElementById("saveBtn");
+
+let currentUser = null;
+let currentProfile = null;
+let previewAvatarObjectUrl = null;
+let previewBannerObjectUrl = null;
+const MAX_SOCIAL_LINKS = 5;
+let socialLinks = []; // [{ url }]
+
+function showMessage(text, type) {
+  msgEl.textContent = text;
+  msgEl.className = "form-msg " + type;
+}
+
+function storagePathFromUrl(url) {
+  if (typeof url !== "string" || !url.startsWith(STORAGE_PREFIX)) return null;
+  return url.slice(STORAGE_PREFIX.length);
+}
+
+function resizeImage(file, maxSize) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let { width, height } = img;
+
+      if (width <= maxSize && height <= maxSize) {
+        resolve(file);
+        return;
+      }
+
+      const scale = Math.min(maxSize / width, maxSize / height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+
+      const outputType = file.type === "image/png" ? "image/png" : "image/jpeg";
+      canvas.toBlob(blob => {
+        if (!blob) { reject(new Error("Could not process image.")); return; }
+        resolve(new File([blob], file.name, { type: outputType }));
+      }, outputType, 0.9);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Could not read image file."));
+    };
+
+    img.src = objectUrl;
+  });
+}
+
+async function uploadToStorage(file, subfolder) {
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `${currentUser.id}/${subfolder}/${Date.now()}-${safeName}`;
+
+  const { error: uploadError } = await supabaseClient.storage
+    .from("mod-uploads")
+    .upload(path, file, { upsert: false });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabaseClient.storage.from("mod-uploads").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function deleteFromStorage(url) {
+  const path = storagePathFromUrl(url);
+  if (!path) return;
+  await supabaseClient.storage.from("mod-uploads").remove([path]);
+}
+
+// ---------- social links editor ----------
+function renderSocialLinksEditor() {
+  const listEl = document.getElementById("socialLinksList");
+  listEl.innerHTML = socialLinks.map((link, i) => {
+    const platform = LB_socialPlatform(link.url);
+    return `
+      <div class="social-link-row">
+        <span class="social-link-icon">${platform ? platform.icon : `<i class="fa-solid fa-link"></i>`}</span>
+        <input type="url" placeholder="https://…" maxlength="300" value="${escapeHtml(link.url)}" data-index="${i}">
+        <button type="button" class="social-link-remove" data-index="${i}" title="Remove"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    `;
+  }).join("");
+
+  listEl.querySelectorAll("input").forEach(input => {
+    input.addEventListener("input", (e) => {
+      const i = Number(e.target.dataset.index);
+      socialLinks[i].url = e.target.value.trim();
+      const icon = listEl.querySelectorAll(".social-link-icon")[i];
+      const platform = LB_socialPlatform(socialLinks[i].url);
+      icon.innerHTML = platform ? platform.icon : `<i class="fa-solid fa-link"></i>`;
+    });
+  });
+
+  listEl.querySelectorAll(".social-link-remove").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      socialLinks.splice(Number(e.currentTarget.dataset.index), 1);
+      renderSocialLinksEditor();
+      updateAddLinkBtn();
+    });
+  });
+}
+
+function updateAddLinkBtn() {
+  const atCap = socialLinks.length >= MAX_SOCIAL_LINKS;
+  document.getElementById("addSocialLinkBtn").style.display = atCap ? "none" : "inline-flex";
+  document.getElementById("socialLinksCapHint").style.display = atCap ? "block" : "none";
+}
+
+document.getElementById("addSocialLinkBtn").addEventListener("click", () => {
+  if (socialLinks.length >= MAX_SOCIAL_LINKS) return;
+  socialLinks.push({ url: "" });
+  renderSocialLinksEditor();
+  updateAddLinkBtn();
+  const inputs = document.querySelectorAll("#socialLinksList input");
+  inputs[inputs.length - 1]?.focus();
+});
+
+// ---------- avatar / banner previews ----------
+const avatarPreviewEl = document.getElementById("avatarPreviewEl");
+const bannerPreviewWrap = document.getElementById("bannerPreviewWrap");
+
+document.getElementById("avatarInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  previewAvatarObjectUrl = URL.createObjectURL(file);
+  avatarPreviewEl.innerHTML = `<img src="${previewAvatarObjectUrl}" alt="">`;
+});
+
+document.getElementById("bannerInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  previewBannerObjectUrl = URL.createObjectURL(file);
+  bannerPreviewWrap.innerHTML = `<img src="${previewBannerObjectUrl}" alt="">`;
+});
+
+// ---------- bio / role tag counters ----------
+const bioInput = document.getElementById("bioInput");
+const bioCount = document.getElementById("bioCount");
+bioInput.addEventListener("input", () => { bioCount.textContent = `${bioInput.value.length}/240`; });
+
+const roleTagInput = document.getElementById("roleTagInput");
+const roleTagCount = document.getElementById("roleTagCount");
+roleTagInput.addEventListener("input", () => { roleTagCount.textContent = `${roleTagInput.value.length}/40`; });
+
+// ---------- load + save ----------
+async function init() {
+  const nav = await LB_mountHeaderNav();
+  currentUser = nav.user;
+
+  if (!currentUser) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("*")
+    .eq("id", currentUser.id)
+    .maybeSingle();
+
+  if (error || !data) {
+    gateEl.textContent = "Couldn't load your profile.";
+    return;
+  }
+
+  currentProfile = data;
+
+  document.getElementById("viewProfileLink").href = `profile.html?u=${encodeURIComponent(currentProfile.username)}`;
+
+  const safeAvatar = isTrustedStorageUrl(currentProfile.avatar_url) ? escapeHtml(currentProfile.avatar_url) : null;
+  avatarPreviewEl.innerHTML = safeAvatar ? `<img src="${safeAvatar}" alt="">` : iconInitials(currentProfile.username);
+
+  const safeBanner = isTrustedStorageUrl(currentProfile.banner_url) ? escapeHtml(currentProfile.banner_url) : null;
+  bannerPreviewWrap.innerHTML = safeBanner ? `<img src="${safeBanner}" alt="">` : "No banner yet";
+
+  bioInput.value = currentProfile.bio || "";
+  bioCount.textContent = `${bioInput.value.length}/240`;
+
+  roleTagInput.value = currentProfile.role_tag || "";
+  roleTagCount.textContent = `${roleTagInput.value.length}/40`;
+
+  socialLinks = Array.isArray(currentProfile.social_links)
+    ? currentProfile.social_links.filter(l => l && typeof l.url === "string").slice(0, MAX_SOCIAL_LINKS)
+    : [];
+  renderSocialLinksEditor();
+  updateAddLinkBtn();
+
+  gateEl.style.display = "none";
+  formWrapEl.style.display = "block";
+  requestAnimationFrame(() => formWrapEl.classList.add("is-visible"));
+}
+
+document.getElementById("editProfileForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving…";
+  msgEl.className = "form-msg";
+
+  try {
+    const updates = {
+      bio: bioInput.value.trim(),
+      role_tag: roleTagInput.value.trim() || null,
+      social_links: socialLinks.filter(l => l.url && l.url.trim()),
+    };
+
+    const avatarFile = document.getElementById("avatarInput").files[0];
+    const bannerFile = document.getElementById("bannerInput").files[0];
+
+    if (avatarFile) {
+      const resized = await resizeImage(avatarFile, 500);
+      updates.avatar_url = await uploadToStorage(resized, "avatars");
+    }
+    if (bannerFile) {
+      const resized = await resizeImage(bannerFile, 1600);
+      updates.banner_url = await uploadToStorage(resized, "banners");
+    }
+
+    const { error: updateError } = await supabaseClient
+      .from("profiles")
+      .update(updates)
+      .eq("id", currentUser.id);
+
+    if (updateError) throw updateError;
+
+    if (avatarFile && currentProfile.avatar_url) await deleteFromStorage(currentProfile.avatar_url);
+    if (bannerFile && currentProfile.banner_url) await deleteFromStorage(currentProfile.banner_url);
+
+    showMessage("Saved, redirecting to your profile…", "success");
+    setTimeout(() => { window.location.href = `profile.html?u=${encodeURIComponent(currentProfile.username)}`; }, 900);
+  } catch (err) {
+    console.error(err);
+    showMessage(err.message || "Something went wrong while saving.", "error");
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save profile";
+  }
+});
+
+init();
+</script>
+
+</body>
+</html>

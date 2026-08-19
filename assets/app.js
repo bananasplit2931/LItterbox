@@ -108,6 +108,35 @@ const CLOCK_ICON = `<i class="fa-solid fa-clock"></i>`;
 const DOWNLOAD_ICON = `<i class="fa-solid fa-arrow-up-right-from-square"></i>`;
 const CUBE_ICON = `<i class="fa-solid fa-cube"></i>`;
 
+// ---------- Social links (profile customization) ----------
+const LB_SOCIAL_PLATFORMS = [
+  { match: (h) => h === "discord.gg" || h.endsWith(".discord.gg") || h === "discord.com" || h.endsWith(".discord.com"), label: "Discord", icon: `<i class="fa-brands fa-discord"></i>` },
+  { match: (h) => h === "x.com" || h.endsWith(".x.com") || h === "twitter.com" || h.endsWith(".twitter.com"), label: "X", icon: `<i class="fa-brands fa-x-twitter"></i>` },
+  { match: (h) => h === "youtube.com" || h.endsWith(".youtube.com") || h === "youtu.be", label: "YouTube", icon: `<i class="fa-brands fa-youtube"></i>` },
+  { match: (h) => h === "itch.io" || h.endsWith(".itch.io"), label: "itch.io", icon: `<i class="fa-brands fa-itch-io"></i>` },
+  { match: (h) => h === "github.com" || h.endsWith(".github.com"), label: "GitHub", icon: `<i class="fa-brands fa-github"></i>` },
+];
+
+function LB_socialPlatform(url) {
+  if (typeof url !== "string") return null;
+  let parsed;
+  try { parsed = new URL(url); } catch { return null; }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+  const host = parsed.hostname.toLowerCase();
+  const known = LB_SOCIAL_PLATFORMS.find(p => p.match(host));
+  return known || { label: "Website", icon: `<i class="fa-solid fa-globe"></i>` };
+}
+
+function LB_renderSocialLinks(links) {
+  const list = Array.isArray(links) ? links.filter(l => l && typeof l.url === "string") : [];
+  if (list.length === 0) return "";
+  return `<div class="social-links-row">${list.map(l => {
+    const platform = LB_socialPlatform(l.url);
+    if (!platform) return "";
+    return `<a class="social-link-btn" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(platform.label)}">${platform.icon}</a>`;
+  }).join("")}</div>`;
+}
+
 // ---------- Emoji rating scale (replaces 1–5 stars) ----------
 // Same 1-5 integer stored in the DB as before — only the presentation
 // changed, from stars to a face that better carries how someone feels

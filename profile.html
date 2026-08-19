@@ -42,17 +42,39 @@
 .credited-role { font-size: 12px; color: var(--color-text-faint); margin: 2px 0 0; }
 
 .edit-toggle-link { font-size: 13px; font-weight: 600; }
-#editSection { animation: lb-section-in .22s var(--ease-out); transform-origin: top center; }
-@keyframes lb-section-in { from { opacity: 0; transform: translateY(-6px) scaleY(.97); } to { opacity: 1; transform: translateY(0) scaleY(1); } }
 .avatar-file-input { max-width: 260px; }
 .avatar-edit-row { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
 .avatar-edit-preview { width: 64px; height: 64px; font-size: 18px; border-width: 2px; flex-shrink: 0; }
 .avatar-field { flex: 1; margin-bottom: 0; }
 .profile-section .card { max-width: 460px; }
+
+.profile-banner {
+  height: 160px; background: var(--color-accent-ink); position: relative; overflow: hidden;
+  background-size: cover; background-position: center;
+}
+.profile-banner:empty { display: none; }
+.profile-banner::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(6,10,9,.55) 100%);
+}
+.role-tag-pill {
+  display: inline-flex; align-items: center; font-family: var(--font-mono); font-size: 11.5px; font-weight: 600;
+  color: var(--color-accent); background: var(--color-accent-tint); border: 1px solid var(--color-accent);
+  border-radius: var(--radius-pill); padding: 3px 10px; margin: 4px 0 0;
+}
+.social-links-row { display: flex; gap: 8px; margin-top: 10px; }
+.social-link-btn {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--color-surface); border: 1px solid var(--color-border);
+  color: var(--color-text-muted); display: flex; align-items: center; justify-content: center; font-size: 14px;
+  text-decoration: none; transition: color .12s ease, border-color .12s ease;
+}
+.social-link-btn:hover { color: var(--color-accent); border-color: var(--color-accent); }
+
 @media (max-width: 480px) {
   .profile-head { padding: 20px 16px 4px; }
   .profile-avatar { width: 72px; height: 72px; font-size: 20px; }
   .profile-info h1 { font-size: 20px; }
+  .profile-banner { height: 110px; }
 }
 </style>
 </head>
@@ -73,41 +95,21 @@
 <div id="gate" class="gate-state">Loading profile…</div>
 
 <div id="pageWrap" class="page-reveal" style="display:none;">
+  <div class="profile-banner" id="profileBanner"></div>
   <div class="profile-head">
     <div class="profile-avatar" id="avatarEl"></div>
     <div class="profile-info">
       <h1 id="usernameEl"></h1>
+      <span class="role-tag-pill" id="roleTagEl" style="display:none;"></span>
       <p class="profile-bio" id="bioEl"></p>
+      <div id="socialLinksEl"></div>
       <div class="profile-stats-row">
         <span class="stat-chip" id="statMods"></span>
         <span class="stat-chip" id="statDownloads"></span>
         <span class="stat-chip" id="statFavorited"></span>
       </div>
     </div>
-    <a class="edit-toggle-link" href="#" id="editToggle" style="display:none;">Edit profile</a>
-  </div>
-
-  <div class="profile-section" id="editSection" style="display:none;">
-    <div class="card">
-      <h2>Edit your profile</h2>
-      <div id="editMsg" class="form-msg"></div>
-      <form id="editProfileForm" class="profile-edit-form">
-        <div class="avatar-edit-row">
-          <div class="profile-avatar avatar-edit-preview" id="avatarPreviewEl"></div>
-          <div class="field avatar-field">
-            <label for="avatarInput">Avatar</label>
-            <div class="file-input avatar-file-input">
-              <input type="file" id="avatarInput" accept="image/*">
-            </div>
-          </div>
-        </div>
-        <div class="field">
-          <label for="bioInput">Bio <span class="field-hint-inline" id="bioCount">0/240</span></label>
-          <textarea id="bioInput" maxlength="240" placeholder="A short line about you and what you make."></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary" id="saveProfileBtn">Save profile</button>
-      </form>
-    </div>
+    <a class="edit-toggle-link" href="edit-profile.html" id="editToggle" style="display:none;">Edit profile</a>
   </div>
 
   <div class="profile-section">
@@ -223,72 +225,8 @@ async function loadAndRenderBadges(userId) {
   document.getElementById("badgesEl").innerHTML = LB_renderBadges(data || []);
 }
 
-function wireEditProfile() {
-  const toggle = document.getElementById("editToggle");
-  const section = document.getElementById("editSection");
-  toggle.style.display = "inline-block";
-  toggle.addEventListener("click", (e) => {
-    e.preventDefault();
-    section.style.display = section.style.display === "none" ? "block" : "none";
-  });
-
-  const bioInput = document.getElementById("bioInput");
-  const bioCount = document.getElementById("bioCount");
-  bioInput.value = profileUser.bio || "";
-  const updateBioCount = () => { bioCount.textContent = `${bioInput.value.length}/240`; };
-  updateBioCount();
-  bioInput.addEventListener("input", updateBioCount);
-
-  const avatarPreviewEl = document.getElementById("avatarPreviewEl");
-  const safeCurrentAvatar = isTrustedStorageUrl(profileUser.avatar_url) ? escapeHtml(profileUser.avatar_url) : null;
-  avatarPreviewEl.innerHTML = safeCurrentAvatar ? `<img src="${safeCurrentAvatar}" alt="">` : iconInitials(profileUser.username);
-  document.getElementById("avatarInput").addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    avatarPreviewEl.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="">`;
-  });
-
-  const form = document.getElementById("editProfileForm");
-  const msgEl = document.getElementById("editMsg");
-  const saveBtn = document.getElementById("saveProfileBtn");
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    saveBtn.disabled = true;
-    saveBtn.textContent = "Saving…";
-    msgEl.className = "form-msg";
-
-    try {
-      const updates = { bio: document.getElementById("bioInput").value.trim() };
-      const avatarFile = document.getElementById("avatarInput").files[0];
-
-      if (avatarFile) {
-        const safeName = avatarFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const path = `${currentUser.id}/avatars/${Date.now()}-${safeName}`;
-        const { error: uploadError } = await supabaseClient.storage
-          .from("mod-uploads").upload(path, avatarFile, { upsert: false });
-        if (uploadError) throw uploadError;
-        const { data } = supabaseClient.storage.from("mod-uploads").getPublicUrl(path);
-        updates.avatar_url = data.publicUrl;
-      }
-
-      const { error: updateError } = await supabaseClient
-        .from("profiles").update(updates).eq("id", currentUser.id);
-      if (updateError) throw updateError;
-
-      profileUser = { ...profileUser, ...updates };
-      renderIdentity();
-      msgEl.textContent = "Saved.";
-      msgEl.className = "form-msg success";
-    } catch (err) {
-      console.error(err);
-      msgEl.textContent = err.message || "Couldn't save your profile.";
-      msgEl.className = "form-msg error";
-    } finally {
-      saveBtn.disabled = false;
-      saveBtn.textContent = "Save profile";
-    }
-  });
+function wireEditToggle() {
+  document.getElementById("editToggle").style.display = "inline-block";
 }
 
 function renderIdentity() {
@@ -298,6 +236,20 @@ function renderIdentity() {
     : iconInitials(profileUser.username);
   document.getElementById("usernameEl").innerHTML = `${escapeHtml(profileUser.username)}${profileUser.is_verified ? VERIFIED_BADGE : ""}`;
   document.getElementById("bioEl").textContent = profileUser.bio || "No bio yet.";
+
+  const safeBanner = isTrustedStorageUrl(profileUser.banner_url) ? escapeHtml(profileUser.banner_url) : null;
+  const bannerEl = document.getElementById("profileBanner");
+  bannerEl.style.backgroundImage = safeBanner ? `url('${safeBanner}')` : "";
+
+  const roleTagEl = document.getElementById("roleTagEl");
+  if (profileUser.role_tag) {
+    roleTagEl.textContent = profileUser.role_tag;
+    roleTagEl.style.display = "inline-flex";
+  } else {
+    roleTagEl.style.display = "none";
+  }
+
+  document.getElementById("socialLinksEl").innerHTML = LB_renderSocialLinks(profileUser.social_links);
 }
 
 async function init() {
@@ -334,9 +286,9 @@ async function init() {
 
   if (currentUser && currentUser.id === profileUser.id) {
     try {
-      wireEditProfile();
+      wireEditToggle();
     } catch (err) {
-      console.error("wireEditProfile failed:", err);
+      console.error("wireEditToggle failed:", err);
     }
   }
 
