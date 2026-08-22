@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Profile - Litterbox</title>
+<meta name="description" content="Mod creator profiles on Litterbox - Cat Goes Fishing mods.">
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="Litterbox">
+<meta property="og:title" content="Litterbox - Cat Goes Fishing mods">
+<meta property="og:description" content="Mod creator profiles on Litterbox - Cat Goes Fishing mods.">
+<meta property="og:image" content="https://litterbox.fyi/assets/og-image.png">
+<meta property="og:url" content="https://litterbox.fyi/profile.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Litterbox - Cat Goes Fishing mods">
+<meta name="twitter:description" content="Mod creator profiles on Litterbox - Cat Goes Fishing mods.">
+<meta name="twitter:image" content="https://litterbox.fyi/assets/og-image.png">
 <link rel="icon" type="image/png" href="assets/favicon-32.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -275,6 +286,12 @@ async function init() {
 
   profileUser = data;
   document.title = `${profileUser.username} - Litterbox`;
+  LB_setMetaTags({
+    title: `${profileUser.username} - Litterbox`,
+    description: (profileUser.bio || `${profileUser.username}'s mods on Litterbox.`).slice(0, 200),
+    image: isTrustedStorageUrl(profileUser.avatar_url) ? profileUser.avatar_url : "https://litterbox.fyi/assets/og-image.png",
+    url: `https://litterbox.fyi/profile.html?u=${encodeURIComponent(profileUser.username)}`
+  });
   renderIdentity();
 
   await Promise.all([

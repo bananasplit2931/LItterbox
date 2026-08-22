@@ -4,6 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mod - Litterbox</title>
+<meta name="description" content="Browse mods for Cat Goes Fishing on Litterbox.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Litterbox">
+<meta property="og:title" content="Litterbox - Cat Goes Fishing mods">
+<meta property="og:description" content="Browse mods for Cat Goes Fishing on Litterbox.">
+<meta property="og:image" content="https://litterbox.fyi/assets/og-image.png">
+<meta property="og:url" content="https://litterbox.fyi/mod.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Litterbox - Cat Goes Fishing mods">
+<meta name="twitter:description" content="Browse mods for Cat Goes Fishing on Litterbox.">
+<meta name="twitter:image" content="https://litterbox.fyi/assets/og-image.png">
+<!-- NOTE: these tags are a generic fallback. Crawlers (Discordbot, Twitterbot, etc.)
+     don't run JavaScript, so they can't see the per-mod title/image that gets set
+     below in JS. For real per-mod cards, see the Cloudflare Worker included alongside
+     this file. -->
 <link rel="icon" type="image/png" href="assets/favicon-32.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -312,6 +327,12 @@ function renderMod() {
   const safeFileUrl = linkPlatform ? escapeHtml(mod.file_url) : null;
 
   document.title = `${mod.name} - Litterbox`;
+  LB_setMetaTags({
+    title: `${mod.name} - Litterbox`,
+    description: (mod.description || "Browse mods for Cat Goes Fishing on Litterbox.").slice(0, 200),
+    image: safeIconUrl || "https://litterbox.fyi/assets/og-image.png",
+    url: `https://litterbox.fyi/mod.html?id=${encodeURIComponent(mod.id)}`
+  });
 
   const bannerEl = document.getElementById("banner");
   if (safeBannerUrl) {

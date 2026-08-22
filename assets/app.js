@@ -248,6 +248,28 @@ function LB_renderModCard(mod, opts = {}) {
   `;
 }
 
+// Updates the page's og:*/twitter:* meta tags at runtime. Only affects what
+// browsers see (JS-executing clients) — link-unfurling bots (Discordbot,
+// Twitterbot, etc.) never run this, since they don't execute JavaScript. The
+// static fallback tags in each page's <head> are what those bots actually
+// see; real per-page previews for bots need a server-side/edge solution
+// (see cloudflare-worker.js).
+function LB_setMetaTags({ title, description, image, url }) {
+  const setMeta = (selector, attr, content) => {
+    const el = document.head.querySelector(selector);
+    if (el && content) el.setAttribute(attr, content);
+  };
+  if (title) document.title = title;
+  setMeta('meta[name="description"]', "content", description);
+  setMeta('meta[property="og:title"]', "content", title);
+  setMeta('meta[property="og:description"]', "content", description);
+  setMeta('meta[property="og:image"]', "content", image);
+  setMeta('meta[property="og:url"]', "content", url);
+  setMeta('meta[name="twitter:title"]', "content", title);
+  setMeta('meta[name="twitter:description"]', "content", description);
+  setMeta('meta[name="twitter:image"]', "content", image);
+}
+
 function LB_formatCount(n) {
   const num = Number(n) || 0;
   if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "m";
