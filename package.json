@@ -1,0 +1,40 @@
+{
+  "name": "catnip",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Catnip — a minimal mod manager for Cat Goes Fishing (data.win swapping).",
+  "author": "Catnip",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-builder --publish=never"
+  },
+  "devDependencies": {
+    "electron": "^43.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "fyi.catnip.app",
+    "productName": "Catnip",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": ["nsis", "portable"]
+    },
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.utilities"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Game"
+    }
+  }
+}
