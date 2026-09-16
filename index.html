@@ -24,57 +24,99 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="assets/app.js"></script>
 <style>
-.mods-section { padding: 30px clamp(16px, 5vw, 56px) 64px; max-width: 1180px; margin: 0 auto; }
-
-.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-
-/* ---- expanding search: a lens button that a search bar slides out from ----
-   The wrap itself grows, so its neighbors (sort pill, view toggle, count)
-   naturally slide over to make room. Driven by a JS-toggled .expanded class
-   (mouseenter/leave + click) rather than CSS :hover - hovering an element
-   that resizes itself is a classic flicker trap, since the box growing can
-   nudge the cursor across its own edge and re-trigger/un-trigger :hover
-   mid-transition. JS enter/leave events don't have that feedback loop. */
-.search-orb-wrap {
-  position: relative; flex-shrink: 0;
-  width: 36px; height: 36px;
-  transition: width .22s var(--ease-out);
+/* ---------- browse page layout: sidebar (search + tabs + category filters) + main list ----------
+   Page-specific, same convention as the old toolbar/search-orb block this replaces: layout that
+   only this page uses lives here, shared component styles live in style.css. */
+.browse-layout {
+  max-width: 1280px; margin: 0 auto; padding: 28px clamp(16px, 5vw, 56px) 64px;
+  display: grid; grid-template-columns: 272px minmax(0, 1fr); gap: 28px; align-items: start;
 }
-.search-orb-wrap.expanded, .search-orb-wrap:focus-within { width: min(280px, 50vw); }
 
-.search-orb-btn {
-  position: relative; z-index: 2;
-  width: 36px; height: 36px; border-radius: 50%;
+.browse-sidebar { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+@media (min-width: 861px) {
+  .browse-sidebar { position: sticky; top: calc(var(--header-h) + 20px); }
+}
+
+.sidebar-search-row { display: flex; align-items: center; gap: 8px; }
+.sidebar-search {
+  position: relative; flex: 1; min-width: 0;
+}
+.sidebar-search i {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--color-text-faint); font-size: 13px; pointer-events: none;
+}
+.sidebar-search input {
+  width: 100%; height: 40px; box-sizing: border-box;
   background: var(--color-surface); border: 1px solid var(--color-border);
-  display: flex; align-items: center; justify-content: center; font-size: 14px;
-  color: var(--color-text-muted); cursor: pointer;
-  transition: color .15s ease, border-color .15s ease, transform .15s var(--ease-out);
-}
-.search-orb-wrap.expanded .search-orb-btn,
-.search-orb-wrap:focus-within .search-orb-btn { color: var(--color-accent); border-color: var(--color-accent); }
-.search-orb-btn:active { transform: scale(.9); }
-
-/* padding-left is reserved up front (not animated — animating padding
-   triggers layout) so only opacity/transform move, both GPU-only */
-.search-orb-input {
-  position: absolute; left: 0; top: 0;
-  height: 36px; width: 100%; box-sizing: border-box;
-  padding: 0 14px 0 38px; border: 1px solid transparent; outline: none;
-  background: var(--color-surface); border-radius: var(--radius-pill);
+  border-radius: var(--radius-pill); padding: 0 14px 0 38px;
   color: var(--color-text); font-family: var(--font-body); font-size: 14px;
-  opacity: 0; pointer-events: none;
-  transform: translateX(-4px);
-  transition: opacity .18s var(--ease-out), transform .18s var(--ease-out), border-color .15s ease;
+  transition: border-color .12s ease;
 }
-.search-orb-wrap.expanded .search-orb-input,
-.search-orb-wrap:focus-within .search-orb-input {
-  opacity: 1; pointer-events: auto; transform: translateX(0);
-  border-color: var(--color-border);
+.sidebar-search input:focus { outline: none; border-color: var(--color-accent); }
+.sidebar-search input::placeholder { color: var(--color-text-faint); }
+
+.filters-toggle-btn {
+  display: none; flex-shrink: 0; align-items: center; gap: 7px;
+  height: 40px; padding: 0 14px; background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill); color: var(--color-text-muted);
+  font-family: var(--font-body); font-weight: 600; font-size: 13.5px; cursor: pointer;
+  transition: color .12s ease, border-color .12s ease;
 }
-.search-orb-wrap:focus-within .search-orb-input { border-color: var(--color-accent); }
+.filters-toggle-btn:hover, .filters-toggle-btn[aria-expanded="true"] { color: var(--color-text); border-color: var(--color-border-strong); }
 
-.toolbar-row2 { display: flex; align-items: center; gap: 10px; flex: 1; flex-wrap: wrap; }
+.sidebar-filters { display: flex; flex-direction: column; gap: 14px; }
+.browse-subtabs { margin-top: 0; }
 
+.category-box {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); padding: 16px;
+}
+.category-box-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.category-box-head h2 {
+  margin: 0; font-size: 15.5px; font-weight: var(--weight-heading); letter-spacing: -0.2px;
+}
+.category-collapse-btn {
+  background: none; border: none; color: var(--color-text-faint); cursor: pointer;
+  width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm); font-size: 12px; transition: background .12s ease, transform .16s var(--ease-out);
+}
+.category-collapse-btn:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.category-box.collapsed .category-collapse-btn { transform: rotate(180deg); }
+.category-box.collapsed .category-list, .category-box.collapsed .category-clear-link { display: none; }
+
+.category-list { display: flex; flex-direction: column; gap: 1px; margin-top: 8px; }
+.category-list-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: none; border: none; border-radius: var(--radius-sm);
+  padding: 9px 10px; font-family: var(--font-body); font-weight: 600; font-size: 13.5px;
+  color: var(--color-text-muted); cursor: pointer; text-align: left;
+  transition: background .12s ease, color .12s ease;
+}
+.category-list-item:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.category-list-item i:first-child { width: 15px; text-align: center; font-size: 12.5px; color: var(--color-text-faint); flex-shrink: 0; }
+.category-list-item span { flex: 1; min-width: 0; }
+.category-list-item .cat-check { opacity: 0; font-size: 11px; flex-shrink: 0; }
+.category-list-item.active { background: var(--color-accent-tint); color: var(--color-accent); }
+.category-list-item.active i:first-child { color: var(--color-accent); }
+.category-list-item.active .cat-check { opacity: 1; }
+
+.category-clear-link {
+  display: inline-flex; align-items: center; gap: 6px; margin: 4px 0 0 4px;
+  font-family: var(--font-body); font-weight: 600; font-size: 12px;
+  color: var(--color-text-faint); background: none; border: none; cursor: pointer; padding: 0;
+  transition: color .12s ease;
+}
+.category-clear-link:hover { color: var(--color-text); }
+
+.browse-main { min-width: 0; }
+.browse-main-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+#modCount { font-size: 13px; color: var(--color-text-faint); }
+.browse-main-controls { display: flex; align-items: center; gap: 10px; }
+
+/* ---- pigulkowy sort + list/grid toggle, moved here from the old top toolbar ---- */
 .pill-select {
   position: relative; display: flex; align-items: center; gap: 6px;
   background: var(--color-surface); border: 1px solid var(--color-border);
@@ -91,21 +133,7 @@
   position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
   font-size: 9px; color: var(--color-text-faint); pointer-events: none;
 }
-
 .view-toggle { display: flex; border: 1px solid var(--color-border); border-radius: var(--radius-pill); overflow: hidden; }
-
-/* ---- preview-mods toggle: same pill language as the sort control, same
-   active-state treatment as the view-toggle buttons — not a foreign switch ---- */
-.pill-toggle {
-  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px;
-  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-pill);
-  color: var(--color-text-muted); font-family: var(--font-body); font-weight: 600; font-size: 13px;
-  cursor: pointer; transition: background .12s ease, border-color .12s ease, color .12s ease;
-}
-.pill-toggle i { font-size: 12px; color: var(--color-text-faint); transition: color .12s ease; }
-.pill-toggle:hover { border-color: var(--color-border-strong); color: var(--color-text); }
-.pill-toggle.active { background: var(--color-preview-bg); border-color: var(--color-preview-border); color: var(--color-preview); }
-.pill-toggle.active i { color: var(--color-preview); }
 .view-btn {
   display: flex; align-items: center; justify-content: center;
   width: 34px; height: 34px; background: var(--color-surface); border: none; cursor: pointer;
@@ -116,31 +144,22 @@
 .view-btn.active { background: var(--color-accent-tint); color: var(--color-accent); }
 .view-btn + .view-btn { border-left: 1px solid var(--color-border); }
 
-#modCount { font-size: 13px; color: var(--color-text-faint); white-space: nowrap; margin-left: auto; }
-
-.category-filter-row {
-  margin: -6px 0 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-}
-.category-filter-row .category-picker { display: contents; }
-.category-filter-row .category-chip-btn { font-size: 12px; padding: 5px 11px; }
-.category-filter-clear {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: var(--font-body); font-weight: 600; font-size: 12px;
-  color: var(--color-text-faint); background: none; border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-pill); padding: 5px 11px; cursor: pointer;
-  transition: color .12s ease, border-color .12s ease;
-}
-.category-filter-clear:hover { color: var(--color-text); border-color: var(--color-text-faint); }
-
-/* ---- list view (default) ---- */
 .mods-list { display: flex; flex-direction: column; gap: 10px; }
 
-@media (max-width: 600px) {
-  .mods-section { padding: 20px 16px 48px; }
+@media (max-width: 860px) {
+  .browse-layout { display: block; padding: 20px 16px 48px; }
+  .browse-sidebar { margin-bottom: 18px; }
+  .filters-toggle-btn { display: inline-flex; }
+  .sidebar-filters {
+    display: none; background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); padding: 14px; margin-top: 10px;
+  }
+  .sidebar-filters.open { display: flex; }
+  .category-box { background: none; border: none; padding: 0; }
 }
 @media (max-width: 480px) {
-  .toolbar-row2 { flex-wrap: wrap; }
-  #modCount { order: 3; margin-left: 0; width: 100%; }
+  .browse-main-head { align-items: flex-start; }
+  .browse-main-controls { width: 100%; justify-content: space-between; }
 }
 </style>
 </head>
@@ -159,54 +178,73 @@
 </header>
 
 <main>
-  <section class="mods-section">
-    <div class="browse-tabs" role="tablist" style="margin-bottom: 14px;">
-      <button type="button" class="browse-tab active" id="modsTabBtn" role="tab"><i class="fa-solid fa-cube"></i> Mods</button>
-      <button type="button" class="browse-tab" id="creatorsTabBtn" role="tab"><i class="fa-solid fa-user-group"></i> Creators</button>
-    </div>
-
-    <div class="toolbar">
-      <div class="search-orb-wrap" id="searchOrbWrap">
-        <button type="button" class="search-orb-btn" id="searchOrbBtn" aria-label="Search" aria-expanded="false">
+  <div class="browse-layout">
+    <aside class="browse-sidebar">
+      <div class="sidebar-search-row">
+        <div class="sidebar-search">
           <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="search" type="text" placeholder="Search mods..." aria-label="Search mods">
+        </div>
+        <button type="button" class="filters-toggle-btn" id="filtersToggleBtn" aria-expanded="false" aria-controls="sidebarFilters">
+          <i class="fa-solid fa-sliders"></i> Filters
         </button>
-        <input id="search" class="search-orb-input" type="text" placeholder="Search mods..." aria-label="Search mods">
       </div>
 
-      <div class="toolbar-row2" id="toolbarRow2">
-        <div class="pill-select">
-          <label for="sort">Sort by</label>
-          <select id="sort">
-            <option value="new">Newest</option>
-            <option value="rating">Top rated</option>
-            <option value="name">Name (A-Z)</option>
-          </select>
-          <i class="fa-solid fa-chevron-down"></i>
+      <div class="sidebar-filters" id="sidebarFilters">
+        <div class="browse-tabs" role="tablist">
+          <button type="button" class="browse-tab active" id="modsTabBtn" role="tab"><i class="fa-solid fa-cube"></i> Mods</button>
+          <button type="button" class="browse-tab" id="creatorsTabBtn" role="tab"><i class="fa-solid fa-user-group"></i> Creators</button>
         </div>
 
-        <div class="view-toggle" role="group" aria-label="Layout">
-          <button type="button" class="view-btn active" id="listViewBtn" title="List view" aria-label="List view">
-            <i class="fa-solid fa-list"></i>
-          </button>
-          <button type="button" class="view-btn" id="gridViewBtn" title="Grid view" aria-label="Grid view">
-            <i class="fa-solid fa-table-cells"></i>
-          </button>
+        <div class="browse-tabs browse-subtabs" role="tablist" id="releaseTabs">
+          <button type="button" class="browse-tab active" id="releasedTabBtn" role="tab"><i class="fa-solid fa-circle-check"></i> Out</button>
+          <button type="button" class="browse-tab" id="previewTabBtn" role="tab"><i class="fa-solid fa-flask"></i> Previews</button>
         </div>
 
-        <button type="button" class="pill-toggle active" id="showPreviewToggle" aria-pressed="true" title="Show or hide preview mods">
-          <i class="fa-solid fa-flask"></i> Previews
-        </button>
+        <div class="category-box" id="categoryBox" style="display:none;">
+          <div class="category-box-head">
+            <h2>Category</h2>
+            <button type="button" class="category-collapse-btn" id="categoryCollapseBtn" aria-expanded="true" aria-label="Collapse categories">
+              <i class="fa-solid fa-chevron-up"></i>
+            </button>
+          </div>
+          <div class="category-list" id="categoryList"></div>
+          <button type="button" class="category-clear-link" id="categoryClear" hidden>
+            <i class="fa-solid fa-xmark"></i> Clear filters
+          </button>
+        </div>
+      </div>
+    </aside>
 
+    <section class="browse-main">
+      <div class="browse-main-head">
         <span id="modCount">Loading…</span>
+        <div class="browse-main-controls" id="browseMainControls">
+          <div class="pill-select">
+            <label for="sort">Sort by</label>
+            <select id="sort">
+              <option value="new">Newest</option>
+              <option value="rating">Top rated</option>
+              <option value="name">Name (A-Z)</option>
+            </select>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+          <div class="view-toggle" role="group" aria-label="Layout">
+            <button type="button" class="view-btn active" id="listViewBtn" title="List view" aria-label="List view">
+              <i class="fa-solid fa-list"></i>
+            </button>
+            <button type="button" class="view-btn" id="gridViewBtn" title="Grid view" aria-label="Grid view">
+              <i class="fa-solid fa-table-cells"></i>
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="category-filter-row" id="categoryFilterRow" style="display:none;"></div>
-
-    <div id="modsList" class="mods-list">
-      <div class="loading-state">Loading mods…</div>
-    </div>
-  </section>
+      <div id="modsList" class="mods-list">
+        <div class="loading-state">Loading mods…</div>
+      </div>
+    </section>
+  </div>
 </main>
 
 <footer class="site-footer">Litterbox &middot; made for the Cat Goes Fishing community &middot; <a href="privacy.html">Privacy</a> &middot; <a href="terms.html">Terms</a></footer>
@@ -215,10 +253,11 @@
 let allMods = [];
 let allProfiles = [];
 let currentBrowseTab = "mods";
+let currentReleaseTab = "out";
 let currentUserId = null;
 let currentSort = "new";
-let showPreview = localStorage.getItem("litterbox-show-preview") !== "0";
 let selectedFilterCategoryIds = new Set();
+let categoriesAvailable = false;
 
 function iconInitials(name) {
   if (!name) return "?";
@@ -255,18 +294,22 @@ function sortMods(mods) {
   return copy;
 }
 
+// Mods vs Previews is now an exclusive filter (pick one, not both at once) -
+// replaces the old additive "show/hide previews" toggle.
 function renderMods(mods) {
   const listEl = document.getElementById("modsList");
   const countEl = document.getElementById("modCount");
-  const visible = showPreview ? mods : mods.filter(m => !m.is_preview);
+  const visible = mods.filter(m => Boolean(m.is_preview) === (currentReleaseTab === "previews"));
 
   if (visible.length === 0) {
-    listEl.innerHTML = `<div class="empty-state">${mods.length ? "No mods match with previews hidden." : "No mods found."}</div>`;
-    countEl.textContent = "0 mods";
+    listEl.innerHTML = `<div class="empty-state">${currentReleaseTab === "previews" ? "No preview mods right now." : "No mods found."}</div>`;
+    countEl.textContent = currentReleaseTab === "previews" ? "0 previews" : "0 mods";
     return;
   }
 
-  countEl.textContent = `${visible.length} mod${visible.length === 1 ? "" : "s"}`;
+  countEl.textContent = currentReleaseTab === "previews"
+    ? `${visible.length} preview${visible.length === 1 ? "" : "s"}`
+    : `${visible.length} mod${visible.length === 1 ? "" : "s"}`;
 
   listEl.innerHTML = sortMods(visible).map(mod => LB_renderModCard(mod, { currentUserId })).join("");
 }
@@ -328,21 +371,42 @@ async function loadMods() {
 
 async function initCategoryFilter() {
   const categories = await LB_loadCategories();
-  const rowEl = document.getElementById("categoryFilterRow");
-  if (categories.length === 0) return;
-  rowEl.style.display = "block";
-  rowEl.innerHTML = `${LB_renderCategoryPicker(categories, [])}<button type="button" class="category-filter-clear" id="categoryFilterClear" hidden><i class="fa-solid fa-xmark"></i>Clear filters</button>`;
-  const pickerEl = rowEl.querySelector(".category-picker");
-  const clearBtn = document.getElementById("categoryFilterClear");
-  selectedFilterCategoryIds = LB_wireCategoryPicker(pickerEl, (selected) => {
-    clearBtn.hidden = selected.size === 0;
+  const boxEl = document.getElementById("categoryBox");
+  const listEl = document.getElementById("categoryList");
+  const clearEl = document.getElementById("categoryClear");
+  if (categories.length === 0) { categoriesAvailable = false; return; }
+  categoriesAvailable = true;
+  boxEl.style.display = "block";
+
+  listEl.innerHTML = categories.map(c => `
+    <button type="button" class="category-list-item" data-cat-id="${c.id}">
+      <i class="${escapeHtml(c.icon || "fa-solid fa-tag")}"></i>
+      <span>${escapeHtml(c.name)}</span>
+      <i class="fa-solid fa-check cat-check" aria-hidden="true"></i>
+    </button>
+  `).join("");
+
+  listEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".category-list-item");
+    if (!btn) return;
+    const id = Number(btn.dataset.catId);
+    btn.classList.toggle("active");
+    if (btn.classList.contains("active")) selectedFilterCategoryIds.add(id);
+    else selectedFilterCategoryIds.delete(id);
+    clearEl.hidden = selectedFilterCategoryIds.size === 0;
     applyFilters();
   });
-  clearBtn.addEventListener("click", () => {
-    pickerEl.querySelectorAll(".category-chip-btn.active").forEach(b => b.classList.remove("active"));
+
+  clearEl.addEventListener("click", () => {
+    listEl.querySelectorAll(".category-list-item.active").forEach(b => b.classList.remove("active"));
     selectedFilterCategoryIds.clear();
-    clearBtn.hidden = true;
+    clearEl.hidden = true;
     applyFilters();
+  });
+
+  document.getElementById("categoryCollapseBtn").addEventListener("click", () => {
+    const collapsed = boxEl.classList.toggle("collapsed");
+    document.getElementById("categoryCollapseBtn").setAttribute("aria-expanded", String(!collapsed));
   });
 }
 
@@ -400,12 +464,11 @@ async function switchTab(tab) {
   currentBrowseTab = tab;
   document.getElementById("modsTabBtn").classList.toggle("active", tab === "mods");
   document.getElementById("creatorsTabBtn").classList.toggle("active", tab === "creators");
-  document.getElementById("toolbarRow2").style.display = tab === "mods" ? "flex" : "none";
+  document.getElementById("releaseTabs").style.display = tab === "mods" ? "inline-flex" : "none";
+  document.getElementById("categoryBox").style.display = (tab === "mods" && categoriesAvailable) ? "block" : "none";
+  document.getElementById("browseMainControls").style.display = tab === "mods" ? "flex" : "none";
   document.getElementById("search").placeholder = tab === "mods" ? "Search mods..." : "Search creators...";
   document.getElementById("search").value = "";
-
-  const filterRow = document.getElementById("categoryFilterRow");
-  if (filterRow.innerHTML.trim()) filterRow.style.display = tab === "mods" ? "block" : "none";
 
   if (tab === "creators") {
     document.getElementById("modsList").innerHTML = `<div class="loading-state">Loading creators…</div>`;
@@ -417,6 +480,15 @@ async function switchTab(tab) {
 }
 document.getElementById("modsTabBtn").addEventListener("click", () => switchTab("mods"));
 document.getElementById("creatorsTabBtn").addEventListener("click", () => switchTab("creators"));
+
+function setReleaseTab(tab) {
+  currentReleaseTab = tab;
+  document.getElementById("releasedTabBtn").classList.toggle("active", tab === "out");
+  document.getElementById("previewTabBtn").classList.toggle("active", tab === "previews");
+  applyFilters();
+}
+document.getElementById("releasedTabBtn").addEventListener("click", () => setReleaseTab("out"));
+document.getElementById("previewTabBtn").addEventListener("click", () => setReleaseTab("previews"));
 
 document.getElementById("search").addEventListener("input", applyFilters);
 document.getElementById("sort").addEventListener("change", (e) => {
@@ -437,41 +509,19 @@ document.getElementById("listViewBtn").addEventListener("click", () => setView("
 document.getElementById("gridViewBtn").addEventListener("click", () => setView("grid"));
 setView(localStorage.getItem("litterbox-view") === "grid" ? "grid" : "list");
 
-const showPreviewToggle = document.getElementById("showPreviewToggle");
-showPreviewToggle.classList.toggle("active", showPreview);
-showPreviewToggle.setAttribute("aria-pressed", String(showPreview));
-showPreviewToggle.addEventListener("click", () => {
-  showPreview = !showPreview;
-  showPreviewToggle.classList.toggle("active", showPreview);
-  showPreviewToggle.setAttribute("aria-pressed", String(showPreview));
-  localStorage.setItem("litterbox-show-preview", showPreview ? "1" : "0");
-  applyFilters();
+// ---------- mobile "Filters" panel ----------
+const filtersToggleBtn = document.getElementById("filtersToggleBtn");
+const sidebarFilters = document.getElementById("sidebarFilters");
+filtersToggleBtn.addEventListener("click", () => {
+  const opening = !sidebarFilters.classList.contains("open");
+  sidebarFilters.classList.toggle("open", opening);
+  filtersToggleBtn.setAttribute("aria-expanded", String(opening));
 });
-
-// ---------- expanding search: click/tap the lens to slide the bar out ----------
-const searchOrbWrap = document.getElementById("searchOrbWrap");
-const searchOrbBtn = document.getElementById("searchOrbBtn");
-const searchInput = document.getElementById("search");
-
-function setSearchExpanded(expanded) {
-  searchOrbWrap.classList.toggle("expanded", expanded);
-  searchOrbBtn.setAttribute("aria-expanded", String(expanded));
-}
-searchOrbBtn.addEventListener("click", () => {
-  const expanding = !searchOrbWrap.classList.contains("expanded");
-  setSearchExpanded(expanding);
-  if (expanding) searchInput.focus();
-});
-if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-  searchOrbWrap.addEventListener("mouseenter", () => setSearchExpanded(true));
-  searchOrbWrap.addEventListener("mouseleave", () => {
-    if (!searchInput.value && document.activeElement !== searchInput) setSearchExpanded(false);
-  });
-}
-searchInput.addEventListener("focus", () => setSearchExpanded(true));
 document.addEventListener("click", (e) => {
-  if (searchOrbWrap.classList.contains("expanded") && !searchOrbWrap.contains(e.target) && !searchInput.value) {
-    setSearchExpanded(false);
+  if (window.innerWidth > 860) return;
+  if (sidebarFilters.classList.contains("open") && !sidebarFilters.contains(e.target) && !filtersToggleBtn.contains(e.target)) {
+    sidebarFilters.classList.remove("open");
+    filtersToggleBtn.setAttribute("aria-expanded", "false");
   }
 });
 
