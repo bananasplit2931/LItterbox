@@ -1,26 +1,25 @@
-
 :root {
-  /* ---- palette: "pond at dusk" — deep forest green-black surfaces with a
-     fresh leaf-green accent and a chartreuse highlight. Every value below is
-     copied 1:1 from the LItterbox-main (green) build. --color-preview* has
-     no counterpart there since that build has no preview-mod feature — kept
-     as its own teal identity so it still reads as a distinct status now
-     that the main accent is green too. ---- */
-  --color-bg: #0A1710;
-  --color-bg-soft: #060F09;
-  --color-surface: #132318;
-  --color-surface-hover: #1D3324;
-  --color-border: #16281B;
-  --color-border-strong: #35573D;
+  /* ---- palette: neutral gray base (Modrinth/GameJolt-style) with a single
+     mint-green accent doing all the color work. Every non-accent surface is
+     a genuinely hue-less gray now — the old build tinted bg/surface/border
+     through the same green channel as the accent, so nothing ever popped.
+     --color-preview* keeps its own separate teal/lime identity so it still
+     reads as a distinct status next to the brand green. ---- */
+  --color-bg: #131316;
+  --color-bg-soft: #0E0E10;
+  --color-surface: #1C1C20;
+  --color-surface-hover: #232327;
+  --color-border: #2A2A2F;
+  --color-border-strong: #3A3A40;
 
   --color-text: #F5F3E9;
-  --color-text-muted: #A9C2AC;
-  --color-text-faint: #6C8770;
+  --color-text-muted: #A8A8AC;
+  --color-text-faint: #6E6E73;
 
-  --color-accent: #6FCB4D;
-  --color-accent-dark: #57A93B;
-  --color-accent-ink: #0D2007;
-  --color-accent-tint: rgba(111, 203, 77, 0.16);
+  --color-accent: #3ED598;
+  --color-accent-dark: #2FB87F;
+  --color-accent-ink: #07281B;
+  --color-accent-tint: rgba(62, 213, 152, 0.14);
 
   --color-gold: #D8E85A;
   --color-gold-bg: rgba(216, 232, 90, 0.12);
@@ -43,19 +42,19 @@
   --color-error-bg: rgba(226, 102, 95, 0.1);
   --color-error-border: rgba(226, 102, 95, 0.35);
 
-  --color-btn-secondary-bg: #17301F;
-  --color-btn-secondary-bg-hover: #1F3E28;
+  --color-btn-secondary-bg: #232327;
+  --color-btn-secondary-bg-hover: #2A2A2F;
 
   /* ---- emoji rating scale, angry (1) → grinning (5) ---- */
   --rating-1: #D9615A;
   --rating-2: #D99A4B;
   --rating-3: #93AC97;
   --rating-4: #9ED66B;
-  --rating-5: #6FCB4D;
+  --rating-5: #3ED598;
 
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --weight-heading: 800;
+  --weight-heading: 700;
 
   --radius-lg: 16px;
   --radius-md: 12px;
@@ -168,7 +167,7 @@ h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; line-he
 
 .nav-drawer {
   position: absolute; top: calc(100% + 10px); right: 0;
-  min-width: 210px; background: rgba(22, 27, 51, 0.86); border: 1px solid var(--color-border-strong);
+  min-width: 210px; background: rgba(28, 28, 32, 0.9); border: 1px solid var(--color-border-strong);
   border-top-color: rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   border-radius: var(--radius-md); box-shadow: var(--shadow-hover);
@@ -296,7 +295,7 @@ textarea { resize: vertical; min-height: 90px; }
   display: inline-flex; align-items: center; gap: 5px;
   font-family: var(--font-mono); font-size: 11px; font-weight: 500;
   color: var(--color-text-muted); background: var(--color-bg);
-  border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
   padding: 3px 10px; white-space: nowrap;
 }
 
@@ -342,7 +341,7 @@ footer.site-footer a:hover { color: var(--color-accent); }
 .notif-panel {
   position: absolute; top: calc(var(--header-h) + 6px); right: clamp(16px, 5vw, 40px);
   width: 320px; max-height: 380px; overflow-y: auto;
-  background: rgba(22, 27, 51, 0.86); border: 1px solid var(--color-border-strong);
+  background: rgba(28, 28, 32, 0.9); border: 1px solid var(--color-border-strong);
   border-top-color: rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   border-radius: var(--radius-md); box-shadow: var(--shadow-hover); z-index: 20;
@@ -408,7 +407,7 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 .changelog-item { padding: 14px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
 .changelog-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
 .changelog-item-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.announcement-pill { color: var(--color-accent); border-color: rgba(111, 203, 77, 0.4); background: var(--color-accent-tint); }
+.announcement-pill { color: var(--color-accent); border-color: rgba(62, 213, 152, 0.4); background: var(--color-accent-tint); }
 .changelog-title { font-size: 14.5px; font-weight: 700; margin: 0; letter-spacing: -0.2px; color: var(--color-text); }
 .changelog-date { font-size: 12px; color: var(--color-text-faint); white-space: nowrap; }
 .changelog-body { font-size: 13.5px; }
@@ -539,7 +538,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .mod-row.is-preview .mod-banner-img { background-color: var(--color-surface-preview); }
 
 .mod-icon {
-  width: 96px; height: 96px; border-radius: var(--radius-lg);
+  width: 112px; height: 112px; border-radius: var(--radius-lg);
   background: var(--color-accent-tint); flex-shrink: 0; object-fit: cover;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-mono); font-weight: 700; font-size: 16px; color: var(--color-accent);
