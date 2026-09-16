@@ -1,38 +1,29 @@
 :root {
-  /* ---- palette: neutral gray base (Modrinth/GameJolt-style) with a single
-     mint-green accent doing all the color work. Every non-accent surface is
-     a genuinely hue-less gray now — the old build tinted bg/surface/border
-     through the same green channel as the accent, so nothing ever popped.
-     --color-preview* keeps its own separate teal/lime identity so it still
-     reads as a distinct status next to the brand green. ---- */
-  --color-bg: #131316;
-  --color-bg-soft: #0E0E10;
-  --color-surface: #1C1C20;
-  --color-surface-hover: #232327;
-  --color-border: #2A2A2F;
-  --color-border-strong: #3A3A40;
+  --color-bg: #14181C;
+  --color-bg-soft: #1E2226;
+  --color-surface: #27292F;
+  --color-surface-hover: #2F323A;
+  --color-border: transparent;
+  --color-border-strong: #3A3D45;
 
-  --color-text: #F5F3E9;
-  --color-text-muted: #A8A8AC;
-  --color-text-faint: #6E6E73;
+  --color-text: #FFFFFF;
+  --color-text-muted: #A8BFC1;
+  --color-text-faint: #6C7A7C;
 
-  --color-accent: #3ED598;
-  --color-accent-dark: #2FB87F;
-  --color-accent-ink: #07281B;
-  --color-accent-tint: rgba(62, 213, 152, 0.14);
+  --color-accent: #02FF8C;
+  --color-accent-dark: #00CC70;
+  --color-accent-ink: #04231A;
+  --color-accent-tint: rgba(2, 255, 140, 0.14);
 
   --color-gold: #D8E85A;
   --color-gold-bg: rgba(216, 232, 90, 0.12);
   --color-gold-border: rgba(216, 232, 90, 0.4);
 
-  /* preview-mod status — chartreuse (same hue as --color-gold), kept a
-     shade brighter/flatter so it still reads as its own status pill
-     against gold "featured" usage elsewhere in the UI */
-  --color-preview: #EAF37E;
-  --color-preview-bg: rgba(216, 232, 90, 0.12);
-  --color-preview-border: rgba(216, 232, 90, 0.4);
-  --color-surface-preview: #1D2413;
-  --color-surface-preview-hover: #262F17;
+  --color-preview: var(--color-text-muted);
+  --color-preview-bg: transparent;
+  --color-preview-border: transparent;
+  --color-surface-preview: var(--color-surface);
+  --color-surface-preview-hover: var(--color-surface-hover);
 
   --color-info: #93AC97;
   --color-info-bg: rgba(147, 172, 151, 0.14);
@@ -42,15 +33,15 @@
   --color-error-bg: rgba(226, 102, 95, 0.1);
   --color-error-border: rgba(226, 102, 95, 0.35);
 
-  --color-btn-secondary-bg: #232327;
-  --color-btn-secondary-bg-hover: #2A2A2F;
+  --color-btn-secondary-bg: #404249;
+  --color-btn-secondary-bg-hover: #4B4E56;
 
   /* ---- emoji rating scale, angry (1) → grinning (5) ---- */
   --rating-1: #D9615A;
   --rating-2: #D99A4B;
   --rating-3: #93AC97;
   --rating-4: #9ED66B;
-  --rating-5: #3ED598;
+  --rating-5: #02FF8C;
 
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -61,15 +52,10 @@
   --radius-sm: 8px;
   --radius-pill: 999px;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-hover: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-card: none;
+  --shadow-hover: 0 16px 40px -12px rgba(0, 0, 0, 0.55);
 
   --header-h: 64px;
-
-  /* ---- motion: shared easing curves ----
-     ease-out: entrances/exits (starts fast, settles gently) — the default for anything appearing/disappearing
-     ease-in-out: on-screen moves that don't enter or exit (tab indicators, reordering)
-     ease-standard: material-style curve for larger layout-affecting transitions (search bar reflow) */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
@@ -103,26 +89,18 @@ img { max-width: 100%; display: block; }
 
 h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; line-height: 1.15; }
 
-/* ---------- section eyebrows ----------
-   The recurring "label above a section" pattern (Profile stats, Admin
-   queues, live-preview panes, mod detail cards) reads as metadata, so it
-   uses the mono face — the same face already used for author bylines,
-   timestamps and stat chips — while everything that's prose (names,
-   descriptions) stays in the body face. */
 .profile-section > h2, .admin-section > h2, .preview-pane h2 {
   font-family: var(--font-mono); font-size: 11.5px; margin: 0 0 14px;
   text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-faint); font-weight: 600;
 }
 .preview-pane h2 { margin: 0 0 10px; }
 
-/* slim, dark scrollbars everywhere */
 * { scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: var(--radius-pill); border: 2px solid var(--color-bg); }
-*::-webkit-scrollbar-thumb:hover { background: #4A7355; }
+*::-webkit-scrollbar-thumb:hover { background: #52565F; }
 
-/* ---------- header ---------- */
 .site-header {
   display: flex;
   align-items: center;
@@ -130,11 +108,8 @@ h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; line-he
   gap: 12px;
   height: var(--header-h);
   padding: 0 clamp(16px, 5vw, 40px);
-  border-bottom: 1px solid transparent;
-  background: rgba(10, 23, 16, 0.82);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 1px 0 rgba(53, 87, 61, 0.35), 0 12px 24px -12px rgba(0, 0, 0, 0.55);
+  background: var(--color-bg-soft);
+  box-shadow: 0 12px 24px -14px rgba(0, 0, 0, 0.6);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -156,7 +131,6 @@ h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; line-he
 .nav-link.primary { background: var(--color-accent); color: var(--color-accent-ink); font-weight: 700; }
 .nav-link.primary:hover { background: var(--color-accent-dark); }
 
-/* ---------- hamburger menu + dropdown drawer (replaces the old row of nav buttons) ---------- */
 .nav-toggle {
   display: inline-flex; align-items: center; justify-content: center;
   width: 40px; height: 40px; border-radius: var(--radius-md);
@@ -167,9 +141,7 @@ h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; line-he
 
 .nav-drawer {
   position: absolute; top: calc(100% + 10px); right: 0;
-  min-width: 210px; background: rgba(28, 28, 32, 0.9); border: 1px solid var(--color-border-strong);
-  border-top-color: rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  min-width: 210px; background: var(--color-surface);
   border-radius: var(--radius-md); box-shadow: var(--shadow-hover);
   padding: 6px; display: flex; flex-direction: column; gap: 2px; z-index: 30;
   transform-origin: top right;
@@ -196,7 +168,6 @@ h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; line-he
 .drawer-link.primary i { color: var(--color-accent); }
 .drawer-divider { height: 1px; background: var(--color-border); margin: 4px 2px; }
 
-/* ---------- generic surfaces ---------- */
 .card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -204,8 +175,6 @@ h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; line-he
   box-shadow: var(--shadow-card);
   padding: 22px;
 }
-
-/* ---------- buttons ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   font-family: var(--font-body); font-weight: 700; font-size: 14.5px; letter-spacing: -0.1px;
@@ -232,7 +201,6 @@ h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; line-he
 }
 .oauth-divider::before, .oauth-divider::after { content: ""; flex: 1; height: 1px; background: currentColor; opacity: 0.25; }
 
-/* ---------- forms ---------- */
 label { display: block; font-size: 13px; font-weight: 700; margin: 0 0 6px; color: var(--color-text-muted); }
 .field { margin-bottom: 18px; }
 .field-hint { font-size: 12px; color: var(--color-text-faint); margin: 6px 0 0; }
@@ -240,7 +208,7 @@ label { display: block; font-size: 13px; font-weight: 700; margin: 0 0 6px; colo
 
 input[type="text"], input[type="email"], input[type="password"], input[type="url"], textarea {
   width: 100%;
-  background: var(--color-bg);
+  background: var(--color-btn-secondary-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
@@ -260,7 +228,7 @@ textarea { resize: vertical; min-height: 90px; }
   border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
-  background: var(--color-bg);
+  background: var(--color-btn-secondary-bg);
   cursor: pointer;
   transition: border-color .12s ease, background .12s ease;
 }
@@ -282,21 +250,20 @@ textarea { resize: vertical; min-height: 90px; }
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 12px; font-weight: 700; color: var(--color-text-muted);
-  background: var(--color-bg); border: 1px solid var(--color-border);
+  background: var(--color-btn-secondary-bg); border: 1px solid var(--color-border);
   border-radius: var(--radius-pill); padding: 4px 10px;
 }
 .verified-badge { color: var(--color-accent); font-size: 13px; vertical-align: -1px; margin-left: 3px; flex-shrink: 0; }
-.preview-pill { color: var(--color-preview); border-color: var(--color-preview-border); background: var(--color-preview-bg); }
+.preview-pill { color: var(--color-text-muted); }
 .pending-pill { color: var(--color-info); border-color: var(--color-info-border); background: var(--color-info-bg); }
 .rejected-pill { color: var(--color-error); border-color: var(--color-error-border); background: var(--color-error-bg); }
 
-/* small mono tag chip, e.g. the game the mod is for */
 .tag-pill {
   display: inline-flex; align-items: center; gap: 5px;
-  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
-  color: var(--color-text-muted); background: var(--color-bg);
-  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-  padding: 3px 10px; white-space: nowrap;
+  font-family: var(--font-body); font-size: 12px; font-weight: 600;
+  color: var(--color-text-muted); background: var(--color-btn-secondary-bg);
+  border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+  padding: 4px 11px; white-space: nowrap;
 }
 
 /* ---------- icon-backed stat chips (downloads / rating / clock etc.) ---------- */
@@ -341,9 +308,7 @@ footer.site-footer a:hover { color: var(--color-accent); }
 .notif-panel {
   position: absolute; top: calc(var(--header-h) + 6px); right: clamp(16px, 5vw, 40px);
   width: 320px; max-height: 380px; overflow-y: auto;
-  background: rgba(28, 28, 32, 0.9); border: 1px solid var(--color-border-strong);
-  border-top-color: rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  background: var(--color-surface);
   border-radius: var(--radius-md); box-shadow: var(--shadow-hover); z-index: 20;
   transform-origin: top right;
   opacity: 0; visibility: hidden; pointer-events: none;
@@ -498,11 +463,11 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 .mod-row.is-preview { background: var(--color-surface-preview); }
 @media (hover: hover) and (pointer: fine) {
   a.mod-row:hover {
-    border-color: var(--color-border-strong); background: var(--color-surface-hover);
+    background: var(--color-surface-hover);
   }
   a.mod-row.is-preview:hover { background: var(--color-surface-preview-hover); }
   a.mod-row:hover .mod-name { color: var(--color-accent); }
-  a.mod-row.is-preview:hover .mod-name { color: var(--color-preview); }
+  a.mod-row.is-preview:hover .mod-name { color: var(--color-accent); }
 }
 a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 
@@ -551,7 +516,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .mod-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
 .mod-title-row { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
 .mod-name { font-family: var(--font-body); font-weight: 700; font-size: 17.5px; margin: 0; letter-spacing: -0.01em; color: var(--color-text); transition: color .12s ease; }
-.mod-author { font-family: var(--font-mono); font-size: 12.5px; color: var(--color-text-faint); }
+.mod-author { font-family: var(--font-body); font-weight: 600; font-size: 13px; color: var(--color-text-faint); }
 .author-link { color: inherit; text-decoration: none; cursor: pointer; }
 .author-link:hover { color: var(--color-accent); text-decoration: underline; }
 
@@ -580,7 +545,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 }
 @media (hover: hover) and (pointer: fine) {
   a.mod-row:hover .mod-icon { border-color: var(--color-surface-hover); }
-  a.mod-row.is-preview:hover .mod-icon { border-color: var(--color-preview-bg); }
+  a.mod-row.is-preview:hover .mod-icon { border-color: var(--color-surface-hover); }
 }
 .mods-list.grid .mod-body, .preview-pane .mod-body { display: block; width: 100%; padding: 8px 14px 14px; }
 .mods-list.grid .mod-main, .preview-pane .mod-main { width: 100%; }
@@ -605,7 +570,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
   padding: 7px 16px; border-radius: var(--radius-pill); background: none; color: var(--color-text-muted);
   transition: background .16s ease, color .16s ease;
 }
-.browse-tab.active { background: var(--color-accent); color: var(--color-accent-ink); }
+.browse-tab.active { background: var(--color-btn-secondary-bg); color: var(--color-text); }
 
 /* ---------- creator card (Creators tab) ---------- */
 .creator-row {
@@ -616,7 +581,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
   animation: lb-card-in .3s var(--ease-out) both;
 }
 @media (hover: hover) and (pointer: fine) {
-  .creator-row:hover { border-color: var(--color-border-strong); background: var(--color-surface-hover); }
+  .creator-row:hover { background: var(--color-surface-hover); }
 }
 .creator-row:active { transform: scale(.99); transition-duration: .08s; }
 .creator-row:nth-child(1) { animation-delay: 0ms; }
@@ -660,7 +625,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .report-link { font-size: 12.5px; font-weight: 600; color: var(--color-text-faint); background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; font-family: var(--font-body); }
 .report-link:hover { color: var(--color-text); }
 .report-form { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; animation: lb-msg-in .2s var(--ease-out); }
-.report-form select { width: 100%; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 9px 10px; color: var(--color-text); font-family: var(--font-body); font-size: 13.5px; }
+.report-form select { width: 100%; background: var(--color-btn-secondary-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 9px 10px; color: var(--color-text); font-family: var(--font-body); font-size: 13.5px; }
 
 /* ---------- admin dashboard ---------- */
 .admin-section { max-width: 1020px; margin: 0 auto; padding: 20px clamp(16px, 5vw, 56px); }
@@ -688,7 +653,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .category-chip-btn {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--font-body); font-weight: 600; font-size: 13px;
-  color: var(--color-text-muted); background: var(--color-surface);
+  color: var(--color-text-muted); background: var(--color-btn-secondary-bg);
   border: 1px solid var(--color-border); border-radius: var(--radius-pill);
   padding: 7px 14px; cursor: pointer;
   transition: background .12s ease, border-color .12s ease, color .12s ease;
@@ -736,10 +701,10 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .screenshot-gallery {
   display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
   scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin; scrollbar-color: var(--color-border) transparent;
+  scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent;
 }
 .screenshot-gallery::-webkit-scrollbar { height: 7px; }
-.screenshot-gallery::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: var(--radius-pill); }
+.screenshot-gallery::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: var(--radius-pill); }
 .screenshot-gallery::-webkit-scrollbar-track { background: transparent; }
 .screenshot-thumb {
   position: relative; flex: 0 0 auto; scroll-snap-align: start;
@@ -749,16 +714,16 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 }
 .screenshot-thumb::after {
   content: ""; position: absolute; inset: 0;
-  background: rgba(10, 23, 16, 0); transition: background .12s ease;
+  background: rgba(10, 12, 14, 0); transition: background .12s ease;
 }
 @media (hover: hover) and (pointer: fine) {
   .screenshot-thumb:hover { transform: scale(1.025); }
-  .screenshot-thumb:hover::after { background: rgba(10, 23, 16, .12); }
+  .screenshot-thumb:hover::after { background: rgba(10, 12, 14, .12); }
 }
 .screenshot-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .screenshot-lightbox {
-  position: fixed; inset: 0; z-index: 60; background: rgba(6, 10, 9, .94);
+  position: fixed; inset: 0; z-index: 60; background: rgba(8, 9, 11, .94);
   align-items: center; justify-content: center; padding: 0;
   animation: lb-msg-in .16s var(--ease-out);
 }
@@ -774,7 +739,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .lightbox-counter {
   position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
   font-family: var(--font-mono); font-size: 12.5px; color: var(--color-text-faint);
-  background: rgba(10, 15, 13, .7); border: 1px solid var(--color-border);
+  background: rgba(20, 24, 28, .8); border: 1px solid var(--color-border);
   border-radius: var(--radius-pill); padding: 5px 12px; white-space: nowrap;
 }
 .lightbox-close {
