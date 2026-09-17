@@ -452,7 +452,6 @@ a.notif-item:hover { background: var(--color-surface-hover); }
     background: var(--color-surface-hover);
   }
   a.mod-row.is-preview:hover { background: var(--color-surface-preview-hover); }
-  a.mod-row:hover .mod-name { text-decoration: underline; text-underline-offset: 3px; }
 }
 a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 
@@ -517,6 +516,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 @media (hover: hover) and (pointer: fine) {
   a.mod-row:hover .mod-icon { border-color: var(--color-surface-hover); }
   a.mod-row.is-preview:hover .mod-icon { border-color: var(--color-surface-hover); }
+  .mod-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .mods-list.grid .mod-body, .preview-pane .mod-body { display: block; width: 100%; padding: 8px 14px 14px; }
 .mods-list.grid .mod-main, .preview-pane .mod-main { width: 100%; }
@@ -553,7 +553,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 }
 @media (hover: hover) and (pointer: fine) {
   .creator-row:hover { background: var(--color-surface-hover); }
-  .creator-row:hover .creator-name { text-decoration: underline; text-underline-offset: 3px; }
+  .creator-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .creator-row:active { transform: scale(.99); transition-duration: .08s; }
 .creator-row:nth-child(1) { animation-delay: 0ms; }
