@@ -1,4 +1,5 @@
 :root {
+
   --color-bg: #14181C;
   --color-bg-soft: #1E2226;
   --color-surface: #27292F;
@@ -36,7 +37,6 @@
   --color-btn-secondary-bg: #404249;
   --color-btn-secondary-bg-hover: #4B4E56;
 
-  /* ---- emoji rating scale, angry (1) → grinning (5) ---- */
   --rating-1: #D9615A;
   --rating-2: #D99A4B;
   --rating-3: #93AC97;
@@ -56,6 +56,7 @@
   --shadow-hover: 0 16px 40px -12px rgba(0, 0, 0, 0.55);
 
   --header-h: 64px;
+
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
@@ -175,6 +176,7 @@ h1, h2, h3 { font-weight: var(--weight-heading); letter-spacing: -0.4px; line-he
   box-shadow: var(--shadow-card);
   padding: 22px;
 }
+
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   font-family: var(--font-body); font-weight: 700; font-size: 14.5px; letter-spacing: -0.1px;
@@ -246,7 +248,6 @@ textarea { resize: vertical; min-height: 90px; }
 .form-msg.error { color: var(--color-error); background: var(--color-error-bg); border: 1px solid var(--color-error-border); }
 .form-msg.success { color: var(--color-accent); background: var(--color-accent-tint); border: 1px solid var(--color-accent); }
 
-/* ---------- badges / pills ---------- */
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 12px; font-weight: 700; color: var(--color-text-muted);
@@ -266,14 +267,12 @@ textarea { resize: vertical; min-height: 90px; }
   padding: 4px 11px; white-space: nowrap;
 }
 
-/* ---------- icon-backed stat chips (downloads / rating / clock etc.) ---------- */
 .stat-chip { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: 13.5px; font-weight: 500; }
 .stat-chip i { flex-shrink: 0; color: var(--color-text-faint); font-size: 12.5px; }
 .stat-chip.stat-rating i { color: var(--rating-color, var(--color-gold)); font-size: 14px; }
 .stat-chip.stat-rating.no-rating i { color: var(--color-text-faint); }
 .stat-chip strong { color: var(--color-text); font-weight: 700; font-family: var(--font-mono); }
 
-/* ---------- empty / loading / error states ---------- */
 .empty-state, .error-state, .loading-state {
   font-size: 14px; color: var(--color-text-muted); text-align: center;
   padding: 48px 20px; border-radius: var(--radius-lg);
@@ -285,10 +284,6 @@ textarea { resize: vertical; min-height: 90px; }
 
 .gate-state { max-width: 420px; margin: 96px auto; text-align: center; color: var(--color-text-muted); font-size: 14px; padding: 0 20px; }
 
-/* ---------- shared page-reveal (gate → content) ----------
-   Applied to whichever wrapper a page swaps in after its auth/session
-   check resolves, so content settles into place instead of popping in.
-   JS adds .is-visible one frame after unhiding the wrapper. */
 .page-reveal { opacity: 0; transform: translateY(6px); transition: opacity .3s var(--ease-out), transform .3s var(--ease-out); }
 .page-reveal.is-visible { opacity: 1; transform: translateY(0); }
 
@@ -298,7 +293,6 @@ footer.site-footer {
 footer.site-footer a { color: var(--color-text-faint); text-decoration: underline; text-underline-offset: 2px; }
 footer.site-footer a:hover { color: var(--color-accent); }
 
-/* ---------- notifications ---------- */
 .icon-btn { position: relative; padding: 8px 10px; }
 .icon-btn i { font-size: 15.5px; }
 .notif-dot {
@@ -327,7 +321,6 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 .notif-item.unread { background: var(--color-accent-tint); }
 .notif-empty { padding: 20px 14px; font-size: 13px; color: var(--color-text-faint); text-align: center; }
 
-/* capped entrance stagger for the first handful of notifications */
 @keyframes lb-item-in { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
 .notif-panel.open .notif-item { animation: lb-item-in .18s var(--ease-out) both; }
 .notif-panel.open .notif-item:nth-child(1) { animation-delay: 0ms; }
@@ -337,7 +330,6 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 .notif-panel.open .notif-item:nth-child(5) { animation-delay: 80ms; }
 .notif-panel.open .notif-item:nth-child(n+6) { animation-delay: 90ms; }
 
-/* ---------- favorite button ---------- */
 .fav-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   background: var(--color-btn-secondary-bg); border: 1px solid transparent;
@@ -353,7 +345,6 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 @keyframes lb-fav-pop { 0% { transform: scale(1); } 40% { transform: scale(1.3); } 70% { transform: scale(.94); } 100% { transform: scale(1); } }
 .fav-btn.active i { animation: lb-fav-pop .3s var(--ease-out); }
 
-/* ---------- badges ---------- */
 .badge-strip { display: flex; flex-wrap: wrap; gap: 8px; }
 .badge-earned {
   background: var(--color-accent-tint); border-color: var(--color-accent); color: var(--color-accent);
@@ -367,7 +358,6 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 @keyframes lb-thumb-in { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
 .empty-inline { font-size: 13px; color: var(--color-text-faint); margin: 0; }
 
-/* ---- Changelogs / announcements ---- */
 .changelog-list { display: flex; flex-direction: column; gap: 12px; }
 .changelog-item { padding: 14px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
 .changelog-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
@@ -386,7 +376,6 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 .changelog-divider { height: 1px; background: var(--color-border); margin: 22px 0 18px; }
 .main-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 
-/* ---------- markdown editor ---------- */
 .md-editor { border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-bg); overflow: hidden; }
 .md-toolbar {
   display: flex; align-items: center; gap: 2px; padding: 6px; flex-wrap: wrap;
@@ -412,7 +401,6 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 .md-textarea:focus { outline: none; }
 .md-preview { padding: 12px 14px; min-height: 160px; font-size: 14px; }
 
-/* rendered markdown content (mod description, preview pane) */
 .md-content, .md-preview { color: var(--color-text); line-height: 1.6; }
 .md-content p, .md-preview p { margin: 0 0 12px; }
 .md-content h1, .md-content h2, .md-content h3,
@@ -436,7 +424,6 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 .embed-yt { position: relative; padding-top: 56.25%; margin: 4px 0 14px; border-radius: var(--radius-md); overflow: hidden; background: var(--color-bg); }
 .embed-yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
-/* ---------- profile page ---------- */
 .profile-head { display: flex; align-items: center; gap: 20px; padding: 32px clamp(16px, 5vw, 56px) 8px; max-width: 1180px; margin: 0 auto; flex-wrap: wrap; }
 .profile-avatar {
   width: 96px; height: 96px; border-radius: 50%; background: var(--color-accent-tint);
@@ -451,7 +438,6 @@ a.notif-item:hover { background: var(--color-surface-hover); }
 .profile-section { max-width: 1180px; margin: 0 auto; padding: 20px clamp(16px, 5vw, 56px); }
 .profile-edit-form { display: flex; flex-direction: column; gap: 12px; max-width: 460px; }
 
-/* ---------- mod card (browse list, live preview, anywhere) ---------- */
 .mod-row {
   position: relative;
   display: flex; gap: 14px; padding: 14px 16px;
@@ -466,13 +452,10 @@ a.notif-item:hover { background: var(--color-surface-hover); }
     background: var(--color-surface-hover);
   }
   a.mod-row.is-preview:hover { background: var(--color-surface-preview-hover); }
-  a.mod-row:hover .mod-name { color: var(--color-accent); }
-  a.mod-row.is-preview:hover .mod-name { color: var(--color-accent); }
+  a.mod-row:hover .mod-name { text-decoration: underline; text-underline-offset: 3px; }
 }
 a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 
-/* capped entrance stagger — replays on every re-render since the list is
-   rebuilt via innerHTML, not just on first page load */
 @keyframes lb-card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .mods-list .mod-row { animation: lb-card-in .3s var(--ease-out) both; }
 .mods-list .mod-row:nth-child(1) { animation-delay: 0ms; }
@@ -483,16 +466,6 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .mods-list .mod-row:nth-child(6) { animation-delay: 125ms; }
 .mods-list .mod-row:nth-child(n+7) { animation-delay: 140ms; }
 
-/* ---- banner (cover image the card is built around) ----
-   Hidden by default (list view stays compact/icon-led); grid view and the
-   narrow preview-pane switch it on below, where there's room for it to
-   actually read as a cover photo instead of a stretched icon.
-   Mods without an uploaded banner fall back to a flat duotone + dot-grid
-   pattern, picked per mod (by id hash, see LB_renderModCard) rather than
-   by position - a card keeps the same look as the list re-sorts. Three
-   variants, all built from the site's own leaf-green/chartreuse palette
-   instead of a generic gradient-mesh wash. Real banner_url images (set
-   inline by JS) always win over these. */
 .mod-banner-wrap { display: none; position: relative; }
 .mod-banner-img {
   width: 100%; height: 100%;
@@ -518,7 +491,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .mod-name { font-family: var(--font-body); font-weight: 700; font-size: 17.5px; margin: 0; letter-spacing: -0.01em; color: var(--color-text); transition: color .12s ease; }
 .mod-author { font-family: var(--font-body); font-weight: 600; font-size: 13px; color: var(--color-text-faint); }
 .author-link { color: inherit; text-decoration: none; cursor: pointer; }
-.author-link:hover { color: var(--color-accent); text-decoration: underline; }
+.author-link:hover { text-decoration: underline; }
 
 .mod-desc {
   color: var(--color-text-muted); font-size: 13.5px; line-height: 1.4; margin: 0;
@@ -532,8 +505,6 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .mod-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; flex-shrink: 0; }
 .mod-stats-row { display: flex; align-items: center; gap: 14px; }
 
-/* ---- grid view + preview-pane (both are single-column "cards", so they
-   share the exact same banner treatment) ---- */
 .mods-list.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
 .mods-list.grid .mod-row, .preview-pane .mod-row {
   flex-direction: column; align-items: flex-start; padding: 0; overflow: hidden;
@@ -563,16 +534,16 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
   .mods-list.grid .mod-side { flex-direction: row; }
 }
 
-/* ---------- browse tabs (Mods / Creators) ---------- */
-.browse-tabs { display: inline-flex; gap: 2px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-pill); padding: 3px; }
+.browse-tabs { display: flex; gap: 2px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-pill); padding: 3px; }
 .browse-tab {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  flex: 1 1 0; min-width: 0;
   font-family: var(--font-body); font-size: 13.5px; font-weight: 700; border: none; cursor: pointer;
-  padding: 7px 16px; border-radius: var(--radius-pill); background: none; color: var(--color-text-muted);
+  padding: 9px 12px; border-radius: var(--radius-pill); background: none; color: var(--color-text-muted);
   transition: background .16s ease, color .16s ease;
 }
 .browse-tab.active { background: var(--color-btn-secondary-bg); color: var(--color-text); }
 
-/* ---------- creator card (Creators tab) ---------- */
 .creator-row {
   display: flex; align-items: center; gap: 16px; padding: 16px 20px;
   background: var(--color-surface); border: 1px solid var(--color-border);
@@ -582,6 +553,7 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 }
 @media (hover: hover) and (pointer: fine) {
   .creator-row:hover { background: var(--color-surface-hover); }
+  .creator-row:hover .creator-name { text-decoration: underline; text-underline-offset: 3px; }
 }
 .creator-row:active { transform: scale(.99); transition-duration: .08s; }
 .creator-row:nth-child(1) { animation-delay: 0ms; }
@@ -602,7 +574,6 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .creator-bio { font-size: 13.5px; color: var(--color-text-muted); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .creator-stats { display: flex; gap: 14px; flex-shrink: 0; }
 
-/* ---------- live card preview (upload / edit) ---------- */
 .form-with-preview { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
 .preview-pane { position: sticky; top: calc(var(--header-h) + 20px); }
 .preview-pane .mod-row { cursor: default; }
@@ -611,7 +582,6 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
   .preview-pane { position: static; }
 }
 
-/* ---------- moderation / reports ---------- */
 .status-banner {
   margin: 24px 0 0; padding: 14px 16px;
   border: 1px solid var(--color-info-border); background: var(--color-info-bg);
@@ -627,7 +597,6 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .report-form { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; animation: lb-msg-in .2s var(--ease-out); }
 .report-form select { width: 100%; background: var(--color-btn-secondary-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 9px 10px; color: var(--color-text); font-family: var(--font-body); font-size: 13.5px; }
 
-/* ---------- admin dashboard ---------- */
 .admin-section { max-width: 1020px; margin: 0 auto; padding: 20px clamp(16px, 5vw, 56px); }
 .admin-row {
   display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin-bottom: 10px;
@@ -641,14 +610,12 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .admin-row-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .admin-row-actions .btn { padding: 8px 14px; font-size: 13px; }
 
-/* ---------- responsive shell helpers ---------- */
 @media (max-width: 480px) {
   .site-header { padding: 0 16px; }
   .brand-name { font-size: 15px; }
   .nav-link { padding: 7px 10px; font-size: 13px; }
 }
 
-/* ---------- category picker (upload/edit forms + index filter row) ---------- */
 .category-picker { display: flex; flex-wrap: wrap; gap: 8px; }
 .category-chip-btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -663,12 +630,10 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
 .category-chip-btn.active { background: var(--color-accent-tint); border-color: var(--color-accent); color: var(--color-accent); }
 .category-chip-btn.active i { color: var(--color-accent); }
 
-/* read-only chip row shown on mod cards / mod page */
 .category-chip-row { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .category-pill i { color: var(--color-accent); font-size: 10px; }
 .category-pill-more { color: var(--color-text-faint); }
 
-/* ---------- screenshot upload (upload/edit forms) ---------- */
 .screenshot-upload-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px;
   margin-top: 10px;
@@ -697,7 +662,6 @@ a.mod-row:active { transform: scale(.99); transition-duration: .08s; }
   color: var(--color-text-faint); font-size: 12px; text-align: center; padding: 8px;
 }
 
-/* ---------- screenshot gallery + lightbox (mod page) ---------- */
 .screenshot-gallery {
   display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
   scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
