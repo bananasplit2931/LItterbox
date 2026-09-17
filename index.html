@@ -47,7 +47,7 @@
 }
 .sidebar-search input {
   width: 100%; height: 40px; box-sizing: border-box;
-  background: var(--color-surface); border: 1px solid var(--color-border);
+  background: var(--color-btn-secondary-bg); border: 1px solid var(--color-border);
   border-radius: var(--radius-pill); padding: 0 14px 0 38px;
   color: var(--color-text); font-family: var(--font-body); font-size: 14px;
   transition: border-color .12s ease;
@@ -110,10 +110,9 @@
 
 .browse-main { min-width: 0; }
 .browse-main-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; align-items: center; justify-content: flex-end; gap: 12px;
   margin-bottom: 16px; flex-wrap: wrap;
 }
-#modCount { font-size: 13px; color: var(--color-text-faint); }
 .browse-main-controls { display: flex; align-items: center; gap: 10px; }
 
 /* ---- pigulkowy sort + list/grid toggle, moved here from the old top toolbar ---- */
@@ -141,7 +140,7 @@
   transition: color .12s ease, background .12s ease;
 }
 .view-btn:hover { color: var(--color-text); }
-.view-btn.active { background: var(--color-accent-tint); color: var(--color-accent); }
+.view-btn.active { background: var(--color-btn-secondary-bg); color: var(--color-text); }
 .view-btn + .view-btn { border-left: 1px solid var(--color-border); }
 
 .mods-list { display: flex; flex-direction: column; gap: 10px; }
@@ -218,7 +217,6 @@
 
     <section class="browse-main">
       <div class="browse-main-head">
-        <span id="modCount">Loading…</span>
         <div class="browse-main-controls" id="browseMainControls">
           <div class="pill-select">
             <label for="sort">Sort by</label>
@@ -298,18 +296,12 @@ function sortMods(mods) {
 // replaces the old additive "show/hide previews" toggle.
 function renderMods(mods) {
   const listEl = document.getElementById("modsList");
-  const countEl = document.getElementById("modCount");
   const visible = mods.filter(m => Boolean(m.is_preview) === (currentReleaseTab === "previews"));
 
   if (visible.length === 0) {
     listEl.innerHTML = `<div class="empty-state">${currentReleaseTab === "previews" ? "No preview mods right now." : "No mods found."}</div>`;
-    countEl.textContent = currentReleaseTab === "previews" ? "0 previews" : "0 mods";
     return;
   }
-
-  countEl.textContent = currentReleaseTab === "previews"
-    ? `${visible.length} preview${visible.length === 1 ? "" : "s"}`
-    : `${visible.length} mod${visible.length === 1 ? "" : "s"}`;
 
   listEl.innerHTML = sortMods(visible).map(mod => LB_renderModCard(mod, { currentUserId })).join("");
 }
@@ -351,7 +343,6 @@ function applyFilters() {
 
 async function loadMods() {
   const listEl = document.getElementById("modsList");
-  const countEl = document.getElementById("modCount");
 
   const { data, error } = await supabaseClient
     .from("mods")
@@ -361,7 +352,6 @@ async function loadMods() {
   if (error) {
     console.error("Error loading mods:", error);
     listEl.innerHTML = `<div class="error-state">Couldn't load mods. Please try again later.</div>`;
-    countEl.textContent = "";
     return;
   }
 
@@ -412,15 +402,11 @@ async function initCategoryFilter() {
 
 function renderCreators(profiles) {
   const listEl = document.getElementById("modsList");
-  const countEl = document.getElementById("modCount");
 
   if (profiles.length === 0) {
     listEl.innerHTML = `<div class="empty-state">No creators found.</div>`;
-    countEl.textContent = "0 creators";
     return;
   }
-
-  countEl.textContent = `${profiles.length} creator${profiles.length === 1 ? "" : "s"}`;
 
   const sorted = [...profiles].sort((a, b) => (b._modCount || 0) - (a._modCount || 0));
   listEl.innerHTML = sorted.map(p => {
